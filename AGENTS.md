@@ -323,6 +323,7 @@ If GUI execution cannot be observed in the current environment, still build and 
 - Update `ARCHITECTURE.md` when a lasting architectural decision changes.
 - Update `IMPLEMENTATION_ROADMAP.md` only when scope, order, or completion criteria change—not merely to mark informal progress.
 - Add a more specific nested `AGENTS.md` only when a subsystem genuinely needs different rules.
+- After completing and verifying a material task, ask the user whether they want the changes committed and pushed if they have not already given that instruction. Do not commit or push without the user's explicit request.
 
 ## Progress Recording
 

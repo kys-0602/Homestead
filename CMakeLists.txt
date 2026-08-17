@@ -35,7 +35,7 @@ file(GLOB HOMESTEAD_FXC_CANDIDATES
 )
 list(SORT HOMESTEAD_FXC_CANDIDATES COMPARE NATURAL ORDER DESCENDING)
 if(NOT HOMESTEAD_FXC_CANDIDATES)
-    message(FATAL_ERROR "Windows SDK fxc.exe is required to build presentation shaders.")
+    message(FATAL_ERROR "Windows SDK fxc.exe is required to build runtime shaders.")
 endif()
 list(GET HOMESTEAD_FXC_CANDIDATES 0 HOMESTEAD_FXC)
 
@@ -43,6 +43,9 @@ set(HOMESTEAD_GENERATED_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated")
 set(HOMESTEAD_PRESENTATION_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/shaders/Presentation.hlsl")
 set(HOMESTEAD_PRESENTATION_VS "${HOMESTEAD_GENERATED_DIRECTORY}/PresentationVS.hpp")
 set(HOMESTEAD_PRESENTATION_PS "${HOMESTEAD_GENERATED_DIRECTORY}/PresentationPS.hpp")
+set(HOMESTEAD_SPRITE_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/shaders/Sprite.hlsl")
+set(HOMESTEAD_SPRITE_VS "${HOMESTEAD_GENERATED_DIRECTORY}/SpriteVS.hpp")
+set(HOMESTEAD_SPRITE_PS "${HOMESTEAD_GENERATED_DIRECTORY}/SpritePS.hpp")
 
 add_custom_command(
     OUTPUT "${HOMESTEAD_PRESENTATION_VS}"
@@ -66,8 +69,34 @@ add_custom_command(
     VERBATIM
 )
 
+add_custom_command(
+    OUTPUT "${HOMESTEAD_SPRITE_VS}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${HOMESTEAD_GENERATED_DIRECTORY}"
+    COMMAND "${HOMESTEAD_FXC}" /nologo /T vs_5_0 /E VSMain /O3
+        /Qstrip_debug /Qstrip_reflect
+        /Fh "${HOMESTEAD_SPRITE_VS}" /Vn HomesteadSpriteVS
+        "${HOMESTEAD_SPRITE_SHADER}"
+    DEPENDS "${HOMESTEAD_SPRITE_SHADER}"
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT "${HOMESTEAD_SPRITE_PS}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${HOMESTEAD_GENERATED_DIRECTORY}"
+    COMMAND "${HOMESTEAD_FXC}" /nologo /T ps_5_0 /E PSMain /O3
+        /Qstrip_debug /Qstrip_reflect
+        /Fh "${HOMESTEAD_SPRITE_PS}" /Vn HomesteadSpritePS
+        "${HOMESTEAD_SPRITE_SHADER}"
+    DEPENDS "${HOMESTEAD_SPRITE_SHADER}"
+    VERBATIM
+)
+
 add_custom_target(HomesteadShaders
-    DEPENDS "${HOMESTEAD_PRESENTATION_VS}" "${HOMESTEAD_PRESENTATION_PS}"
+    DEPENDS
+        "${HOMESTEAD_PRESENTATION_VS}"
+        "${HOMESTEAD_PRESENTATION_PS}"
+        "${HOMESTEAD_SPRITE_VS}"
+        "${HOMESTEAD_SPRITE_PS}"
 )
 add_dependencies(Homestead HomesteadShaders)
 
