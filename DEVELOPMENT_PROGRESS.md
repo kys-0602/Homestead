@@ -5,14 +5,14 @@
 ## 현재 상태
 
 - 마지막 갱신: 2026-08-17
-- 현재 완료 범위: 단계 0~3 구현
-- 다음 작업: 단계 4 `최소 SpriteBatch`
+- 현재 완료 범위: 단계 0~4 구현
+- 다음 작업: 단계 5 `입력과 고정 업데이트 루프`
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `15,872 bytes`
+- 현재 Release EXE: `22,528 bytes`
 - 현재 `data.pak`: 없음
 - 현재 대표 save: 없음
-- 현재 합계: `15,872 bytes`
-- 남은 공간: `1,458,688 bytes`
+- 현재 합계: `22,528 bytes`
+- 남은 공간: `1,452,032 bytes`
 
 ## 단계별 기록
 
@@ -22,6 +22,7 @@
 | 1. Win32 애플리케이션 골격 | 완료 | `0d63fb0` (#4) | 12,800 bytes | +2,560 bytes |
 | 2. Direct3D 11 초기화 | 구현 완료, Debug Layer 검증 대기 | `21e19d4` (#5) | 13,824 bytes | +1,024 bytes |
 | 3. 고정 논리 화면과 letterbox | 구현 완료, Debug Layer 검증 대기 | `7559bae` (#6) | 15,872 bytes | +2,048 bytes |
+| 4. 최소 SpriteBatch | 구현 완료, Debug Layer 검증 대기 | 병합 대기 | 22,528 bytes | +6,656 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -104,22 +105,50 @@
 남은 확인:
 
 - Graphics Tools 설치 후 잘못된 resource binding이나 live-object 경고가 없는지 확인
-- 실제 pixel-art sprite가 추가되는 단계 4에서 정수 확대 시 픽셀 경계를 시각적으로 재확인
+- 구매 pixel-art atlas가 추가되는 이후 단계에서 실제 에셋의 픽셀 경계를 다시 확인
 
-## 다음 작업: 단계 4
+### 단계 4: 최소 SpriteBatch
+
+구현:
+
+- position, UV, color를 받는 sprite vertex/pixel shader의 빌드 시 오프라인 컴파일
+- 256-sprite 동적 vertex buffer와 고정 index buffer
+- point sampler와 straight-alpha blend state
+- 고정 용량 `SpriteCommand`, `RenderQueue`, `SpriteBatch`
+- texture/material, layer/depth, Actor Y와 제출 순서 기반 정렬
+- 동일 texture batch 제출과 texture 변경 또는 256개 초과 시 flush
+- 런타임 파일 없이 생성하는 16×16 RGBA 테스트 texture
+- 투명도, tint와 겹침 순서를 확인할 여러 테스트 sprite
+- presentation 포함 전체 shader bytecode `1,688 bytes`; sprite shader만 `884 bytes`
+
+검증:
+
+- Debug/Release `/W4` build 성공
+- presentation 및 RenderQueue 단위 테스트 Debug/Release 통과
+- 257 sprite가 2 batch로 분할되고 queue 용량 초과가 안전하게 거부되는지 확인
+- 실제 GPU draw call 수가 batch 계산 결과와 일치하는지 런타임 확인
+- 1280×720 캡처에서 UV, 흰색/노란색 tint, 반투명 red/blue 겹침과 Y 순서 확인
+- 16×16 texture가 4배 정수 확대에서 선명한 픽셀 블록으로 표시되는지 확인
+- 정상 종료 코드 `0` 및 Release에 HLSL 경로와 `d3dcompiler` 의존이 없음을 확인
+
+남은 확인:
+
+- Graphics Tools 설치 후 SpriteBatch resource binding과 종료 시 live-object 경고 확인
+- 여러 실제 texture를 로드하는 단계에서 texture 전환별 GPU binding을 확장 및 검증
+
+## 다음 작업: 단계 5
 
 `IMPLEMENTATION_ROADMAP.md`에 따라 다음 범위만 진행한다.
 
-- position, UV, color용 최소 sprite HLSL
-- 빌드 시 오프라인 셰이더 컴파일
-- point sampler와 alpha blend state
-- 동적 vertex buffer와 고정 index buffer
-- `SpriteCommand`, `RenderQueue`, `SpriteBatch`
-- 테스트 texture의 16×16 sprite 출력
-- layer/depth 및 actor Y 정렬
-- batch 용량 초과 시 안전한 flush
+- 키보드와 마우스의 held/pressed/released 상태
+- 물리 키에서 gameplay action으로의 변환
+- focus 상실 시 held 상태 해제
+- 60Hz fixed-update accumulator
+- 긴 frame delta와 최대 fixed-update 반복 횟수 제한
+- 한 render frame 안에서 pressed 입력의 중복 소비 방지
+- 논리 화면 마우스 좌표 보고
 
-단계 4에서도 셰이더 bytecode, Release EXE 크기와 전체 남은 byte를 기록한다.
+단계 5에서도 Release EXE 크기와 전체 남은 byte를 기록한다.
 
 ## 기록 갱신 규칙
 

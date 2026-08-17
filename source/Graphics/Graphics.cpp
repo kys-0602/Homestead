@@ -3,6 +3,8 @@
 #include "PresentationPS.hpp"
 #include "PresentationVS.hpp"
 
+#include <array>
+
 #if defined(HOMESTEAD_ENABLE_D3D_DEBUG)
 #include <d3d11sdklayers.h>
 #endif
@@ -107,7 +109,11 @@ bool Graphics::Initialize(
     clientWidth_ = clientWidth;
     clientHeight_ = clientHeight;
     presentationViewport_ = CalculatePresentationViewport(clientWidth, clientHeight);
-    if (!CreateBackBufferView() || !CreatePresentationResources()) {
+    if (!CreateBackBufferView() ||
+        !CreatePresentationResources() ||
+        !spriteBatch_.Initialize(device_, context_) ||
+        !CreateTestTexture() ||
+        !BuildTestRenderQueue()) {
         Shutdown();
         return false;
     }
@@ -158,6 +164,9 @@ bool Graphics::Render() noexcept {
     context_->RSSetViewports(1, &sceneViewport);
     context_->OMSetRenderTargets(1, &sceneTargetView_, nullptr);
     context_->ClearRenderTargetView(sceneTargetView_, SceneClearColor);
+    if (!spriteBatch_.Render(renderQueue_, testTextureView_, 16, 16, 0)) {
+        return false;
+    }
 
     D3D11_VIEWPORT outputViewport{};
     outputViewport.TopLeftX = static_cast<float>(presentationViewport_.x);
@@ -209,6 +218,8 @@ void Graphics::Shutdown() noexcept {
     }
 
     ReleaseBackBufferView();
+    spriteBatch_.Shutdown();
+    ReleaseTestTexture();
     ReleasePresentationResources();
     Release(swapChain_);
     Release(context_);
@@ -289,6 +300,88 @@ bool Graphics::CreatePresentationResources() noexcept {
     return true;
 }
 
+bool Graphics::CreateTestTexture() noexcept {
+    constexpr std::uint16_t textureWidth = 16;
+    constexpr std::uint16_t textureHeight = 16;
+    std::array<std::uint32_t, textureWidth * textureHeight> pixels{};
+    for (std::uint16_t y = 0; y < textureHeight; ++y) {
+        for (std::uint16_t x = 0; x < textureWidth; ++x) {
+            const bool border = x < 2 || y < 2 || x >= 14 || y >= 14;
+            const bool checker = ((x / 4) + (y / 4)) % 2 == 0;
+            const std::uint32_t alpha = border ? 0U : (checker ? 255U : 160U);
+            pixels[static_cast<std::size_t>(y) * textureWidth + x] =
+                (alpha << 24U) | 0x00FFFFFFU;
+        }
+    }
+
+    D3D11_TEXTURE2D_DESC description{};
+    description.Width = textureWidth;
+    description.Height = textureHeight;
+    description.MipLevels = 1;
+    description.ArraySize = 1;
+    description.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    description.SampleDesc.Count = 1;
+    description.Usage = D3D11_USAGE_IMMUTABLE;
+    description.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+    D3D11_SUBRESOURCE_DATA data{};
+    data.pSysMem = pixels.data();
+    data.SysMemPitch = textureWidth * sizeof(std::uint32_t);
+    if (FAILED(device_->CreateTexture2D(&description, &data, &testTexture_)) ||
+        FAILED(device_->CreateShaderResourceView(testTexture_, nullptr, &testTextureView_))) {
+        return false;
+    }
+
+    return true;
+}
+
+bool Graphics::BuildTestRenderQueue() noexcept {
+    renderQueue_.Clear();
+
+    SpriteCommand command{};
+    command.x = 16.0F;
+    command.y = 16.0F;
+    command.width = 48.0F;
+    command.height = 48.0F;
+    command.uvWidth = 16;
+    command.uvHeight = 16;
+    command.layer = SpriteLayer::Ground;
+    if (!renderQueue_.Add(command)) {
+        return false;
+    }
+
+    command.x = 72.0F;
+    command.y = 48.0F;
+    command.color = 0xC04040FFU;
+    command.layer = SpriteLayer::Actor;
+    command.sortY = 96;
+    if (!renderQueue_.Add(command)) {
+        return false;
+    }
+
+    command.x = 84.0F;
+    command.y = 60.0F;
+    command.color = 0xC0FF8040U;
+    command.sortY = 108;
+    if (!renderQueue_.Add(command)) {
+        return false;
+    }
+
+    command.x = 250.0F;
+    command.y = 20.0F;
+    command.width = 32.0F;
+    command.height = 32.0F;
+    command.color = 0xFF40FFFFU;
+    command.layer = SpriteLayer::UI;
+    command.sortY = 0;
+    if (!renderQueue_.Add(command)) {
+        return false;
+    }
+
+    renderQueue_.Sort();
+    return true;
+}
+
 void Graphics::ReleaseBackBufferView() noexcept {
     Release(backBufferView_);
 }
@@ -300,6 +393,11 @@ void Graphics::ReleasePresentationResources() noexcept {
     Release(sceneShaderView_);
     Release(sceneTargetView_);
     Release(sceneTexture_);
+}
+
+void Graphics::ReleaseTestTexture() noexcept {
+    Release(testTextureView_);
+    Release(testTexture_);
 }
 
 } // namespace Homestead

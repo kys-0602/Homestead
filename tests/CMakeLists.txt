@@ -12,3 +12,18 @@ target_compile_options(HomesteadPresentationTests PRIVATE
 )
 
 add_test(NAME HomesteadPresentationTests COMMAND HomesteadPresentationTests)
+
+add_executable(HomesteadRenderQueueTests
+    RenderQueueTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/RenderQueue.cpp"
+)
+
+target_include_directories(HomesteadRenderQueueTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+
+target_compile_options(HomesteadRenderQueueTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+
+add_test(NAME HomesteadRenderQueueTests COMMAND HomesteadRenderQueueTests)

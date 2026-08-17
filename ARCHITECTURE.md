@@ -180,6 +180,8 @@ struct SpriteCommand {
 
 명령은 `material/texture → layer/depth` 기준으로 정렬하고, 한 번에 동적 버퍼에 복사해 배치한다. 하나의 큰 아틀라스를 사용하면 대부분 한 draw call 흐름으로 처리할 수 있다. 깊이값은 다음처럼 고정한다.
 
+첫 구현은 `RenderQueue`를 1,024 command, GPU sprite batch를 256 sprite로 고정한다. queue 용량을 넘는 제출은 안전하게 거부하고, 같은 texture/material의 sprite가 batch 용량을 넘으면 여러 draw call로 flush한다. 이 값은 실제 타일맵과 UI가 들어온 뒤 메모리 사용량과 draw call 수를 측정해 조정한다.
+
 ```text
 Ground → GroundDecoration → ObjectBack → Actor(y-sort)
 → ObjectFront → Weather/Effect → UI → Debug
