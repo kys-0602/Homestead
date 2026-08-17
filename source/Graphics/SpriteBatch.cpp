@@ -155,25 +155,30 @@ bool SpriteBatch::Render(
     context_->PSSetShaderResources(0, 1, &texture);
     context_->OMSetBlendState(blendState_, nullptr, 0xFFFFFFFFU);
 
+    auto Cleanup = [&]() noexcept {
+        ID3D11ShaderResourceView* nullView = nullptr;
+        context_->PSSetShaderResources(0, 1, &nullView);
+        context_->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFFU);
+    };
+
     std::size_t begin = 0;
     while (begin < queue.Size()) {
         const SpriteCommand& command = queue[begin];
         if (command.textureId != textureId || command.material != 0) {
+            Cleanup();
             return false;
         }
 
         const std::size_t end = FindSpriteBatchEnd(queue, begin, BatchCapacity);
         if (end == begin || !Flush(queue, begin, end, textureWidth, textureHeight)) {
+            Cleanup();
             return false;
         }
         begin = end;
     }
 
-    ID3D11ShaderResourceView* nullView = nullptr;
-    context_->PSSetShaderResources(0, 1, &nullView);
-    context_->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFFU);
+    Cleanup();
     return true;
-}
 
 void SpriteBatch::Shutdown() noexcept {
     Release(blendState_);
