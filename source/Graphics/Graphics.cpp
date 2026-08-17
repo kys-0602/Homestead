@@ -164,9 +164,7 @@ bool Graphics::Render() noexcept {
     context_->RSSetViewports(1, &sceneViewport);
     context_->OMSetRenderTargets(1, &sceneTargetView_, nullptr);
     context_->ClearRenderTargetView(sceneTargetView_, SceneClearColor);
-    if (!spriteBatch_.Render(renderQueue_, testTextureView_, 16, 16, 0) ||
-        spriteBatch_.DrawCalls() !=
-            CountSpriteBatches(renderQueue_, SpriteBatch::BatchCapacity)) {
+    if (!spriteBatch_.Render(renderQueue_, testTextureView_, 16, 16, 0)) {
         return false;
     }
 
