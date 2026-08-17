@@ -31,6 +31,8 @@ target_include_directories(Homestead PRIVATE
 )
 
 target_compile_definitions(Homestead PRIVATE
+    UNICODE
+    _UNICODE
     WIN32_LEAN_AND_MEAN
     NOMINMAX
     WINVER=0x0A00
