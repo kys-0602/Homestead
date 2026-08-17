@@ -5,14 +5,14 @@
 ## 현재 상태
 
 - 마지막 갱신: 2026-08-17
-- 현재 완료 범위: 단계 0~4 구현
-- 다음 작업: 단계 5 `입력과 고정 업데이트 루프`
+- 현재 완료 범위: 단계 0~5 구현
+- 다음 작업: 단계 6 `에셋 패커의 최소 버전`
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `22,528 bytes`
+- 현재 Release EXE: `26,112 bytes`
 - 현재 `data.pak`: 없음
 - 현재 대표 save: 없음
-- 현재 합계: `22,528 bytes`
-- 남은 공간: `1,452,032 bytes`
+- 현재 합계: `26,112 bytes`
+- 남은 공간: `1,448,448 bytes`
 
 ## 단계별 기록
 
@@ -22,7 +22,8 @@
 | 1. Win32 애플리케이션 골격 | 완료 | `0d63fb0` (#4) | 12,800 bytes | +2,560 bytes |
 | 2. Direct3D 11 초기화 | 구현 완료, Debug Layer 검증 대기 | `21e19d4` (#5) | 13,824 bytes | +1,024 bytes |
 | 3. 고정 논리 화면과 letterbox | 구현 완료, Debug Layer 검증 대기 | `7559bae` (#6) | 15,872 bytes | +2,048 bytes |
-| 4. 최소 SpriteBatch | 구현 완료, Debug Layer 검증 대기 | 병합 대기 | 22,528 bytes | +6,656 bytes |
+| 4. 최소 SpriteBatch | 구현 완료, Debug Layer 검증 대기 | `11d8f09` (#8) | 22,528 bytes | +6,656 bytes |
+| 5. 입력과 고정 업데이트 루프 | 완료 | 병합 대기 | 26,112 bytes | +3,584 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -136,19 +137,51 @@
 - Graphics Tools 설치 후 SpriteBatch resource binding과 종료 시 live-object 경고 확인
 - 여러 실제 texture를 로드하는 단계에서 texture 전환별 GPU binding을 확장 및 검증
 
-## 다음 작업: 단계 5
+### 단계 5: 입력과 고정 업데이트 루프
+
+구현:
+
+- keyboard/mouse 물리 입력과 gameplay `Action` 분리
+- held/pressed/released 및 fixed update용 pending press 상태
+- WASD/방향키 이동, E/Space/오른쪽 클릭 상호작용, F/왼쪽 클릭 도구, Escape 메뉴 매핑
+- 여러 물리 키가 같은 Action에 묶일 때 올바른 held/released 처리
+- focus 상실 시 held와 pending press 해제
+- client mouse를 320×180 논리 좌표로 변환하고 letterbox 바깥 위치 무효화
+- 60Hz fixed update, frame delta 0.25초 clamp, 프레임당 최대 5회 update
+- update 상한 초과 누적 시간 폐기로 spiral-of-death 방지
+- 테스트 sprite의 fixed-speed 이동, 단발 tint 전환과 mouse 위치 이동
+- 4단계 병합 과정에서 누락된 `SpriteBatch::Render()` 종료 중괄호 수정
+
+검증:
+
+- Debug/Release `/W4` build 성공
+- presentation, RenderQueue, Input, FixedStep 테스트가 Debug/Release에서 모두 통과
+- 30/60/144Hz 시뮬레이션이 2초 동안 동일하게 120 fixed update를 생성
+- 긴 delta가 최대 5 update로 제한되고 reset/보간 alpha 범위를 지키는지 확인
+- 실제 GUI에서 1초간 이동이 약 61 logical pixels로 측정됨
+- focus 상실 뒤 held 이동이 고착되지 않고 위치가 유지되는지 확인
+- 단발 Interact가 tint를 한 번 전환하는지 확인
+- client `(800,400)` 클릭과 변환 후 sprite 중심 `(800,400)`이 일치하는지 확인
+- 정상 종료 코드 `0` 및 잔류 프로세스 없음
+
+남은 확인:
+
+- 실제 게임 상태가 추가될 때 `InputSnapshot` 또는 동등한 읽기 전용 경계로 Input과 Game 의존성을 분리
+- Graphics Tools 설치 후 기존 D3D11 validation/live-object 검증 수행
+
+## 다음 작업: 단계 6
 
 `IMPLEMENTATION_ROADMAP.md`에 따라 다음 범위만 진행한다.
 
-- 키보드와 마우스의 held/pressed/released 상태
-- 물리 키에서 gameplay action으로의 변환
-- focus 상실 시 held 상태 해제
-- 60Hz fixed-update accumulator
-- 긴 frame delta와 최대 fixed-update 반복 횟수 제한
-- 한 render frame 안에서 pressed 입력의 중복 소비 방지
-- 논리 화면 마우스 좌표 보고
+- 별도 `AssetPacker` target과 원본 이미지/메타데이터 입력
+- 필요한 16×16 에셋 선별, 중복 및 투명 영역 제거, palette 축소
+- sprite/font atlas 생성과 안정적인 `AssetId` 충돌 검사
+- versioned `data.pak` header/index/payload 작성
+- 런타임 `AssetStore`의 pak 검증과 texture 생성
+- 동일 입력의 deterministic pak 출력
+- 잘못된 magic/version/offset에 대한 parser 테스트
 
-단계 5에서도 Release EXE 크기와 전체 남은 byte를 기록한다.
+단계 6에서는 `Homestead.exe`와 새 `data.pak` 크기, 실제 선별 에셋 목록과 전체 남은 byte를 기록한다.
 
 ## 기록 갱신 규칙
 

@@ -179,6 +179,7 @@ bool SpriteBatch::Render(
 
     Cleanup();
     return true;
+}
 
 void SpriteBatch::Shutdown() noexcept {
     Release(blendState_);

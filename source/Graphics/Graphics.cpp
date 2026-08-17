@@ -197,6 +197,13 @@ bool Graphics::Render() noexcept {
     return SUCCEEDED(presentResult);
 }
 
+bool Graphics::SetTestSpriteState(float x, float y, bool alternateTint) noexcept {
+    testSpriteX_ = x;
+    testSpriteY_ = y;
+    testSpriteAlternateTint_ = alternateTint;
+    return BuildTestRenderQueue();
+}
+
 bool Graphics::ClientToLogical(
     std::int32_t clientX,
     std::int32_t clientY,
@@ -240,6 +247,9 @@ void Graphics::Shutdown() noexcept {
     clientWidth_ = 0;
     clientHeight_ = 0;
     presentationViewport_ = {};
+    testSpriteX_ = 16.0F;
+    testSpriteY_ = 16.0F;
+    testSpriteAlternateTint_ = false;
 }
 
 bool Graphics::CreateBackBufferView() noexcept {
@@ -339,12 +349,13 @@ bool Graphics::BuildTestRenderQueue() noexcept {
     renderQueue_.Clear();
 
     SpriteCommand command{};
-    command.x = 16.0F;
-    command.y = 16.0F;
+    command.x = testSpriteX_;
+    command.y = testSpriteY_;
     command.width = 48.0F;
     command.height = 48.0F;
     command.uvWidth = 16;
     command.uvHeight = 16;
+    command.color = testSpriteAlternateTint_ ? 0xFFFFA060U : 0xFFFFFFFFU;
     command.layer = SpriteLayer::Ground;
     if (!renderQueue_.Add(command)) {
         return false;

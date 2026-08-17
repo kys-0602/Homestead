@@ -27,3 +27,33 @@ target_compile_options(HomesteadRenderQueueTests PRIVATE
 )
 
 add_test(NAME HomesteadRenderQueueTests COMMAND HomesteadRenderQueueTests)
+
+add_executable(HomesteadInputTests
+    InputTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Input/Input.cpp"
+)
+
+target_include_directories(HomesteadInputTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+
+target_compile_options(HomesteadInputTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+
+add_test(NAME HomesteadInputTests COMMAND HomesteadInputTests)
+
+add_executable(HomesteadFixedStepTests
+    FixedStepTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Core/FixedStep.cpp"
+)
+
+target_include_directories(HomesteadFixedStepTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+
+target_compile_options(HomesteadFixedStepTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+
+add_test(NAME HomesteadFixedStepTests COMMAND HomesteadFixedStepTests)

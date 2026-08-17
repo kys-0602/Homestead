@@ -6,6 +6,8 @@
 
 namespace Homestead {
 
+class Input;
+
 class Window final {
 public:
     Window() = default;
@@ -14,7 +16,7 @@ public:
     Window(const Window&) = delete;
     Window& operator=(const Window&) = delete;
 
-    [[nodiscard]] bool Initialize(HINSTANCE instance, int showCommand) noexcept;
+    [[nodiscard]] bool Initialize(HINSTANCE instance, int showCommand, Input& input) noexcept;
     [[nodiscard]] bool ProcessMessages() noexcept;
     void Shutdown() noexcept;
 
@@ -30,11 +32,13 @@ private:
 
     HINSTANCE instance_ = nullptr;
     HWND handle_ = nullptr;
+    Input* input_ = nullptr;
     std::uint32_t clientWidth_ = 0;
     std::uint32_t clientHeight_ = 0;
     bool classRegistered_ = false;
     bool minimized_ = false;
     bool focused_ = false;
+    bool mouseTracking_ = false;
 };
 
 } // namespace Homestead

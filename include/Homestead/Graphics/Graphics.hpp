@@ -26,6 +26,7 @@ public:
         std::uint32_t clientHeight) noexcept;
     [[nodiscard]] bool Resize(std::uint32_t clientWidth, std::uint32_t clientHeight) noexcept;
     [[nodiscard]] bool Render() noexcept;
+    [[nodiscard]] bool SetTestSpriteState(float x, float y, bool alternateTint) noexcept;
     [[nodiscard]] bool ClientToLogical(
         std::int32_t clientX,
         std::int32_t clientY,
@@ -59,6 +60,9 @@ private:
     PresentationViewport presentationViewport_{};
     std::uint32_t clientWidth_ = 0;
     std::uint32_t clientHeight_ = 0;
+    float testSpriteX_ = 16.0F;
+    float testSpriteY_ = 16.0F;
+    bool testSpriteAlternateTint_ = false;
 };
 
 } // namespace Homestead

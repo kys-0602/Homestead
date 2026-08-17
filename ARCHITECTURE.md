@@ -97,8 +97,8 @@ private:
 게임 규칙은 60Hz 고정 스텝, 렌더링은 가변 프레임으로 처리한다. 이렇게 하면 이동, 충돌, 작물 타이머가 프레임 속도에 따라 달라지지 않는다.
 
 ```text
-Win32 메시지 처리
-→ Input::BeginFrame
+Input::BeginFrame
+→ Win32 메시지 처리
 → 실제 경과 시간 측정 및 과도한 delta 제한
 → accumulator에 delta 누적
 → while accumulator >= 1/60초
@@ -113,6 +113,7 @@ Win32 메시지 처리
 ```
 
 - 창 이동이나 디버거 정지 후 폭주하지 않도록 한 프레임의 `delta`를 제한한다.
+- 첫 구현은 fixed step을 60Hz, 한 프레임 delta 상한을 0.25초, 프레임당 fixed update 상한을 5회로 둔다. 상한 뒤에도 한 step 이상 남은 누적 시간은 버려 다음 프레임으로 update 폭주가 이어지지 않게 한다.
 - 일시정지는 월드 시뮬레이션만 멈추고 UI와 입력은 계속 갱신한다.
 - 게임 내 시각은 부동소수 누적값 대신 정수 tick 또는 게임 내 분 단위로 저장한다.
 - 렌더 보간이 필요하면 엔티티의 이전/현재 위치를 보관하고 `alpha`로 보간한다.
@@ -370,6 +371,8 @@ scene은 입력 차단, 아래 scene 업데이트 여부, 아래 scene 렌더 �
 - `released`: 이번 프레임에 해제
 
 게임은 키 코드 대신 `Action`을 읽는다. 고정 업데이트가 한 렌더 프레임에 여러 번 실행되어도 `pressed`가 중복 소비되지 않도록 command queue 또는 소비 플래그를 둔다. 포커스를 잃으면 모든 held 상태를 해제한다. 마우스 좌표는 논리 화면 좌표와 월드 좌표로 변환하고, letterbox 바깥 클릭은 무시한다. 게임패드와 XInput 코드는 포함하지 않는다.
+
+초기 키 매핑은 WASD/방향키 이동, E/Space/오른쪽 클릭 상호작용, F/왼쪽 클릭 도구 사용, Escape 메뉴다. 렌더 프레임의 `pressed`와 fixed update가 소비할 pending press를 분리해 fixed update가 없는 고주사율 프레임에서도 단발 입력을 잃지 않는다.
 
 ## 13. 오디오
 
