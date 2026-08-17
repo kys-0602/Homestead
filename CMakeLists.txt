@@ -26,8 +26,54 @@ endif()
 
 add_executable(Homestead WIN32 ${HOMESTEAD_SOURCES})
 
+get_filename_component(HOMESTEAD_WINDOWS_KITS_ROOT
+    "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots;KitsRoot10]"
+    ABSOLUTE
+)
+file(GLOB HOMESTEAD_FXC_CANDIDATES
+    "${HOMESTEAD_WINDOWS_KITS_ROOT}/bin/*/x64/fxc.exe"
+)
+list(SORT HOMESTEAD_FXC_CANDIDATES COMPARE NATURAL ORDER DESCENDING)
+if(NOT HOMESTEAD_FXC_CANDIDATES)
+    message(FATAL_ERROR "Windows SDK fxc.exe is required to build presentation shaders.")
+endif()
+list(GET HOMESTEAD_FXC_CANDIDATES 0 HOMESTEAD_FXC)
+
+set(HOMESTEAD_GENERATED_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated")
+set(HOMESTEAD_PRESENTATION_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/shaders/Presentation.hlsl")
+set(HOMESTEAD_PRESENTATION_VS "${HOMESTEAD_GENERATED_DIRECTORY}/PresentationVS.hpp")
+set(HOMESTEAD_PRESENTATION_PS "${HOMESTEAD_GENERATED_DIRECTORY}/PresentationPS.hpp")
+
+add_custom_command(
+    OUTPUT "${HOMESTEAD_PRESENTATION_VS}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${HOMESTEAD_GENERATED_DIRECTORY}"
+    COMMAND "${HOMESTEAD_FXC}" /nologo /T vs_5_0 /E VSMain /O3
+        /Qstrip_debug /Qstrip_reflect
+        /Fh "${HOMESTEAD_PRESENTATION_VS}" /Vn HomesteadPresentationVS
+        "${HOMESTEAD_PRESENTATION_SHADER}"
+    DEPENDS "${HOMESTEAD_PRESENTATION_SHADER}"
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT "${HOMESTEAD_PRESENTATION_PS}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${HOMESTEAD_GENERATED_DIRECTORY}"
+    COMMAND "${HOMESTEAD_FXC}" /nologo /T ps_5_0 /E PSMain /O3
+        /Qstrip_debug /Qstrip_reflect
+        /Fh "${HOMESTEAD_PRESENTATION_PS}" /Vn HomesteadPresentationPS
+        "${HOMESTEAD_PRESENTATION_SHADER}"
+    DEPENDS "${HOMESTEAD_PRESENTATION_SHADER}"
+    VERBATIM
+)
+
+add_custom_target(HomesteadShaders
+    DEPENDS "${HOMESTEAD_PRESENTATION_VS}" "${HOMESTEAD_PRESENTATION_PS}"
+)
+add_dependencies(Homestead HomesteadShaders)
+
 target_include_directories(Homestead PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${HOMESTEAD_GENERATED_DIRECTORY}"
 )
 
 target_compile_definitions(Homestead PRIVATE
@@ -64,6 +110,8 @@ add_custom_command(TARGET Homestead POST_BUILD
 )
 
 add_subdirectory(tools)
+enable_testing()
+add_subdirectory(tests)
 
 set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT Homestead)
 

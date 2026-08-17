@@ -1,5 +1,8 @@
 #include "Homestead/Graphics/Graphics.hpp"
 
+#include "PresentationPS.hpp"
+#include "PresentationVS.hpp"
+
 #if defined(HOMESTEAD_ENABLE_D3D_DEBUG)
 #include <d3d11sdklayers.h>
 #endif
@@ -15,7 +18,8 @@ void Release(Interface*& object) noexcept {
     }
 }
 
-constexpr float ClearColor[] = {0.08F, 0.16F, 0.10F, 1.0F};
+constexpr float SceneClearColor[] = {0.08F, 0.16F, 0.10F, 1.0F};
+constexpr float LetterboxColor[] = {0.0F, 0.0F, 0.0F, 1.0F};
 
 } // namespace
 
@@ -102,7 +106,8 @@ bool Graphics::Initialize(
 
     clientWidth_ = clientWidth;
     clientHeight_ = clientHeight;
-    if (!CreateBackBufferView()) {
+    presentationViewport_ = CalculatePresentationViewport(clientWidth, clientHeight);
+    if (!CreateBackBufferView() || !CreatePresentationResources()) {
         Shutdown();
         return false;
     }
@@ -134,15 +139,46 @@ bool Graphics::Resize(std::uint32_t clientWidth, std::uint32_t clientHeight) noe
 
     clientWidth_ = clientWidth;
     clientHeight_ = clientHeight;
+    presentationViewport_ = CalculatePresentationViewport(clientWidth, clientHeight);
     return CreateBackBufferView();
 }
 
 bool Graphics::Render() noexcept {
-    if (context_ == nullptr || swapChain_ == nullptr || backBufferView_ == nullptr) {
+    if (context_ == nullptr || swapChain_ == nullptr || backBufferView_ == nullptr ||
+        sceneTargetView_ == nullptr || sceneShaderView_ == nullptr || pointSampler_ == nullptr ||
+        presentationVertexShader_ == nullptr || presentationPixelShader_ == nullptr ||
+        presentationViewport_.width == 0 || presentationViewport_.height == 0) {
         return false;
     }
 
-    context_->ClearRenderTargetView(backBufferView_, ClearColor);
+    D3D11_VIEWPORT sceneViewport{};
+    sceneViewport.Width = static_cast<float>(LogicalWidth);
+    sceneViewport.Height = static_cast<float>(LogicalHeight);
+    sceneViewport.MaxDepth = 1.0F;
+    context_->RSSetViewports(1, &sceneViewport);
+    context_->OMSetRenderTargets(1, &sceneTargetView_, nullptr);
+    context_->ClearRenderTargetView(sceneTargetView_, SceneClearColor);
+
+    D3D11_VIEWPORT outputViewport{};
+    outputViewport.TopLeftX = static_cast<float>(presentationViewport_.x);
+    outputViewport.TopLeftY = static_cast<float>(presentationViewport_.y);
+    outputViewport.Width = static_cast<float>(presentationViewport_.width);
+    outputViewport.Height = static_cast<float>(presentationViewport_.height);
+    outputViewport.MaxDepth = 1.0F;
+    context_->RSSetViewports(1, &outputViewport);
+    context_->OMSetRenderTargets(1, &backBufferView_, nullptr);
+    context_->ClearRenderTargetView(backBufferView_, LetterboxColor);
+
+    context_->IASetInputLayout(nullptr);
+    context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    context_->VSSetShader(presentationVertexShader_, nullptr, 0);
+    context_->PSSetShader(presentationPixelShader_, nullptr, 0);
+    context_->PSSetSamplers(0, 1, &pointSampler_);
+    context_->PSSetShaderResources(0, 1, &sceneShaderView_);
+    context_->Draw(3, 0);
+
+    ID3D11ShaderResourceView* nullView = nullptr;
+    context_->PSSetShaderResources(0, 1, &nullView);
 
     const HRESULT presentResult = swapChain_->Present(1, 0);
     if (presentResult == DXGI_STATUS_OCCLUDED) {
@@ -150,6 +186,19 @@ bool Graphics::Render() noexcept {
     }
 
     return SUCCEEDED(presentResult);
+}
+
+bool Graphics::ClientToLogical(
+    std::int32_t clientX,
+    std::int32_t clientY,
+    std::uint32_t& logicalX,
+    std::uint32_t& logicalY) const noexcept {
+    return Homestead::ClientToLogical(
+        presentationViewport_,
+        clientX,
+        clientY,
+        logicalX,
+        logicalY);
 }
 
 void Graphics::Shutdown() noexcept {
@@ -160,6 +209,7 @@ void Graphics::Shutdown() noexcept {
     }
 
     ReleaseBackBufferView();
+    ReleasePresentationResources();
     Release(swapChain_);
     Release(context_);
 
@@ -178,6 +228,7 @@ void Graphics::Shutdown() noexcept {
 
     clientWidth_ = 0;
     clientHeight_ = 0;
+    presentationViewport_ = {};
 }
 
 bool Graphics::CreateBackBufferView() noexcept {
@@ -195,8 +246,60 @@ bool Graphics::CreateBackBufferView() noexcept {
     return SUCCEEDED(viewResult);
 }
 
+bool Graphics::CreatePresentationResources() noexcept {
+    D3D11_TEXTURE2D_DESC textureDescription{};
+    textureDescription.Width = LogicalWidth;
+    textureDescription.Height = LogicalHeight;
+    textureDescription.MipLevels = 1;
+    textureDescription.ArraySize = 1;
+    textureDescription.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    textureDescription.SampleDesc.Count = 1;
+    textureDescription.Usage = D3D11_USAGE_DEFAULT;
+    textureDescription.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+
+    if (FAILED(device_->CreateTexture2D(&textureDescription, nullptr, &sceneTexture_)) ||
+        FAILED(device_->CreateRenderTargetView(sceneTexture_, nullptr, &sceneTargetView_)) ||
+        FAILED(device_->CreateShaderResourceView(sceneTexture_, nullptr, &sceneShaderView_))) {
+        return false;
+    }
+
+    D3D11_SAMPLER_DESC samplerDescription{};
+    samplerDescription.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+    samplerDescription.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDescription.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDescription.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDescription.MaxLOD = D3D11_FLOAT32_MAX;
+    if (FAILED(device_->CreateSamplerState(&samplerDescription, &pointSampler_))) {
+        return false;
+    }
+
+    if (FAILED(device_->CreateVertexShader(
+            HomesteadPresentationVS,
+            sizeof(HomesteadPresentationVS),
+            nullptr,
+            &presentationVertexShader_)) ||
+        FAILED(device_->CreatePixelShader(
+            HomesteadPresentationPS,
+            sizeof(HomesteadPresentationPS),
+            nullptr,
+            &presentationPixelShader_))) {
+        return false;
+    }
+
+    return true;
+}
+
 void Graphics::ReleaseBackBufferView() noexcept {
     Release(backBufferView_);
+}
+
+void Graphics::ReleasePresentationResources() noexcept {
+    Release(presentationPixelShader_);
+    Release(presentationVertexShader_);
+    Release(pointSampler_);
+    Release(sceneShaderView_);
+    Release(sceneTargetView_);
+    Release(sceneTexture_);
 }
 
 } // namespace Homestead
