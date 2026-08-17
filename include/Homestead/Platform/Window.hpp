@@ -1,0 +1,40 @@
+#pragma once
+
+#include <Windows.h>
+
+#include <cstdint>
+
+namespace Homestead {
+
+class Window final {
+public:
+    Window() = default;
+    ~Window() noexcept;
+
+    Window(const Window&) = delete;
+    Window& operator=(const Window&) = delete;
+
+    [[nodiscard]] bool Initialize(HINSTANCE instance, int showCommand) noexcept;
+    [[nodiscard]] bool ProcessMessages() noexcept;
+    void Shutdown() noexcept;
+
+    [[nodiscard]] HWND Handle() const noexcept { return handle_; }
+    [[nodiscard]] std::uint32_t ClientWidth() const noexcept { return clientWidth_; }
+    [[nodiscard]] std::uint32_t ClientHeight() const noexcept { return clientHeight_; }
+    [[nodiscard]] bool IsMinimized() const noexcept { return minimized_; }
+    [[nodiscard]] bool HasFocus() const noexcept { return focused_; }
+
+private:
+    static LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
+    LRESULT HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) noexcept;
+
+    HINSTANCE instance_ = nullptr;
+    HWND handle_ = nullptr;
+    std::uint32_t clientWidth_ = 0;
+    std::uint32_t clientHeight_ = 0;
+    bool classRegistered_ = false;
+    bool minimized_ = false;
+    bool focused_ = false;
+};
+
+} // namespace Homestead
