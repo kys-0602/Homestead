@@ -133,9 +133,14 @@ LRESULT Window::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) noexce
         return 0;
 
     case WM_DESTROY:
-        handle_ = nullptr;
         PostQuitMessage(0);
         return 0;
+
+    case WM_NCDESTROY: {
+        const LRESULT result = DefWindowProcW(handle_, message, wParam, lParam);
+        handle_ = nullptr;
+        return result;
+    }
 
     case WM_SIZE:
         clientWidth_ = static_cast<std::uint32_t>(LOWORD(lParam));
