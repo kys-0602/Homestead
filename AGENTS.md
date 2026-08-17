@@ -20,6 +20,7 @@ Read the following documents before making architectural or implementation chang
 2. `IMPLEMENTATION_ROADMAP.md` — implementation order and completion criteria
 3. `CMAKE_BUILD_GUIDE.md` — supported local build workflow
 4. `Questions.md` — product decisions and the user's original answers
+5. `DEVELOPMENT_PROGRESS.md` — completed work, verification history, size measurements, and the next unfinished stage
 
 When the documents conflict, use this priority:
 
@@ -322,6 +323,21 @@ If GUI execution cannot be observed in the current environment, still build and 
 - Update `ARCHITECTURE.md` when a lasting architectural decision changes.
 - Update `IMPLEMENTATION_ROADMAP.md` only when scope, order, or completion criteria change—not merely to mark informal progress.
 - Add a more specific nested `AGENTS.md` only when a subsystem genuinely needs different rules.
+
+## Progress Recording
+
+Update `DEVELOPMENT_PROGRESS.md` whenever a roadmap-stage task or other material implementation task is completed. Do this as part of the same change rather than leaving the record for a later cleanup pass.
+
+Record at minimum:
+
+1. What was implemented and the resulting stage status.
+2. Automated, build, and GUI verification performed.
+3. Any manual or environment-dependent verification still pending.
+4. Release sizes for `Homestead.exe`, `data.pak`, and the representative save when each exists.
+5. Size change from the previous recorded state, total submitted size, and bytes remaining under the limit.
+6. The next unfinished roadmap stage or concrete follow-up task.
+
+After the work is merged, update the record with the canonical `main` commit or PR number at the next opportunity. Do not use `IMPLEMENTATION_ROADMAP.md` as a progress checklist; it remains the source for scope, order, and completion criteria.
 
 ## Definition of Done
 
