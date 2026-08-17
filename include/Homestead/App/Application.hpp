@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 
+#include "Homestead/Graphics/Graphics.hpp"
 #include "Homestead/Platform/Clock.hpp"
 #include "Homestead/Platform/Window.hpp"
 
@@ -22,6 +23,7 @@ public:
 private:
     Window window_;
     Clock clock_;
+    Graphics graphics_;
     bool initialized_ = false;
 };
 

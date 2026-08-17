@@ -21,6 +21,14 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         return false;
     }
 
+    if (!graphics_.Initialize(
+            window_.Handle(),
+            window_.ClientWidth(),
+            window_.ClientHeight())) {
+        window_.Shutdown();
+        return false;
+    }
+
     initialized_ = true;
     return true;
 }
@@ -32,7 +40,16 @@ int Application::Run() noexcept {
 
     while (window_.ProcessMessages()) {
         [[maybe_unused]] const double deltaSeconds = clock_.Tick();
-        Sleep(1);
+
+        if (window_.IsMinimized()) {
+            Sleep(16);
+            continue;
+        }
+
+        if (!graphics_.Resize(window_.ClientWidth(), window_.ClientHeight()) ||
+            !graphics_.Render()) {
+            return 1;
+        }
     }
 
     return 0;
@@ -43,6 +60,7 @@ void Application::Shutdown() noexcept {
         return;
     }
 
+    graphics_.Shutdown();
     window_.Shutdown();
     initialized_ = false;
 }

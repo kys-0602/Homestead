@@ -53,7 +53,6 @@ target_link_options(Homestead PRIVATE
 target_link_libraries(Homestead PRIVATE
     d3d11
     dxgi
-    d3dcompiler
 )
 
 add_custom_command(TARGET Homestead POST_BUILD
