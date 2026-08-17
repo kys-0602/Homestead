@@ -143,7 +143,13 @@ bool Graphics::Render() noexcept {
     }
 
     context_->ClearRenderTargetView(backBufferView_, ClearColor);
-    return SUCCEEDED(swapChain_->Present(1, 0));
+
+    const HRESULT presentResult = swapChain_->Present(1, 0);
+    if (presentResult == DXGI_STATUS_OCCLUDED) {
+        return true;
+    }
+
+    return SUCCEEDED(presentResult);
 }
 
 void Graphics::Shutdown() noexcept {
