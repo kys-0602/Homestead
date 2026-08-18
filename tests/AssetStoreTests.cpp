@@ -204,5 +204,16 @@ int main() {
     if (Loads(damaged)) {
         return 10;
     }
+    damaged = valid;
+    SetU32(damaged, 16, 81);
+    if (Loads(damaged)) {
+        return 11;
+    }
+    damaged = valid;
+    SetU32(damaged, atlasEntry + 8U, ReadU32(damaged, atlasEntry + 8U) + 1U);
+    RefreshGlobalChecksum(damaged);
+    if (Loads(damaged)) {
+        return 12;
+    }
     return 0;
 }
