@@ -65,3 +65,6 @@ MinSizeRel/
 Thumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+
+# Licensed source art must remain local and is never part of the repository.
+/assets-src/Character/
