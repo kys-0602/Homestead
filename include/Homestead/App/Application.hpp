@@ -2,7 +2,9 @@
 
 #include <Windows.h>
 
+#include "Homestead/Core/FixedStep.hpp"
 #include "Homestead/Graphics/Graphics.hpp"
+#include "Homestead/Input/Input.hpp"
 #include "Homestead/Platform/Clock.hpp"
 #include "Homestead/Platform/Window.hpp"
 
@@ -21,9 +23,16 @@ public:
     void Shutdown() noexcept;
 
 private:
+    [[nodiscard]] bool FixedUpdate() noexcept;
+
     Window window_;
     Clock clock_;
     Graphics graphics_;
+    Input input_;
+    FixedStepController fixedStep_;
+    float testSpriteX_ = 16.0F;
+    float testSpriteY_ = 16.0F;
+    bool testSpriteAlternateTint_ = false;
     bool initialized_ = false;
 };
 

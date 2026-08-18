@@ -2,6 +2,12 @@
 
 #include <Windows.h>
 
+#include <algorithm>
+#include <cstdint>
+
+#include "Homestead/Graphics/Presentation.hpp"
+#include "Homestead/Input/Action.hpp"
+
 namespace Homestead {
 
 Application::~Application() noexcept {
@@ -17,7 +23,7 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         return false;
     }
 
-    if (!window_.Initialize(instance, showCommand)) {
+    if (!window_.Initialize(instance, showCommand, input_)) {
         return false;
     }
 
@@ -38,21 +44,90 @@ int Application::Run() noexcept {
         return 1;
     }
 
-    while (window_.ProcessMessages()) {
-        [[maybe_unused]] const double deltaSeconds = clock_.Tick();
+    for (;;) {
+        input_.BeginFrame();
+        if (!window_.ProcessMessages()) {
+            break;
+        }
+
+        std::uint32_t logicalMouseX = 0;
+        std::uint32_t logicalMouseY = 0;
+        const double deltaSeconds = clock_.Tick();
 
         if (window_.IsMinimized()) {
+            fixedStep_.Reset();
             Sleep(16);
             continue;
         }
 
-        if (!graphics_.Resize(window_.ClientWidth(), window_.ClientHeight()) ||
-            !graphics_.Render()) {
+        if (!graphics_.Resize(window_.ClientWidth(), window_.ClientHeight())) {
+            return 1;
+        }
+
+        const bool logicalMouseValid = graphics_.ClientToLogical(
+            input_.ClientMouseX(),
+            input_.ClientMouseY(),
+            logicalMouseX,
+            logicalMouseY);
+        input_.SetLogicalMouse(logicalMouseX, logicalMouseY, logicalMouseValid);
+
+        const FixedStepFrame fixedFrame = fixedStep_.Advance(deltaSeconds);
+        for (std::uint32_t step = 0; step < fixedFrame.steps; ++step) {
+            if (!FixedUpdate()) {
+                return 1;
+            }
+        }
+
+        if (!graphics_.Render()) {
             return 1;
         }
     }
 
     return 0;
+}
+
+bool Application::FixedUpdate() noexcept {
+    constexpr float movementPerStep =
+        60.0F * static_cast<float>(FixedStepController::StepSeconds);
+    constexpr float spriteSize = 48.0F;
+
+    if (input_.Held(Action::MoveLeft)) {
+        testSpriteX_ -= movementPerStep;
+    }
+    if (input_.Held(Action::MoveRight)) {
+        testSpriteX_ += movementPerStep;
+    }
+    if (input_.Held(Action::MoveUp)) {
+        testSpriteY_ -= movementPerStep;
+    }
+    if (input_.Held(Action::MoveDown)) {
+        testSpriteY_ += movementPerStep;
+    }
+
+    const bool toggleTint = input_.ConsumePressed(Action::Interact);
+    const bool useTool = input_.ConsumePressed(Action::UseTool);
+    [[maybe_unused]] const bool menuPressed = input_.ConsumePressed(Action::Menu);
+    if (toggleTint) {
+        testSpriteAlternateTint_ = !testSpriteAlternateTint_;
+    }
+    if (useTool && input_.IsLogicalMouseValid()) {
+        testSpriteX_ = static_cast<float>(input_.LogicalMouseX()) - spriteSize * 0.5F;
+        testSpriteY_ = static_cast<float>(input_.LogicalMouseY()) - spriteSize * 0.5F;
+    }
+
+    testSpriteX_ = std::clamp(
+        testSpriteX_,
+        0.0F,
+        static_cast<float>(LogicalWidth) - spriteSize);
+    testSpriteY_ = std::clamp(
+        testSpriteY_,
+        0.0F,
+        static_cast<float>(LogicalHeight) - spriteSize);
+
+    return graphics_.SetTestSpriteState(
+        testSpriteX_,
+        testSpriteY_,
+        testSpriteAlternateTint_);
 }
 
 void Application::Shutdown() noexcept {
@@ -62,6 +137,7 @@ void Application::Shutdown() noexcept {
 
     graphics_.Shutdown();
     window_.Shutdown();
+    fixedStep_.Reset();
     initialized_ = false;
 }
 
