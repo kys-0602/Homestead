@@ -203,6 +203,7 @@ LRESULT Window::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) noexce
     }
 
     case WM_LBUTTONDOWN:
+        SetCapture(handle_);
         input_->SetClientMouse(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         input_->SetPhysicalKey(PhysicalKey::MouseLeft, true);
         return 0;
@@ -210,9 +211,13 @@ LRESULT Window::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) noexce
     case WM_LBUTTONUP:
         input_->SetClientMouse(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         input_->SetPhysicalKey(PhysicalKey::MouseLeft, false);
+        if (GetCapture() == handle_ && (wParam & MK_RBUTTON) == 0) {
+            ReleaseCapture();
+        }
         return 0;
 
     case WM_RBUTTONDOWN:
+        SetCapture(handle_);
         input_->SetClientMouse(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         input_->SetPhysicalKey(PhysicalKey::MouseRight, true);
         return 0;
@@ -220,6 +225,9 @@ LRESULT Window::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) noexce
     case WM_RBUTTONUP:
         input_->SetClientMouse(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         input_->SetPhysicalKey(PhysicalKey::MouseRight, false);
+        if (GetCapture() == handle_ && (wParam & MK_LBUTTON) == 0) {
+            ReleaseCapture();
+        }
         return 0;
 
     case WM_MOUSEMOVE:
