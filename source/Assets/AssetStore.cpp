@@ -109,7 +109,8 @@ bool AssetStore::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept
         const std::uint32_t rawSize = ReadU32(entry + 16);
         const std::uint32_t checksum = ReadU32(entry + 20);
         if ((index != 0 && view.id <= previousId) || flags != 0 || view.size == 0 ||
-            rawSize != view.size || view.offset < payloadOffset ||
+            rawSize != view.size || (view.offset & 3U) != 0U ||
+            view.offset < payloadOffset ||
             !HasRange(size, view.offset, view.size) ||
             checksum != Checksum(data + view.offset, view.size)) {
             return false;
