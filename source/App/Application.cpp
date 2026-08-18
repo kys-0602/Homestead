@@ -52,13 +52,6 @@ int Application::Run() noexcept {
 
         std::uint32_t logicalMouseX = 0;
         std::uint32_t logicalMouseY = 0;
-        const bool logicalMouseValid = graphics_.ClientToLogical(
-            input_.ClientMouseX(),
-            input_.ClientMouseY(),
-            logicalMouseX,
-            logicalMouseY);
-        input_.SetLogicalMouse(logicalMouseX, logicalMouseY, logicalMouseValid);
-
         const double deltaSeconds = clock_.Tick();
 
         if (window_.IsMinimized()) {
@@ -67,6 +60,17 @@ int Application::Run() noexcept {
             continue;
         }
 
+        if (!graphics_.Resize(window_.ClientWidth(), window_.ClientHeight())) {
+            return 1;
+        }
+
+        const bool logicalMouseValid = graphics_.ClientToLogical(
+            input_.ClientMouseX(),
+            input_.ClientMouseY(),
+            logicalMouseX,
+            logicalMouseY);
+        input_.SetLogicalMouse(logicalMouseX, logicalMouseY, logicalMouseValid);
+
         const FixedStepFrame fixedFrame = fixedStep_.Advance(deltaSeconds);
         for (std::uint32_t step = 0; step < fixedFrame.steps; ++step) {
             if (!FixedUpdate()) {
@@ -74,8 +78,7 @@ int Application::Run() noexcept {
             }
         }
 
-        if (!graphics_.Resize(window_.ClientWidth(), window_.ClientHeight()) ||
-            !graphics_.Render()) {
+        if (!graphics_.Render()) {
             return 1;
         }
     }
