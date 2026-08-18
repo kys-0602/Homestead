@@ -225,7 +225,12 @@ bool BuildAtlas(
             error = "cannot parse static sprite while building atlas";
             return false;
         }
-        const Source& source = sources.at(fields[1]);
+        const auto sourceIt = sources.find(fields[1]);
+        if (sourceIt == sources.end()) {
+            error = "unknown atlas source " + fields[1];
+            return false;
+        }
+        const Source& source = sourceIt->second;
         Image* image = nullptr;
         if (!GetImage(fields[1], sources, images, image, error)) {
             return false;
