@@ -4,15 +4,15 @@
 
 ## 현재 상태
 
-- 마지막 갱신: 2026-08-17
-- 현재 완료 범위: 단계 0~5 구현
-- 다음 작업: 단계 6 `에셋 패커의 최소 버전`
+- 마지막 갱신: 2026-08-18
+- 현재 완료 범위: 단계 0~6 구현
+- 다음 작업: 단계 7 `카메라와 타일맵`
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `26,112 bytes`
-- 현재 `data.pak`: 없음
+- 현재 Release EXE: `33,280 bytes`
+- 현재 `data.pak`: `83,560 bytes`
 - 현재 대표 save: 없음
-- 현재 합계: `26,112 bytes`
-- 남은 공간: `1,448,448 bytes`
+- 현재 합계: `116,840 bytes`
+- 남은 공간: `1,357,720 bytes`
 
 ## 단계별 기록
 
@@ -24,6 +24,7 @@
 | 3. 고정 논리 화면과 letterbox | 구현 완료, Debug Layer 검증 대기 | `7559bae` (#6) | 15,872 bytes | +2,048 bytes |
 | 4. 최소 SpriteBatch | 구현 완료, Debug Layer 검증 대기 | `11d8f09` (#8) | 22,528 bytes | +6,656 bytes |
 | 5. 입력과 고정 업데이트 루프 | 완료 | 병합 대기 | 26,112 bytes | +3,584 bytes |
+| 6. 에셋 패커의 최소 버전 | 구현 완료, 시각/D3D 검증 대기 | 병합 대기 | 33,280 bytes | +7,168 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -169,19 +170,58 @@
 - 실제 게임 상태가 추가될 때 `InputSnapshot` 또는 동등한 읽기 전용 경계로 Input과 Game 의존성을 분리
 - Graphics Tools 설치 후 기존 D3D11 validation/live-object 검증 수행
 
-## 다음 작업: 단계 6
+### 단계 6: 에셋 패커의 최소 버전
+
+구현:
+
+- 구매 원본을 Git에서 제외하고 추적 가능한 source/sprite/player-frame manifest 작성
+- 29개 허용 source, 30개 정적 sprite 영역, 57개 플레이어 프레임 검증
+- WIC 기반 개발 전용 PNG 디코딩과 플레이어/의상/도구 레이어 합성
+- 투명 경계 트리밍, 동일 픽셀 중복 제거와 결정적 atlas 배치
+- 87개 논리 sprite를 73개 고유 영역과 79색 palette atlas로 변환
+- 안정적인 32-bit `AssetId`와 패커 충돌 검사
+- version 1 `data.pak` header/index/payload, 전체 및 항목별 checksum
+- 런타임 `AssetStore`의 pak/atlas/sprite table 검증과 D3D11 atlas texture 생성
+- CMake 빌드에서 pak 생성 후 실행 파일 옆 자동 복사
+
+검증:
+
+- Debug/Release `/W4` build 성공
+- presentation, RenderQueue, Input, FixedStep, manifest, AssetStore 테스트 6개 통과
+- bad magic, unsupported version, truncated file, checksum 변조, invalid/overlapping offset,
+  excessive entry count, invalid stable ID와 palette index 범위 초과 거부 확인
+- palette atlas의 RGBA 무손실 복원 확인
+- 반복 생성한 atlas metadata/pixels와 `data.pak` SHA-256 일치
+- Debug 앱이 실제 pak과 atlas texture를 로드한 상태로 2초 이상 실행됨
+- Release `Homestead.exe`: `33,280 bytes` (단계 5 대비 `+7,168 bytes`)
+- `data.pak`: `83,560 bytes`
+- 대표 save: 없음
+- 제출 합계: `116,840 bytes`; 상한까지 `1,357,720 bytes`
+
+선별 콘텐츠:
+
+- 기본 농부 idle/walk/hoe/watering, 괭이와 물뿌리개
+- 잔디, 길, 건조/젖은 농지, 당근 성장/수확
+- 농가, 큰 참나무, 최소 울타리/꽃/허수아비/표지판
+- 5x7 bitmap font와 pointer frame
+- 큰 UI sheet는 source allowlist에만 두고 실제 영역 선택은 단계 14로 연기
+
+남은 확인:
+
+- 실제 표시 창에서 atlas sprite의 색, 투명도, pixel 경계와 point sampling 수동 확인
+- Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
+
+## 다음 작업: 단계 7
 
 `IMPLEMENTATION_ROADMAP.md`에 따라 다음 범위만 진행한다.
 
-- 별도 `AssetPacker` target과 원본 이미지/메타데이터 입력
-- 필요한 16×16 에셋 선별, 중복 및 투명 영역 제거, palette 축소
-- sprite/font atlas 생성과 안정적인 `AssetId` 충돌 검사
-- versioned `data.pak` header/index/payload 작성
-- 런타임 `AssetStore`의 pak 검증과 texture 생성
-- 동일 입력의 deterministic pak 출력
-- 잘못된 magic/version/offset에 대한 parser 테스트
+- `Camera2D`의 world/screen 변환과 visible bounds
+- 고정 크기 `TileMap` 데이터와 범위 안전 접근
+- ground/object/collision layer의 compact tile ID와 flag
+- 보이는 tile만 `RenderQueue`에 제출하는 최소 renderer
+- 현재 선택한 atlas sprite ID를 사용하는 테스트 farm map
 
-단계 6에서는 `Homestead.exe`와 새 `data.pak` 크기, 실제 선별 에셋 목록과 전체 남은 byte를 기록한다.
+단계 7에서도 Release EXE와 `data.pak` 크기 및 전체 남은 byte를 기록한다.
 
 ## 기록 갱신 규칙
 

@@ -1,0 +1,30 @@
+name	path	x	y	width	height
+player.base	Player/Player_Base/Player_Base_animations.png	0	0	576	3584
+player.hair	Player/Head/Hair_1/Hair_1_Brown.png	0	0	576	3584
+player.shirt	Player/Chest/Farmer_Shirt/Farmer_Shirt_1_White_and_Brown.png	0	0	576	3584
+player.pants	Player/Legs/Farmer_Pants/Farmer_Pants_1_White_and_Brown.png	0	0	576	3584
+player.shoes	Player/Feet/Shoes_1_Brown.png	0	0	576	3584
+tools.iron	Player/Tools/Iron/Iron_Tools.png	0	0	384	768
+tiles.grass	Tiles/Grass/Grass_1_Middle.png	0	0	16	16
+tiles.path.base	Tiles/Grass/Path_Middle.png	0	0	16	16
+tiles.path.decor	Tiles/Grass/Path_Decoration.png	0	0	48	16
+tiles.farmland.dry	Tiles/FarmLand/FarmLand_Tile.png	0	0	112	128
+tiles.farmland.wet	Tiles/FarmLand/FarmLand_Wet_Tile.png	0	0	112	128
+crops.sheet	Crops/Crops.png	0	0	112	704
+building.farmhouse	Buildings/Buildings/Houses/Wood/House_1_Wood_Green_Red.png	0	0	96	128
+trees.oak.small	Trees/Small_Oak_Tree.png	0	0	96	64
+trees.oak.medium	Trees/Medium_Oak_Tree.png	0	0	96	48
+trees.oak.big	Trees/Big_Oak_Tree.png	0	0	192	80
+decor.fences	Outdoor decoration/Fences.png	0	0	64	64
+decor.flowers	Outdoor decoration/Flowers.png	0	0	160	160
+decor.scarecrows	Outdoor decoration/Scarecrows.png	0	0	160	32
+decor.signs	Outdoor decoration/Signs.png	0	0	96	528
+icons.tools	Icons/Outline/Tool_Icons_Outline.png	0	0	160	16
+font.small	UI/Cute_Fantasy_Font_5x7.png	0	0	135	35
+ui.pointer	UI/Pointer_Click_Anim.png	0	0	64	16
+ui.inventory	UI/UI_Premade.png	0	0	512	256
+ui.popup	UI/UI_Pop_Up.png	0	0	96	96
+ui.bars	UI/UI_Bars.png	0	0	304	128
+ui.button_icons	UI/UI_Button_Icons.png	0	0	496	224
+ui.selectors	UI/UI_Selectors.png	0	0	192	960
+ui.sliders	UI/UI_Sliders.png	0	0	608	160

@@ -3,8 +3,6 @@
 #include "PresentationPS.hpp"
 #include "PresentationVS.hpp"
 
-#include <array>
-
 #if defined(HOMESTEAD_ENABLE_D3D_DEBUG)
 #include <d3d11sdklayers.h>
 #endif
@@ -32,7 +30,8 @@ Graphics::~Graphics() noexcept {
 bool Graphics::Initialize(
     HWND window,
     std::uint32_t clientWidth,
-    std::uint32_t clientHeight) noexcept {
+    std::uint32_t clientHeight,
+    const AssetStore& assets) noexcept {
     if (device_ != nullptr) {
         return true;
     }
@@ -112,7 +111,7 @@ bool Graphics::Initialize(
     if (!CreateBackBufferView() ||
         !CreatePresentationResources() ||
         !spriteBatch_.Initialize(device_, context_) ||
-        !CreateTestTexture() ||
+        !CreateTestTexture(assets) ||
         !BuildTestRenderQueue()) {
         Shutdown();
         return false;
@@ -164,7 +163,8 @@ bool Graphics::Render() noexcept {
     context_->RSSetViewports(1, &sceneViewport);
     context_->OMSetRenderTargets(1, &sceneTargetView_, nullptr);
     context_->ClearRenderTargetView(sceneTargetView_, SceneClearColor);
-    if (!spriteBatch_.Render(renderQueue_, testTextureView_, 16, 16, 0)) {
+    if (!spriteBatch_.Render(
+            renderQueue_, testTextureView_, testTextureWidth_, testTextureHeight_, 0)) {
         return false;
     }
 
@@ -250,6 +250,9 @@ void Graphics::Shutdown() noexcept {
     testSpriteX_ = 16.0F;
     testSpriteY_ = 16.0F;
     testSpriteAlternateTint_ = false;
+    testSpriteAsset_ = {};
+    testTextureWidth_ = 0;
+    testTextureHeight_ = 0;
 }
 
 bool Graphics::CreateBackBufferView() noexcept {
@@ -310,23 +313,19 @@ bool Graphics::CreatePresentationResources() noexcept {
     return true;
 }
 
-bool Graphics::CreateTestTexture() noexcept {
-    constexpr std::uint16_t textureWidth = 16;
-    constexpr std::uint16_t textureHeight = 16;
-    std::array<std::uint32_t, textureWidth * textureHeight> pixels{};
-    for (std::uint16_t y = 0; y < textureHeight; ++y) {
-        for (std::uint16_t x = 0; x < textureWidth; ++x) {
-            const bool border = x < 2 || y < 2 || x >= 14 || y >= 14;
-            const bool checker = ((x / 4) + (y / 4)) % 2 == 0;
-            const std::uint32_t alpha = border ? 0U : (checker ? 255U : 160U);
-            pixels[static_cast<std::size_t>(y) * textureWidth + x] =
-                (alpha << 24U) | 0x00FFFFFFU;
-        }
+bool Graphics::CreateTestTexture(const AssetStore& assets) noexcept {
+    const SpriteAsset* grass = assets.FindSprite(MakeAssetId("terrain.grass"));
+    if (grass == nullptr || assets.AtlasPixels() == nullptr ||
+        assets.AtlasWidth() == 0 || assets.AtlasHeight() == 0) {
+        return false;
     }
+    testSpriteAsset_ = *grass;
+    testTextureWidth_ = assets.AtlasWidth();
+    testTextureHeight_ = assets.AtlasHeight();
 
     D3D11_TEXTURE2D_DESC description{};
-    description.Width = textureWidth;
-    description.Height = textureHeight;
+    description.Width = testTextureWidth_;
+    description.Height = testTextureHeight_;
     description.MipLevels = 1;
     description.ArraySize = 1;
     description.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -335,8 +334,8 @@ bool Graphics::CreateTestTexture() noexcept {
     description.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 
     D3D11_SUBRESOURCE_DATA data{};
-    data.pSysMem = pixels.data();
-    data.SysMemPitch = textureWidth * sizeof(std::uint32_t);
+    data.pSysMem = assets.AtlasPixels();
+    data.SysMemPitch = testTextureWidth_ * 4U;
     if (FAILED(device_->CreateTexture2D(&description, &data, &testTexture_)) ||
         FAILED(device_->CreateShaderResourceView(testTexture_, nullptr, &testTextureView_))) {
         return false;
@@ -353,8 +352,10 @@ bool Graphics::BuildTestRenderQueue() noexcept {
     command.y = testSpriteY_;
     command.width = 48.0F;
     command.height = 48.0F;
-    command.uvWidth = 16;
-    command.uvHeight = 16;
+    command.uvX = testSpriteAsset_.x;
+    command.uvY = testSpriteAsset_.y;
+    command.uvWidth = testSpriteAsset_.width;
+    command.uvHeight = testSpriteAsset_.height;
     command.color = testSpriteAlternateTint_ ? 0xFFFFA060U : 0xFFFFFFFFU;
     command.layer = SpriteLayer::Ground;
     if (!renderQueue_.Add(command)) {

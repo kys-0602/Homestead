@@ -4,11 +4,32 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <iterator>
 
 #include "Homestead/Graphics/Presentation.hpp"
 #include "Homestead/Input/Action.hpp"
 
 namespace Homestead {
+namespace {
+
+bool GetPakPath(wchar_t (&path)[MAX_PATH]) noexcept {
+    const DWORD length = GetModuleFileNameW(nullptr, path, MAX_PATH);
+    if (length == 0 || length >= MAX_PATH) {
+        return false;
+    }
+    wchar_t* separator = path + length;
+    while (separator != path && separator[-1] != L'\\') {
+        --separator;
+    }
+    constexpr wchar_t fileName[] = L"data.pak";
+    if (static_cast<std::size_t>(separator - path) + std::size(fileName) > MAX_PATH) {
+        return false;
+    }
+    std::copy(std::begin(fileName), std::end(fileName), separator);
+    return true;
+}
+
+} // namespace
 
 Application::~Application() noexcept {
     Shutdown();
@@ -27,10 +48,18 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         return false;
     }
 
+    wchar_t pakPath[MAX_PATH]{};
+    if (!GetPakPath(pakPath) || !assets_.LoadFile(pakPath)) {
+        window_.Shutdown();
+        return false;
+    }
+
     if (!graphics_.Initialize(
             window_.Handle(),
             window_.ClientWidth(),
-            window_.ClientHeight())) {
+            window_.ClientHeight(),
+            assets_)) {
+        assets_.Clear();
         window_.Shutdown();
         return false;
     }
@@ -136,6 +165,7 @@ void Application::Shutdown() noexcept {
     }
 
     graphics_.Shutdown();
+    assets_.Clear();
     window_.Shutdown();
     fixedStep_.Reset();
     initialized_ = false;

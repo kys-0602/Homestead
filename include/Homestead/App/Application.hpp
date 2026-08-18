@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 
+#include "Homestead/Assets/AssetStore.hpp"
 #include "Homestead/Core/FixedStep.hpp"
 #include "Homestead/Graphics/Graphics.hpp"
 #include "Homestead/Input/Input.hpp"
@@ -27,6 +28,7 @@ private:
 
     Window window_;
     Clock clock_;
+    AssetStore assets_;
     Graphics graphics_;
     Input input_;
     FixedStepController fixedStep_;
