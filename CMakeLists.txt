@@ -139,6 +139,37 @@ add_custom_command(TARGET Homestead POST_BUILD
 )
 
 add_subdirectory(tools)
+
+file(GLOB_RECURSE HOMESTEAD_ASSET_SOURCE_FILES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets-src/*.png"
+)
+if(HOMESTEAD_ASSET_SOURCE_FILES)
+    set(HOMESTEAD_ASSET_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated-assets")
+    set(HOMESTEAD_DATA_PAK "${HOMESTEAD_ASSET_OUTPUT_DIRECTORY}/data.pak")
+    add_custom_command(
+        OUTPUT "${HOMESTEAD_DATA_PAK}"
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${HOMESTEAD_ASSET_OUTPUT_DIRECTORY}"
+        COMMAND $<TARGET_FILE:AssetPacker>
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets-src"
+            "${HOMESTEAD_ASSET_OUTPUT_DIRECTORY}"
+        DEPENDS
+            AssetPacker
+            ${HOMESTEAD_ASSET_SOURCE_FILES}
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets-src/manifest.tsv"
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets-src/sprites.tsv"
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets-src/player-frames.tsv"
+        VERBATIM
+    )
+    add_custom_target(HomesteadAssets ALL DEPENDS "${HOMESTEAD_DATA_PAK}")
+    add_dependencies(Homestead HomesteadAssets)
+    add_custom_command(TARGET Homestead POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+            "${HOMESTEAD_DATA_PAK}"
+            "$<TARGET_FILE_DIR:Homestead>/data.pak"
+        VERBATIM
+    )
+endif()
+
 enable_testing()
 add_subdirectory(tests)
 

@@ -57,3 +57,35 @@ target_compile_options(HomesteadFixedStepTests PRIVATE
 )
 
 add_test(NAME HomesteadFixedStepTests COMMAND HomesteadFixedStepTests)
+
+add_executable(HomesteadAssetManifestTests
+    AssetManifestTests.cpp
+)
+
+target_link_libraries(HomesteadAssetManifestTests PRIVATE HomesteadAssetManifest)
+
+target_compile_options(HomesteadAssetManifestTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+
+add_test(NAME HomesteadAssetManifestTests COMMAND HomesteadAssetManifestTests)
+
+add_executable(HomesteadAssetStoreTests
+    AssetStoreTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Assets/AssetStore.cpp"
+)
+
+target_include_directories(HomesteadAssetStoreTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+
+target_compile_definitions(HomesteadAssetStoreTests PRIVATE
+    WIN32_LEAN_AND_MEAN
+    NOMINMAX
+)
+
+target_compile_options(HomesteadAssetStoreTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+
+add_test(NAME HomesteadAssetStoreTests COMMAND HomesteadAssetStoreTests)

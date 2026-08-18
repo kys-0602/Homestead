@@ -6,6 +6,7 @@
 
 #include <cstdint>
 
+#include "Homestead/Assets/AssetStore.hpp"
 #include "Homestead/Graphics/Presentation.hpp"
 #include "Homestead/Graphics/RenderQueue.hpp"
 #include "Homestead/Graphics/SpriteBatch.hpp"
@@ -23,7 +24,8 @@ public:
     [[nodiscard]] bool Initialize(
         HWND window,
         std::uint32_t clientWidth,
-        std::uint32_t clientHeight) noexcept;
+        std::uint32_t clientHeight,
+        const AssetStore& assets) noexcept;
     [[nodiscard]] bool Resize(std::uint32_t clientWidth, std::uint32_t clientHeight) noexcept;
     [[nodiscard]] bool Render() noexcept;
     [[nodiscard]] bool SetTestSpriteState(float x, float y, bool alternateTint) noexcept;
@@ -37,7 +39,7 @@ public:
 private:
     [[nodiscard]] bool CreateBackBufferView() noexcept;
     [[nodiscard]] bool CreatePresentationResources() noexcept;
-    [[nodiscard]] bool CreateTestTexture() noexcept;
+    [[nodiscard]] bool CreateTestTexture(const AssetStore& assets) noexcept;
     [[nodiscard]] bool BuildTestRenderQueue() noexcept;
     void ReleaseBackBufferView() noexcept;
     void ReleasePresentationResources() noexcept;
@@ -63,6 +65,9 @@ private:
     float testSpriteX_ = 16.0F;
     float testSpriteY_ = 16.0F;
     bool testSpriteAlternateTint_ = false;
+    SpriteAsset testSpriteAsset_{};
+    std::uint16_t testTextureWidth_ = 0;
+    std::uint16_t testTextureHeight_ = 0;
 };
 
 } // namespace Homestead

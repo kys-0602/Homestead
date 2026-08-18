@@ -220,6 +220,18 @@ PakEntry  { id, type, flags, offset, packedSize, rawSize }
 Payloads  { atlas, maps, tables, shaders, audio ... }
 ```
 
+현재 version 1 pak은 모든 정수 필드를 little-endian으로 기록한다. 32-byte
+header에는 `HSPK` magic, version, header/index/payload 위치, file size와
+header 이후 전체 checksum을 두고, 24-byte entry에는 `AssetId`, type, flags,
+offset, packed/raw size와 payload checksum을 둔다. Entry는 `AssetId` 오름차순으로
+정렬하고 payload는 4-byte 경계에 맞춘다. 런타임은 중복 ID, 겹치거나 범위를
+벗어난 payload, 알 수 없는 type/flags, checksum 불일치를 모두 거부한다.
+
+첫 atlas payload는 `HSPA` magic과 version, width/height, 최대 256개의 RGBA
+palette, 8-bit pixel index로 구성한다. `AssetStore`는 이를 시작 시 RGBA로 한 번
+확장해 D3D11 immutable texture를 만든다. Sprite table은 이름 문자열 없이
+`AssetId`와 atlas rectangle, trim offset, 원본 sprite 크기만 저장한다.
+
 권장 변환은 다음과 같다.
 
 - 여러 이미지를 palette 기반 atlas 하나 또는 소수로 병합
