@@ -89,7 +89,7 @@ bool AssetStore::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept
         return false;
     }
     const std::uint32_t indexEnd = indexOffset + entryCount * PakEntrySize;
-    if (payloadOffset < indexEnd || payloadOffset > size ||
+    if ((payloadOffset & 3U) != 0U || payloadOffset < indexEnd || payloadOffset > size ||
         ReadU32(data + 24) != Checksum(data + PakHeaderSize, size - PakHeaderSize)) {
         return false;
     }
