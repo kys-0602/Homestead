@@ -1,5 +1,6 @@
 #include "Map.hpp"
 
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -16,8 +17,9 @@ bool Write(const std::filesystem::path& path, const char* text) {
 } // namespace
 
 int main() {
+    const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     const std::filesystem::path directory =
-        std::filesystem::temp_directory_path() / "homestead-map-tests";
+        std::filesystem::temp_directory_path() / ("homestead-map-tests-" + std::to_string(uniqueSuffix));
     std::error_code errorCode;
     std::filesystem::create_directories(directory, errorCode);
     if (errorCode) {
