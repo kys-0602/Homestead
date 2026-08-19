@@ -111,8 +111,7 @@ bool Graphics::Initialize(
     if (!CreateBackBufferView() ||
         !CreatePresentationResources() ||
         !spriteBatch_.Initialize(device_, context_) ||
-        !CreateTestTexture(assets) ||
-        !BuildTestRenderQueue()) {
+        !CreateAtlasTexture(assets)) {
         Shutdown();
         return false;
     }
@@ -148,7 +147,7 @@ bool Graphics::Resize(std::uint32_t clientWidth, std::uint32_t clientHeight) noe
     return CreateBackBufferView();
 }
 
-bool Graphics::Render() noexcept {
+bool Graphics::Render(const RenderQueue& queue) noexcept {
     if (context_ == nullptr || swapChain_ == nullptr || backBufferView_ == nullptr ||
         sceneTargetView_ == nullptr || sceneShaderView_ == nullptr || pointSampler_ == nullptr ||
         presentationVertexShader_ == nullptr || presentationPixelShader_ == nullptr ||
@@ -164,7 +163,7 @@ bool Graphics::Render() noexcept {
     context_->OMSetRenderTargets(1, &sceneTargetView_, nullptr);
     context_->ClearRenderTargetView(sceneTargetView_, SceneClearColor);
     if (!spriteBatch_.Render(
-            renderQueue_, testTextureView_, testTextureWidth_, testTextureHeight_, 0)) {
+            queue, atlasTextureView_, atlasTextureWidth_, atlasTextureHeight_, 0)) {
         return false;
     }
 
@@ -197,13 +196,6 @@ bool Graphics::Render() noexcept {
     return SUCCEEDED(presentResult);
 }
 
-bool Graphics::SetTestSpriteState(float x, float y, bool alternateTint) noexcept {
-    testSpriteX_ = x;
-    testSpriteY_ = y;
-    testSpriteAlternateTint_ = alternateTint;
-    return BuildTestRenderQueue();
-}
-
 bool Graphics::ClientToLogical(
     std::int32_t clientX,
     std::int32_t clientY,
@@ -226,7 +218,7 @@ void Graphics::Shutdown() noexcept {
 
     ReleaseBackBufferView();
     spriteBatch_.Shutdown();
-    ReleaseTestTexture();
+    ReleaseAtlasTexture();
     ReleasePresentationResources();
     Release(swapChain_);
     Release(context_);
@@ -247,12 +239,8 @@ void Graphics::Shutdown() noexcept {
     clientWidth_ = 0;
     clientHeight_ = 0;
     presentationViewport_ = {};
-    testSpriteX_ = 16.0F;
-    testSpriteY_ = 16.0F;
-    testSpriteAlternateTint_ = false;
-    testSpriteAsset_ = {};
-    testTextureWidth_ = 0;
-    testTextureHeight_ = 0;
+    atlasTextureWidth_ = 0;
+    atlasTextureHeight_ = 0;
 }
 
 bool Graphics::CreateBackBufferView() noexcept {
@@ -313,19 +301,17 @@ bool Graphics::CreatePresentationResources() noexcept {
     return true;
 }
 
-bool Graphics::CreateTestTexture(const AssetStore& assets) noexcept {
-    const SpriteAsset* grass = assets.FindSprite(MakeAssetId("terrain.grass"));
-    if (grass == nullptr || assets.AtlasPixels() == nullptr ||
+bool Graphics::CreateAtlasTexture(const AssetStore& assets) noexcept {
+    if (assets.AtlasPixels() == nullptr ||
         assets.AtlasWidth() == 0 || assets.AtlasHeight() == 0) {
         return false;
     }
-    testSpriteAsset_ = *grass;
-    testTextureWidth_ = assets.AtlasWidth();
-    testTextureHeight_ = assets.AtlasHeight();
+    atlasTextureWidth_ = assets.AtlasWidth();
+    atlasTextureHeight_ = assets.AtlasHeight();
 
     D3D11_TEXTURE2D_DESC description{};
-    description.Width = testTextureWidth_;
-    description.Height = testTextureHeight_;
+    description.Width = atlasTextureWidth_;
+    description.Height = atlasTextureHeight_;
     description.MipLevels = 1;
     description.ArraySize = 1;
     description.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -335,62 +321,12 @@ bool Graphics::CreateTestTexture(const AssetStore& assets) noexcept {
 
     D3D11_SUBRESOURCE_DATA data{};
     data.pSysMem = assets.AtlasPixels();
-    data.SysMemPitch = testTextureWidth_ * 4U;
-    if (FAILED(device_->CreateTexture2D(&description, &data, &testTexture_)) ||
-        FAILED(device_->CreateShaderResourceView(testTexture_, nullptr, &testTextureView_))) {
+    data.SysMemPitch = atlasTextureWidth_ * 4U;
+    if (FAILED(device_->CreateTexture2D(&description, &data, &atlasTexture_)) ||
+        FAILED(device_->CreateShaderResourceView(atlasTexture_, nullptr, &atlasTextureView_))) {
         return false;
     }
 
-    return true;
-}
-
-bool Graphics::BuildTestRenderQueue() noexcept {
-    renderQueue_.Clear();
-
-    SpriteCommand command{};
-    command.x = testSpriteX_;
-    command.y = testSpriteY_;
-    command.width = 48.0F;
-    command.height = 48.0F;
-    command.uvX = testSpriteAsset_.x;
-    command.uvY = testSpriteAsset_.y;
-    command.uvWidth = testSpriteAsset_.width;
-    command.uvHeight = testSpriteAsset_.height;
-    command.color = testSpriteAlternateTint_ ? 0xFFFFA060U : 0xFFFFFFFFU;
-    command.layer = SpriteLayer::Ground;
-    if (!renderQueue_.Add(command)) {
-        return false;
-    }
-
-    command.x = 72.0F;
-    command.y = 48.0F;
-    command.color = 0xC04040FFU;
-    command.layer = SpriteLayer::Actor;
-    command.sortY = 96;
-    if (!renderQueue_.Add(command)) {
-        return false;
-    }
-
-    command.x = 84.0F;
-    command.y = 60.0F;
-    command.color = 0xC0FF8040U;
-    command.sortY = 108;
-    if (!renderQueue_.Add(command)) {
-        return false;
-    }
-
-    command.x = 250.0F;
-    command.y = 20.0F;
-    command.width = 32.0F;
-    command.height = 32.0F;
-    command.color = 0xFF40FFFFU;
-    command.layer = SpriteLayer::UI;
-    command.sortY = 0;
-    if (!renderQueue_.Add(command)) {
-        return false;
-    }
-
-    renderQueue_.Sort();
     return true;
 }
 
@@ -407,9 +343,9 @@ void Graphics::ReleasePresentationResources() noexcept {
     Release(sceneTexture_);
 }
 
-void Graphics::ReleaseTestTexture() noexcept {
-    Release(testTextureView_);
-    Release(testTexture_);
+void Graphics::ReleaseAtlasTexture() noexcept {
+    Release(atlasTextureView_);
+    Release(atlasTexture_);
 }
 
 } // namespace Homestead

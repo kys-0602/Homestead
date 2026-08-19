@@ -73,3 +73,5 @@ $RECYCLE.BIN/
 !/assets-src/manifest.tsv
 !/assets-src/sprites.tsv
 !/assets-src/player-frames.tsv
+!/assets-src/maps/
+!/assets-src/maps/farm.map

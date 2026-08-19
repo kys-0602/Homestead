@@ -44,7 +44,11 @@ void RefreshGlobalChecksum(std::vector<std::uint8_t>& pak) {
 }
 
 std::size_t FindEntry(const std::vector<std::uint8_t>& pak, std::uint16_t type) {
-    for (std::size_t offset = 32; offset < 80; offset += 24) {
+    const std::size_t entryCount = static_cast<std::uint32_t>(pak[8]) |
+        (static_cast<std::uint32_t>(pak[9]) << 8U) |
+        (static_cast<std::uint32_t>(pak[10]) << 16U) |
+        (static_cast<std::uint32_t>(pak[11]) << 24U);
+    for (std::size_t offset = 32; offset < 32 + entryCount * 24; offset += 24) {
         const std::uint16_t entryType = static_cast<std::uint16_t>(pak[offset + 4U]) |
             static_cast<std::uint16_t>(pak[offset + 5U] << 8U);
         if (entryType == type) {
@@ -85,6 +89,21 @@ std::vector<std::uint8_t> MakeValidPak() {
     U16(sprites, 0);
     U16(sprites, 0);
     U16(sprites, 1);
+
+    std::vector<std::uint8_t> map{'H', 'S', 'T', 'M'};
+    U16(map, 1);
+    U16(map, 24);
+    U16(map, 1);
+    U16(map, 1);
+    U16(map, 16);
+    U16(map, 16);
+    U16(map, 3);
+    U16(map, 6);
+    U32(map, 1);
+    U16(map, 1);
+    U16(map, 0);
+    map.push_back(0);
+    map.push_back(0);
     U16(sprites, 1);
 
     struct Entry {
@@ -95,11 +114,12 @@ std::vector<std::uint8_t> MakeValidPak() {
     };
     std::vector<Entry> entries{
         {Homestead::MakeAssetId("atlas/main"), 1, &atlas, 0},
-        {Homestead::MakeAssetId("sprites/main"), 2, &sprites, 0}};
+        {Homestead::MakeAssetId("sprites/main"), 2, &sprites, 0},
+        {Homestead::MakeAssetId("map/farm"), 3, &map, 0}};
     std::sort(entries.begin(), entries.end(), [](const Entry& left, const Entry& right) {
         return left.id < right.id;
     });
-    std::uint32_t offset = 80;
+    std::uint32_t offset = 104;
     for (Entry& entry : entries) {
         entry.offset = offset;
         offset += static_cast<std::uint32_t>(entry.payload->size());
@@ -110,9 +130,9 @@ std::vector<std::uint8_t> MakeValidPak() {
     std::vector<std::uint8_t> pak{'H', 'S', 'P', 'K'};
     U16(pak, 1);
     U16(pak, 32);
-    U32(pak, 2);
+    U32(pak, 3);
     U32(pak, 32);
-    U32(pak, 80);
+    U32(pak, 104);
     U32(pak, fileSize);
     U32(pak, 0);
     U32(pak, 0);
@@ -144,7 +164,7 @@ int main() {
     const std::vector<std::uint8_t> valid = MakeValidPak();
     Homestead::AssetStore store;
     if (!store.LoadMemory(valid.data(), valid.size()) || store.AtlasWidth() != 1 ||
-        store.AtlasHeight() != 1 || store.SpriteCount() != 1 ||
+        store.AtlasHeight() != 1 || store.SpriteCount() != 1 || store.MapSize() != 30 ||
         store.FindSprite(Homestead::MakeAssetId("terrain.grass")) == nullptr) {
         return 1;
     }

@@ -4,15 +4,15 @@
 
 ## 현재 상태
 
-- 마지막 갱신: 2026-08-18
-- 현재 완료 범위: 단계 0~6 구현
-- 다음 작업: 단계 7 `카메라와 타일맵`
+- 마지막 갱신: 2026-08-19
+- 현재 완료 범위: 단계 0~7 구현
+- 다음 작업: 단계 7 작업 브랜치 검토와 병합 후 단계 8 `플레이어와 충돌`
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `33,280 bytes`
-- 현재 `data.pak`: `83,560 bytes`
+- 현재 Release EXE: `36,864 bytes`
+- 현재 `data.pak`: `88,216 bytes`
 - 현재 대표 save: 없음
-- 현재 합계: `116,840 bytes`
-- 남은 공간: `1,357,720 bytes`
+- 현재 합계: `125,080 bytes`
+- 남은 공간: `1,349,480 bytes`
 
 ## 단계별 기록
 
@@ -25,6 +25,7 @@
 | 4. 최소 SpriteBatch | 구현 완료, Debug Layer 검증 대기 | `11d8f09` (#8) | 22,528 bytes | +6,656 bytes |
 | 5. 입력과 고정 업데이트 루프 | 완료 | 병합 대기 | 26,112 bytes | +3,584 bytes |
 | 6. 에셋 패커의 최소 버전 | 구현 완료, 시각/D3D 검증 대기 | 병합 대기 | 33,280 bytes | +7,168 bytes |
+| 7. 카메라와 타일맵 | 구현 및 시각 검증 완료, D3D Debug Layer 검증 대기 | 병합 대기 | 36,864 bytes | +3,584 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -211,17 +212,53 @@
 - 실제 표시 창에서 atlas sprite의 색, 투명도, pixel 경계와 point sampling 수동 확인
 - Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
 
-## 다음 작업: 단계 7
+### 단계 7: 카메라와 타일맵
 
-`IMPLEMENTATION_ROADMAP.md`에 따라 다음 범위만 진행한다.
+구현:
 
-- `Camera2D`의 world/screen 변환과 visible bounds
-- 고정 크기 `TileMap` 데이터와 범위 안전 접근
-- ground/object/collision layer의 compact tile ID와 flag
-- 보이는 tile만 `RenderQueue`에 제출하는 최소 renderer
-- 현재 선택한 atlas sprite ID를 사용하는 테스트 farm map
+- 논리 픽셀에 스냅되는 `Camera2D`의 world/screen 변환과 visible bounds
+- 16×16 tile, 16×16 chunk와 최대 128×128 tile 상한을 가진 `TileMap`
+- ground/object `uint16_t` ID와 collision/gameplay `uint8_t` flag
+- `HSTM` version 1 map header와 6-byte 비압축 tile record
+- 개발용 32×24 farm map source와 결정적 map payload 생성
+- pak type 3 `map/farm` 항목과 런타임 payload 전달
+- visible bounds와 여유 한 줄만 순회하는 `TileMapRenderer`
+- ground와 object layer 분리, 큰 object의 tile-bottom anchor
+- WASD/방향키로 독립 이동하는 단계 7 테스트 카메라
 
-단계 7에서도 Release EXE와 `data.pak` 크기 및 전체 남은 byte를 기록한다.
+검증:
+
+- Debug/Release `/W4` build 성공
+- 기존 테스트와 Camera, TileMap, MapCompiler 테스트를 합한 9개가 Debug/Release에서 모두 통과
+- world/screen 왕복, fractional camera 스냅, 음수·맵 경계 좌표 검증
+- 320×180 화면과 한 tile 여유에서 최악의 2-layer 제출이 616 command로 1,024 한도 이내임을 검증
+- bad magic/version, truncated payload, 0/상한 초과 크기, 잘못된 tile 크기·ID·flag 거부 확인
+- 동일 입력으로 두 번 생성한 `data.pak` SHA-256 `8FC2F4E90B4EA50110B96E9144F4CEC74492BFE5832EA85877C8520AF541A634` 일치
+- Debug 앱이 실제 map 포함 pak을 로드한 상태로 2초 이상 실행되고 종료됨
+- 1280×720 초기/이동 캡처에서 pixel 경계, path, ground/object layer와 큰 object의 tile-bottom anchor 확인
+- 직접 키 입력으로 오른쪽/아래 및 맵 왼쪽·위 경계 밖까지 이동해 컬링 결과와 정상 실행 확인
+- 984×661 리사이즈 및 최소화·복원 뒤 정수 확대, letterbox와 point sampling 유지 확인
+- Release `Homestead.exe`: `36,864 bytes` (단계 6 대비 `+3,584 bytes`)
+- `data.pak`: `88,216 bytes` (단계 6 대비 `+4,656 bytes`, map payload `4,632 bytes`)
+- 대표 save: 없음
+- 제출 합계: `125,080 bytes` (단계 6 대비 `+8,240 bytes`); 상한까지 `1,349,480 bytes`
+
+남은 확인:
+
+- Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
+
+## 다음 작업: 단계 8
+
+단계 7 작업 브랜치를 검토하고 병합한 뒤 `IMPLEMENTATION_ROADMAP.md`에 따라
+다음 범위만 진행한다.
+
+- `PlayerState`와 최소 `EntityWorld`
+- 정규화된 자유 이동과 발 부분 AABB
+- X/Y축 tile collision과 벽 미끄러짐
+- 플레이어 추적 camera와 map 경계 제한
+- 발 위치 Y 기반 object/player 정렬
+
+단계 8에서도 Release EXE와 `data.pak` 크기 및 전체 남은 byte를 기록한다.
 
 ## 기록 갱신 규칙
 

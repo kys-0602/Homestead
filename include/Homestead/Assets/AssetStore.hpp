@@ -31,10 +31,13 @@ public:
     [[nodiscard]] std::uint16_t AtlasWidth() const noexcept { return atlasWidth_; }
     [[nodiscard]] std::uint16_t AtlasHeight() const noexcept { return atlasHeight_; }
     [[nodiscard]] std::size_t SpriteCount() const noexcept { return sprites_.size(); }
+    [[nodiscard]] const std::uint8_t* MapData() const noexcept { return mapBytes_.data(); }
+    [[nodiscard]] std::size_t MapSize() const noexcept { return mapBytes_.size(); }
 
 private:
     std::vector<std::uint8_t> atlasPixels_;
     std::vector<SpriteAsset> sprites_;
+    std::vector<std::uint8_t> mapBytes_;
     std::uint16_t atlasWidth_ = 0;
     std::uint16_t atlasHeight_ = 0;
 };

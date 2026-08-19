@@ -7,6 +7,7 @@
 #include <iterator>
 
 #include "Homestead/Graphics/Presentation.hpp"
+#include "Homestead/Graphics/TileMapRenderer.hpp"
 #include "Homestead/Input/Action.hpp"
 
 namespace Homestead {
@@ -53,6 +54,16 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         window_.Shutdown();
         return false;
     }
+
+    if (!tileMap_.LoadMemory(assets_.MapData(), assets_.MapSize())) {
+        assets_.Clear();
+        window_.Shutdown();
+        return false;
+    }
+
+    camera_.SetCenter({
+        static_cast<float>(tileMap_.Width() * TileSize) * 0.5F,
+        static_cast<float>(tileMap_.Height() * TileSize) * 0.5F});
 
     if (!graphics_.Initialize(
             window_.Handle(),
@@ -107,7 +118,8 @@ int Application::Run() noexcept {
             }
         }
 
-        if (!graphics_.Render()) {
+        if (!TileMapRenderer::Build(tileMap_, camera_, assets_, renderQueue_) ||
+            !graphics_.Render(renderQueue_)) {
             return 1;
         }
     }
@@ -118,45 +130,26 @@ int Application::Run() noexcept {
 bool Application::FixedUpdate() noexcept {
     constexpr float movementPerStep =
         60.0F * static_cast<float>(FixedStepController::StepSeconds);
-    constexpr float spriteSize = 48.0F;
+    Float2 center = camera_.Center();
 
     if (input_.Held(Action::MoveLeft)) {
-        testSpriteX_ -= movementPerStep;
+        center.x -= movementPerStep;
     }
     if (input_.Held(Action::MoveRight)) {
-        testSpriteX_ += movementPerStep;
+        center.x += movementPerStep;
     }
     if (input_.Held(Action::MoveUp)) {
-        testSpriteY_ -= movementPerStep;
+        center.y -= movementPerStep;
     }
     if (input_.Held(Action::MoveDown)) {
-        testSpriteY_ += movementPerStep;
+        center.y += movementPerStep;
     }
 
-    const bool toggleTint = input_.ConsumePressed(Action::Interact);
-    const bool useTool = input_.ConsumePressed(Action::UseTool);
+    [[maybe_unused]] const bool interactPressed = input_.ConsumePressed(Action::Interact);
+    [[maybe_unused]] const bool useToolPressed = input_.ConsumePressed(Action::UseTool);
     [[maybe_unused]] const bool menuPressed = input_.ConsumePressed(Action::Menu);
-    if (toggleTint) {
-        testSpriteAlternateTint_ = !testSpriteAlternateTint_;
-    }
-    if (useTool && input_.IsLogicalMouseValid()) {
-        testSpriteX_ = static_cast<float>(input_.LogicalMouseX()) - spriteSize * 0.5F;
-        testSpriteY_ = static_cast<float>(input_.LogicalMouseY()) - spriteSize * 0.5F;
-    }
-
-    testSpriteX_ = std::clamp(
-        testSpriteX_,
-        0.0F,
-        static_cast<float>(LogicalWidth) - spriteSize);
-    testSpriteY_ = std::clamp(
-        testSpriteY_,
-        0.0F,
-        static_cast<float>(LogicalHeight) - spriteSize);
-
-    return graphics_.SetTestSpriteState(
-        testSpriteX_,
-        testSpriteY_,
-        testSpriteAlternateTint_);
+    camera_.SetCenter(center);
+    return true;
 }
 
 void Application::Shutdown() noexcept {
@@ -165,6 +158,7 @@ void Application::Shutdown() noexcept {
     }
 
     graphics_.Shutdown();
+    tileMap_.Clear();
     assets_.Clear();
     window_.Shutdown();
     fixedStep_.Reset();
