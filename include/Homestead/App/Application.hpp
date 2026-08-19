@@ -4,10 +4,14 @@
 
 #include "Homestead/Assets/AssetStore.hpp"
 #include "Homestead/Core/FixedStep.hpp"
+#include "Homestead/Graphics/Camera2D.hpp"
 #include "Homestead/Graphics/Graphics.hpp"
+#include "Homestead/Graphics/Presentation.hpp"
+#include "Homestead/Graphics/RenderQueue.hpp"
 #include "Homestead/Input/Input.hpp"
 #include "Homestead/Platform/Clock.hpp"
 #include "Homestead/Platform/Window.hpp"
+#include "Homestead/World/TileMap.hpp"
 
 namespace Homestead {
 
@@ -29,12 +33,14 @@ private:
     Window window_;
     Clock clock_;
     AssetStore assets_;
+    TileMap tileMap_;
     Graphics graphics_;
     Input input_;
     FixedStepController fixedStep_;
-    float testSpriteX_ = 16.0F;
-    float testSpriteY_ = 16.0F;
-    bool testSpriteAlternateTint_ = false;
+    Camera2D camera_{
+        static_cast<float>(LogicalWidth),
+        static_cast<float>(LogicalHeight)};
+    RenderQueue renderQueue_;
     bool initialized_ = false;
 };
 

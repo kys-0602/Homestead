@@ -1,5 +1,7 @@
 #include "Pak.hpp"
 
+#include "Map.hpp"
+
 #include <algorithm>
 #include <array>
 #include <charconv>
@@ -171,6 +173,7 @@ bool BuildSpriteTable(
 } // namespace
 
 bool BuildPak(
+    const std::filesystem::path& assetRoot,
     const std::filesystem::path& atlasDirectory,
     const std::filesystem::path& outputPath,
     PakStats& stats,
@@ -192,6 +195,15 @@ bool BuildPak(
         return false;
     }
     payloads.push_back(std::move(sprites));
+    Payload map{};
+    map.id = Hash("map/farm");
+    map.type = 3;
+    MapStats mapStats{};
+    if (!BuildMapPayload(assetRoot / "maps" / "farm.map", map.bytes, mapStats, error)) {
+        return false;
+    }
+    stats.mapBytes = mapStats.byteCount;
+    payloads.push_back(std::move(map));
     std::sort(payloads.begin(), payloads.end(), [](const Payload& left, const Payload& right) {
         return left.id < right.id;
     });

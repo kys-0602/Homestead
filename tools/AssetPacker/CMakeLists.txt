@@ -14,7 +14,12 @@ add_executable(AssetPacker
     Atlas.cpp
     Image.cpp
     Main.cpp
+    Map.cpp
     Pak.cpp
+)
+
+target_include_directories(AssetPacker PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../include"
 )
 
 target_link_libraries(AssetPacker PRIVATE

@@ -43,12 +43,13 @@ int main(int argumentCount, char** arguments) {
     Homestead::AssetPacker::PakStats pakStats{};
     const std::filesystem::path outputDirectory = arguments[2];
     if (!Homestead::AssetPacker::BuildPak(
-            outputDirectory, outputDirectory / "data.pak", pakStats, error)) {
+            arguments[1], outputDirectory, outputDirectory / "data.pak", pakStats, error)) {
         std::cerr << "Pak error: " << error << '\n';
         return 1;
     }
     std::cout << "Wrote data.pak with " << pakStats.entryCount << " entries, "
               << pakStats.spriteCount << " sprite records, and "
-              << pakStats.byteCount << " bytes.\n";
+              << pakStats.mapBytes << " map bytes ("
+              << pakStats.byteCount << " bytes total).\n";
     return 0;
 }

@@ -232,6 +232,15 @@ palette, 8-bit pixel index로 구성한다. `AssetStore`는 이를 시작 시 RG
 확장해 D3D11 immutable texture를 만든다. Sprite table은 이름 문자열 없이
 `AssetId`와 atlas rectangle, trim offset, 원본 sprite 크기만 저장한다.
 
+첫 map payload는 `HSTM` magic의 version 1 little-endian 형식이다. 24-byte
+header에 header size, 맵의 tile 크기와 가로/세로 tile 수, chunk 크기,
+layer 수, tile record 크기와 tile 수를 기록한다. 뒤이어 각 tile을
+`ground u16`, `object u16`, `flags u8`, `variant u8`의 6-byte record로 저장한다.
+초기 상한은 16×16 tile, 16×16 tile chunk, 128×128 tile 맵이다. 런타임은
+header와 전체 payload 크기, ID와 flag 범위를 검증한 뒤 row-major record를
+고정 크기 chunk로 재배치한다. version 1은 비압축으로 측정하고 chunk 압축은
+맵 콘텐츠가 늘어 실제 이득이 확인될 때 추가한다.
+
 권장 변환은 다음과 같다.
 
 - 여러 이미지를 palette 기반 atlas 하나 또는 소수로 병합

@@ -96,6 +96,7 @@ bool AssetStore::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept
 
     EntryView atlasEntry{};
     EntryView spriteEntry{};
+    EntryView mapEntry{};
     std::array<EntryView, MaxPakEntries> entries{};
     AssetId previousId = 0;
     for (std::uint32_t index = 0; index < entryCount; ++index) {
@@ -131,11 +132,15 @@ bool AssetStore::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept
             view.type == 2 && view.id == MakeAssetId("sprites/main") &&
             spriteEntry.size == 0) {
             spriteEntry = view;
+        } else if (
+            view.type == 3 && view.id == MakeAssetId("map/farm") &&
+            mapEntry.size == 0) {
+            mapEntry = view;
         } else {
             return false;
         }
     }
-    if (atlasEntry.size < 12 || spriteEntry.size < 4) {
+    if (atlasEntry.size < 12 || spriteEntry.size < 4 || mapEntry.size < 24) {
         return false;
     }
 
@@ -199,6 +204,7 @@ bool AssetStore::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept
     }
     atlasWidth_ = width;
     atlasHeight_ = height;
+    mapBytes_.assign(data + mapEntry.offset, data + mapEntry.offset + mapEntry.size);
     return true;
 }
 
@@ -212,6 +218,7 @@ const SpriteAsset* AssetStore::FindSprite(AssetId id) const noexcept {
 void AssetStore::Clear() noexcept {
     atlasPixels_.clear();
     sprites_.clear();
+    mapBytes_.clear();
     atlasWidth_ = 0;
     atlasHeight_ = 0;
 }

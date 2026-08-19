@@ -89,3 +89,49 @@ target_compile_options(HomesteadAssetStoreTests PRIVATE
 )
 
 add_test(NAME HomesteadAssetStoreTests COMMAND HomesteadAssetStoreTests)
+
+add_executable(HomesteadCameraTests
+    CameraTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/Camera2D.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/TileMapRenderer.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/RenderQueue.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Assets/AssetStore.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/TileMap.cpp"
+)
+
+target_include_directories(HomesteadCameraTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+
+target_compile_definitions(HomesteadCameraTests PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_compile_options(HomesteadCameraTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+add_test(NAME HomesteadCameraTests COMMAND HomesteadCameraTests)
+
+add_executable(HomesteadTileMapTests
+    TileMapTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/TileMap.cpp"
+)
+
+target_include_directories(HomesteadTileMapTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+target_compile_options(HomesteadTileMapTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+add_test(NAME HomesteadTileMapTests COMMAND HomesteadTileMapTests)
+
+add_executable(HomesteadMapCompilerTests
+    MapCompilerTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../tools/AssetPacker/Map.cpp"
+)
+
+target_include_directories(HomesteadMapCompilerTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../tools/AssetPacker"
+)
+target_compile_options(HomesteadMapCompilerTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+add_test(NAME HomesteadMapCompilerTests COMMAND HomesteadMapCompilerTests)
