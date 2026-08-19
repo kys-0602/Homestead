@@ -198,10 +198,12 @@ source/Platform/Clock.cpp
 
 - `Camera2D`의 `WorldToScreen`, `ScreenToWorld`, visible bounds를 구현한다.
 - 카메라 위치를 논리 픽셀 경계에 맞춘다.
-- `TileMap`을 고정 크기 chunk로 나눈다.
+- 16×16 tile을 기준으로 `TileMap`을 고정 크기 chunk로 나누고, chunk 크기와 최대 맵 크기를 명시적인 상수로 제한한다.
 - ground, object, collision 정보를 작은 정수 ID와 flag로 저장한다.
 - 현재 카메라에 보이는 타일과 여유 한 줄만 `SpriteBatch`에 제출한다.
-- 테스트 맵을 패커에서 이진 형식으로 변환한다.
+- 테스트 맵을 패커에서 version 1 이진 형식으로 변환한다. 첫 버전은 단순한 비압축 표현으로 크기를 측정하고, chunk 압축은 측정 결과가 필요성을 보일 때 추가한다.
+- 맵 payload에 magic, version, tile/chunk 크기, 맵 크기와 layer 정보를 기록하고, 런타임에서 모든 범위와 ID를 적용 전에 검증한다.
+- 단계 7에서는 테스트 입력으로 카메라를 독립 이동한다. 플레이어 추적과 맵 경계 고정은 단계 8에서 구현한다.
 
 ### 완료 조건
 
@@ -209,6 +211,15 @@ source/Platform/Clock.cpp
 - 화면 밖 타일은 렌더 명령에 들어가지 않는다.
 - 맵 가장자리 접근에서 배열 범위를 벗어나지 않는다.
 - ground와 object layer 순서가 정확하다.
+- `WorldToScreen`과 `ScreenToWorld`의 왕복, 음수 좌표, fractional camera 위치와 visible-bound 경계를 자동화 테스트로 검증한다.
+- 잘못된 magic/version, 잘린 payload, 0 또는 상한 초과 크기, 곱셈 overflow, 잘못된 tile ID와 layer 정보를 가진 맵을 안전하게 거부한다.
+- 같은 입력으로 만든 맵 payload의 내용과 크기가 재현 가능하다.
+- 최악의 visible tile과 layer 조합이 `RenderQueue`의 1,024 command 용량 안에 들어가는지 검증하고, 초과 제출은 안전하게 거부한다.
+
+### 크기 점검
+
+- Release `Homestead.exe`, `data.pak`, 대표 save가 있으면 그 크기와 전체 합계를 기록한다.
+- 이전 단계 대비 증감과 1,474,560 bytes 상한까지 남은 용량을 `DEVELOPMENT_PROGRESS.md`에 기록한다.
 
 ## 단계 8: 플레이어와 충돌
 
