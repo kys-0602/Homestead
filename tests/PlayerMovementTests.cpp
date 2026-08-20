@@ -116,5 +116,16 @@ int main() {
             passWorld, passPlayer, map, {1.0F, 0.0F}, 1.0F / 60.0F)) return 13;
     const Homestead::TransformComponent* passed = passWorld.Transform(passPlayer.entity);
     if (passed == nullptr || !Near(passed->current.x, 207.0F)) return 14;
+
+    Homestead::EntityWorld fallbackWorld;
+    Homestead::PlayerState fallbackPlayer{};
+    fallbackPlayer.entity = fallbackWorld.Create({64.0F, 64.0F}, 1);
+    fallbackPlayer.facing = static_cast<Homestead::FacingDirection>(255);
+    if (!Homestead::UpdatePlayerMovement(
+            fallbackWorld, fallbackPlayer, map, {}, 1.0F / 60.0F)) return 15;
+    const Homestead::SpriteComponent* fallbackSprite =
+        fallbackWorld.Sprite(fallbackPlayer.entity);
+    if (fallbackSprite == nullptr ||
+        fallbackSprite->asset != Homestead::MakeAssetId("player.idle.down.0")) return 16;
     return 0;
 }

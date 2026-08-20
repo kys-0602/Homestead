@@ -152,6 +152,7 @@ AssetId PlayerSprite(const PlayerState& player) noexcept {
         case FacingDirection::Right: return MakeAssetId("player.idle.right.0");
         case FacingDirection::Down: return MakeAssetId("player.idle.down.0");
         }
+        return MakeAssetId("player.idle.down.0");
     }
 
     const std::uint16_t frame = static_cast<std::uint16_t>((player.animationTicks / 10U) % 6U);

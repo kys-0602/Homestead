@@ -130,7 +130,6 @@ bool TileMapRenderer::Build(
             }
         }
     }
-    queue.Sort();
     if (stats != nullptr) {
         *stats = result;
     }
