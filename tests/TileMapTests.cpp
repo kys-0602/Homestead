@@ -84,5 +84,11 @@ int main() {
     damaged = valid;
     damaged[28] = 0x80;
     if (Loads(damaged)) return 9;
+    damaged = valid;
+    damaged[28] = Homestead::TileFlagValue(Homestead::TileFlag::Watered);
+    if (Loads(damaged)) return 10;
+    damaged[28] = Homestead::TileFlagValue(Homestead::TileFlag::Tilled) |
+        Homestead::TileFlagValue(Homestead::TileFlag::Watered);
+    if (!Loads(damaged)) return 11;
     return 0;
 }

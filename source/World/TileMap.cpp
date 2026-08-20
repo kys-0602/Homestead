@@ -56,7 +56,8 @@ bool TileMap::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept {
     chunks_.resize(static_cast<std::size_t>(chunkColumns) * chunkRows);
 
     constexpr std::uint8_t validFlags = TileFlagValue(TileFlag::Blocked) |
-        TileFlagValue(TileFlag::Water) | TileFlagValue(TileFlag::Tilled);
+        TileFlagValue(TileFlag::Water) | TileFlagValue(TileFlag::Tilled) |
+        TileFlagValue(TileFlag::Watered);
     for (std::uint32_t index = 0; index < tileCount; ++index) {
         const std::uint8_t* record = data + MapHeaderSize + index * TileRecordSize;
         Tile tile{};
@@ -64,9 +65,11 @@ bool TileMap::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept {
         tile.object = ReadU16(record + 2);
         tile.flags = record[4];
         tile.variant = record[5];
+        const bool tilled = (tile.flags & TileFlagValue(TileFlag::Tilled)) != 0;
+        const bool watered = (tile.flags & TileFlagValue(TileFlag::Watered)) != 0;
         if (!IsValidGraphic(tile.ground) || tile.ground == 0 ||
             !IsValidGraphic(tile.object) || (tile.flags & ~validFlags) != 0 ||
-            tile.variant != 0) {
+            (watered && !tilled) || tile.variant != 0) {
             Clear();
             return false;
         }
@@ -106,6 +109,10 @@ const Tile* TileMap::Get(std::int32_t x, std::int32_t y) const noexcept {
         static_cast<std::size_t>(y % TileChunkSize) * TileChunkSize +
         static_cast<std::size_t>(x % TileChunkSize);
     return &chunks_[chunkIndex].tiles[tileIndex];
+}
+
+Tile* TileMap::Get(std::int32_t x, std::int32_t y) noexcept {
+    return const_cast<Tile*>(static_cast<const TileMap&>(*this).Get(x, y));
 }
 
 } // namespace Homestead

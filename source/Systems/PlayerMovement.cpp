@@ -193,6 +193,10 @@ bool UpdatePlayerMovement(
     }
 
     transform->previous = transform->current;
+    if (player.toolUse.action != ToolAction::None) {
+        player.moving = false;
+        return true;
+    }
     const float lengthSquared = input.x * input.x + input.y * input.y;
     player.moving = lengthSquared > 0.0F;
     if (player.moving) {

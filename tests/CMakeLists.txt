@@ -150,3 +150,20 @@ target_compile_options(HomesteadPlayerMovementTests PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
 )
 add_test(NAME HomesteadPlayerMovementTests COMMAND HomesteadPlayerMovementTests)
+
+add_executable(HomesteadInteractionToolTests
+    InteractionToolTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Systems/InteractionSystem.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Systems/PlayerMovement.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Systems/ToolSystem.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/EntityWorld.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/TileMap.cpp"
+)
+
+target_include_directories(HomesteadInteractionToolTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+target_compile_options(HomesteadInteractionToolTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+add_test(NAME HomesteadInteractionToolTests COMMAND HomesteadInteractionToolTests)

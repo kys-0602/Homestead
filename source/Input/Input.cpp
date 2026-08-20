@@ -29,6 +29,7 @@ void Input::SetPhysicalKey(PhysicalKey key, bool held) noexcept {
     if (!wasHeld && isHeld) {
         pressed_[actionIndex] = true;
         pendingPressed_[actionIndex] = true;
+        pendingSource_[actionIndex] = key;
     } else if (wasHeld && !isHeld) {
         released_[actionIndex] = true;
     }
@@ -43,6 +44,7 @@ void Input::OnFocusLost() noexcept {
     keyHeld_.fill(false);
     pressed_.fill(false);
     pendingPressed_.fill(false);
+    pendingSource_.fill(PhysicalKey::Count);
     clientMouseX_ = -1;
     clientMouseY_ = -1;
     logicalMouseValid_ = false;
@@ -75,6 +77,12 @@ bool Input::Released(Action action) const noexcept {
 }
 
 bool Input::ConsumePressed(Action action) noexcept {
+    PhysicalKey ignored = PhysicalKey::Count;
+    return ConsumePressed(action, ignored);
+}
+
+bool Input::ConsumePressed(Action action, PhysicalKey& source) noexcept {
+    source = PhysicalKey::Count;
     if (action == Action::Count) {
         return false;
     }
@@ -82,6 +90,10 @@ bool Input::ConsumePressed(Action action) noexcept {
     const std::size_t index = ToIndex(action);
     const bool pressed = pendingPressed_[index];
     pendingPressed_[index] = false;
+    if (pressed) {
+        source = pendingSource_[index];
+    }
+    pendingSource_[index] = PhysicalKey::Count;
     return pressed;
 }
 

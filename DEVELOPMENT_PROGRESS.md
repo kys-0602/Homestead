@@ -5,14 +5,14 @@
 ## 현재 상태
 
 - 마지막 갱신: 2026-08-20
-- 현재 완료 범위: 단계 0~8 구현
-- 다음 작업: 단계 9 `상호작용과 도구`
+- 현재 완료 범위: 단계 0~9 구현
+- 다음 작업: 단계 10 `인벤토리와 아이템`
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `40,960 bytes`
+- 현재 Release EXE: `44,544 bytes`
 - 현재 `data.pak`: `88,216 bytes`
 - 현재 대표 save: 없음
-- 현재 합계: `129,176 bytes`
-- 남은 공간: `1,345,384 bytes`
+- 현재 합계: `132,760 bytes`
+- 남은 공간: `1,341,800 bytes`
 
 ## 단계별 기록
 
@@ -26,7 +26,8 @@
 | 5. 입력과 고정 업데이트 루프 | 완료 | `48394d4` (#9) | 26,112 bytes | +3,584 bytes |
 | 6. 에셋 패커의 최소 버전 | 구현 완료, 시각/D3D 검증 대기 | `bd51ebe` (#10) | 33,280 bytes | +7,168 bytes |
 | 7. 카메라와 타일맵 | 구현 및 시각 검증 완료, D3D Debug Layer 검증 대기 | `b560ff3` (#12) | 36,864 bytes | +3,584 bytes |
-| 8. 플레이어와 충돌 | 구현 및 gameplay 시각 검증 완료, D3D 검증 대기 | 병합 대기 | 40,960 bytes | +4,096 bytes |
+| 8. 플레이어와 충돌 | 구현 및 gameplay 시각 검증 완료, D3D 검증 대기 | `12b31af` (#14) | 40,960 bytes | +4,096 bytes |
+| 9. 상호작용과 도구 | 구현 및 gameplay 시각 검증 완료, D3D 검증 대기 | 병합 대기 | 44,544 bytes | +3,584 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -284,11 +285,49 @@
 
 - Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
 
-## 다음 작업: 단계 9
+### 단계 9: 상호작용과 도구
 
-`IMPLEMENTATION_ROADMAP.md`에 따라 `상호작용과 도구` 범위를 진행한다.
+구현:
 
-단계 9에서도 Release EXE와 `data.pak` 크기 및 전체 남은 byte를 기록한다.
+- 플레이어 방향 기준 앞쪽 tile과 mouse world 좌표 기준 tile 선택
+- tile 중심까지 최대 32 logical pixel 작업 거리와 map 범위 검증
+- 범위 안은 초록색, 범위 밖은 빨간색인 개발용 pointer overlay
+- fixed update 전에 click이 해제되어도 mouse/keyboard 입력 출처를 보존하는 pending press
+- `Interact`는 object 기록만, `UseTool`은 map 상태만 변경하도록 분리
+- 인벤토리 전 임시 문맥형 도구 동작: grass는 hoe, tilled tile은 watering can 사용
+- blocked/water/path/object tile 경작 거부와 tilled/watered tile flag
+- 36 fixed-tick 도구 상태, 18번째 tick의 상태 변경과 6-frame hoe/watering animation
+- 도구 사용 중 이동·상호작용·중복 도구 사용 차단과 mouse target 방향 전환
+- dry/wet farmland sprite 전환으로 경작·물주기 결과 표시
+
+검증:
+
+- Debug/Release `/W4` build 성공
+- 기존 테스트와 InteractionTool 테스트를 합한 11개가 Debug/Release에서 모두 통과
+- 네 방향 앞쪽 tile, mouse tile, map 밖과 최대 작업 거리 경계 검증
+- object 상호작용이 tile 상태를 변경하지 않고 범위 밖 상호작용을 거부하는지 검증
+- blocked/path/object/range 밖 tile에서 도구 시작을 거부하는지 검증
+- 도구 사용 중 이동과 중복 사용을 차단하는지 검증
+- 도구 입력이 시작된 동일 fixed tick부터 이동을 차단하는 update 순서 확인
+- impact 이전에는 tile이 바뀌지 않고 animation frame 3 시점에 till/water flag가 적용되는지 검증
+- serialized map에서 `Watered`만 있고 `Tilled`가 없는 모순된 flag 조합 거부 확인
+- mouse click이 fixed update 전에 release되어도 물리 입력 출처가 유지되는지 검증
+- Debug 앱이 실제 pak과 overlay sprite를 로드한 상태로 3초간 조기 종료 없이 실행됨
+- 사용자가 실제 표시 창에서 경작 후 물주기 동작과 dry/wet tile 전환을 확인함
+- Release `Homestead.exe`: `44,544 bytes` (단계 8 대비 `+3,584 bytes`)
+- `data.pak`: `88,216 bytes` (단계 8 대비 변경 없음)
+- 대표 save: 없음
+- 제출 합계: `132,760 bytes` (단계 8 대비 `+3,584 bytes`); 상한까지 `1,341,800 bytes`
+
+남은 확인:
+
+- 경작 tile 표현의 시각적 어색함은 이후 콘텐츠/표현 조정에서 재검토
+- keyboard/mouse target overlay와 빠른 click 동작의 추가 수동 확인
+- Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
+
+## 다음 작업: 단계 10
+
+`IMPLEMENTATION_ROADMAP.md`에 따라 `인벤토리와 아이템` 범위를 진행한다.
 
 ## 기록 갱신 규칙
 
