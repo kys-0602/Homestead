@@ -216,10 +216,15 @@ bool SpriteBatch::Flush(
         const float top = command.y;
         const float right = command.x + command.width;
         const float bottom = command.y + command.height;
-        const float u0 = static_cast<float>(command.uvX) / textureWidth;
+        float u0 = static_cast<float>(command.uvX) / textureWidth;
         const float v0 = static_cast<float>(command.uvY) / textureHeight;
-        const float u1 = static_cast<float>(command.uvX + command.uvWidth) / textureWidth;
+        float u1 = static_cast<float>(command.uvX + command.uvWidth) / textureWidth;
         const float v1 = static_cast<float>(command.uvY + command.uvHeight) / textureHeight;
+        if ((command.flags & SpriteFlagValue(SpriteFlag::FlipHorizontal)) != 0) {
+            const float temporary = u0;
+            u0 = u1;
+            u1 = temporary;
+        }
         const std::size_t vertex = (index - begin) * 4;
 
         vertices[vertex + 0] = {left, top, u0, v0, command.color};

@@ -1,5 +1,6 @@
 #include "Homestead/Graphics/Camera2D.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 namespace Homestead {
@@ -10,6 +11,18 @@ Camera2D::Camera2D(float viewportWidth, float viewportHeight) noexcept
 
 void Camera2D::SetZoom(float zoom) noexcept {
     zoom_ = zoom > 0.0F ? zoom : 1.0F;
+}
+
+void Camera2D::SetCenterClamped(
+    Float2 center,
+    float worldWidth,
+    float worldHeight) noexcept {
+    const float halfWidth = viewportWidth_ * 0.5F / zoom_;
+    const float halfHeight = viewportHeight_ * 0.5F / zoom_;
+    center_.x = worldWidth <= halfWidth * 2.0F ? worldWidth * 0.5F :
+        std::clamp(center.x, halfWidth, worldWidth - halfWidth);
+    center_.y = worldHeight <= halfHeight * 2.0F ? worldHeight * 0.5F :
+        std::clamp(center.y, halfHeight, worldHeight - halfHeight);
 }
 
 Float2 Camera2D::WorldToScreen(Float2 world) const noexcept {

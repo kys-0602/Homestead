@@ -17,6 +17,10 @@ enum class SpriteLayer : std::uint8_t {
     Debug
 };
 
+enum class SpriteFlag : std::uint8_t {
+    FlipHorizontal = 1U << 0U
+};
+
 struct SpriteCommand {
     float x = 0.0F;
     float y = 0.0F;
@@ -31,9 +35,14 @@ struct SpriteCommand {
     std::uint16_t textureId = 0;
     std::uint32_t color = 0xFFFFFFFFU;
     SpriteLayer layer = SpriteLayer::Ground;
+    std::uint8_t flags = 0;
     std::uint8_t material = 0;
     std::uint16_t submissionOrder = 0;
 };
+
+[[nodiscard]] constexpr std::uint8_t SpriteFlagValue(SpriteFlag flag) noexcept {
+    return static_cast<std::uint8_t>(flag);
+}
 
 class RenderQueue final {
 public:

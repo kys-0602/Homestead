@@ -7,8 +7,10 @@
 #include <iterator>
 
 #include "Homestead/Graphics/Presentation.hpp"
+#include "Homestead/Graphics/PlayerRenderer.hpp"
 #include "Homestead/Graphics/TileMapRenderer.hpp"
 #include "Homestead/Input/Action.hpp"
+#include "Homestead/Systems/PlayerMovement.hpp"
 
 namespace Homestead {
 namespace {
@@ -61,15 +63,24 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         return false;
     }
 
-    camera_.SetCenter({
-        static_cast<float>(tileMap_.Width() * TileSize) * 0.5F,
-        static_cast<float>(tileMap_.Height() * TileSize) * 0.5F});
+    player_.entity = entityWorld_.Create(
+        {static_cast<float>(tileMap_.Width() * TileSize) * 0.5F,
+         static_cast<float>(tileMap_.Height() * TileSize) * 0.5F},
+        MakeAssetId("player.idle.down.0"));
+    if (!entityWorld_.IsAlive(player_.entity)) {
+        tileMap_.Clear();
+        assets_.Clear();
+        window_.Shutdown();
+        return false;
+    }
 
     if (!graphics_.Initialize(
             window_.Handle(),
             window_.ClientWidth(),
             window_.ClientHeight(),
             assets_)) {
+        entityWorld_.Clear();
+        tileMap_.Clear();
         assets_.Clear();
         window_.Shutdown();
         return false;
@@ -118,8 +129,28 @@ int Application::Run() noexcept {
             }
         }
 
+        const TransformComponent* playerTransform = entityWorld_.Transform(player_.entity);
+        if (playerTransform == nullptr) {
+            return 1;
+        }
+        const float alpha = static_cast<float>(fixedFrame.alpha);
+        const Float2 playerPosition{
+            playerTransform->previous.x +
+                (playerTransform->current.x - playerTransform->previous.x) * alpha,
+            playerTransform->previous.y +
+                (playerTransform->current.y - playerTransform->previous.y) * alpha};
+        camera_.SetCenterClamped(
+            playerPosition,
+            static_cast<float>(tileMap_.Width() * TileSize),
+            static_cast<float>(tileMap_.Height() * TileSize));
+
         if (!TileMapRenderer::Build(tileMap_, camera_, assets_, renderQueue_) ||
-            !graphics_.Render(renderQueue_)) {
+            !PlayerRenderer::Add(
+                entityWorld_, player_, alpha, camera_, assets_, renderQueue_)) {
+            return 1;
+        }
+        renderQueue_.Sort();
+        if (!graphics_.Render(renderQueue_)) {
             return 1;
         }
     }
@@ -128,28 +159,18 @@ int Application::Run() noexcept {
 }
 
 bool Application::FixedUpdate() noexcept {
-    constexpr float movementPerStep =
-        60.0F * static_cast<float>(FixedStepController::StepSeconds);
-    Float2 center = camera_.Center();
-
-    if (input_.Held(Action::MoveLeft)) {
-        center.x -= movementPerStep;
-    }
-    if (input_.Held(Action::MoveRight)) {
-        center.x += movementPerStep;
-    }
-    if (input_.Held(Action::MoveUp)) {
-        center.y -= movementPerStep;
-    }
-    if (input_.Held(Action::MoveDown)) {
-        center.y += movementPerStep;
-    }
+    MovementInput movement{};
+    movement.x = (input_.Held(Action::MoveRight) ? 1.0F : 0.0F) -
+        (input_.Held(Action::MoveLeft) ? 1.0F : 0.0F);
+    movement.y = (input_.Held(Action::MoveDown) ? 1.0F : 0.0F) -
+        (input_.Held(Action::MoveUp) ? 1.0F : 0.0F);
 
     [[maybe_unused]] const bool interactPressed = input_.ConsumePressed(Action::Interact);
     [[maybe_unused]] const bool useToolPressed = input_.ConsumePressed(Action::UseTool);
     [[maybe_unused]] const bool menuPressed = input_.ConsumePressed(Action::Menu);
-    camera_.SetCenter(center);
-    return true;
+    return UpdatePlayerMovement(
+        entityWorld_, player_, tileMap_, movement,
+        static_cast<float>(FixedStepController::StepSeconds));
 }
 
 void Application::Shutdown() noexcept {
@@ -158,6 +179,7 @@ void Application::Shutdown() noexcept {
     }
 
     graphics_.Shutdown();
+    entityWorld_.Clear();
     tileMap_.Clear();
     assets_.Clear();
     window_.Shutdown();

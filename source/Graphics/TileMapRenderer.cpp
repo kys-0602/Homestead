@@ -67,7 +67,9 @@ bool AddGraphic(
     command.uvWidth = sprite->width;
     command.uvHeight = sprite->height;
     command.depth = static_cast<std::uint16_t>(tileY * MaximumMapTiles + tileX);
-    command.sortY = static_cast<std::uint16_t>((tileY + 1) * TileSize);
+    const float visibleBottom = worldY + TileSize - sprite->sourceHeight +
+        sprite->trimY + sprite->height;
+    command.sortY = static_cast<std::uint16_t>(std::clamp(visibleBottom, 0.0F, 65535.0F));
     command.layer = layer;
     return queue.Add(command);
 }
@@ -119,7 +121,7 @@ bool TileMapRenderer::Build(
                 ++result.submittedSprites;
                 if (tile->object != 0) {
                     if (!AddGraphic(
-                            tile->object, x, y, SpriteLayer::ObjectBack,
+                            tile->object, x, y, SpriteLayer::Actor,
                             camera, assets, queue)) {
                         return false;
                     }
