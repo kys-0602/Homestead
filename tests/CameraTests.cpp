@@ -45,5 +45,17 @@ int main() {
     if (edge.firstX != 0 || edge.firstY != 0 || edge.lastX >= 32 || edge.lastY >= 24) {
         return 5;
     }
+    camera.SetCenterClamped({10.0F, 10.0F}, 512.0F, 384.0F);
+    if (!Near(camera.Center().x, 160.0F) || !Near(camera.Center().y, 90.0F)) {
+        return 6;
+    }
+    camera.SetCenterClamped({500.0F, 380.0F}, 512.0F, 384.0F);
+    if (!Near(camera.Center().x, 352.0F) || !Near(camera.Center().y, 294.0F)) {
+        return 7;
+    }
+    camera.SetCenterClamped({100.0F, 100.0F}, 128.0F, 96.0F);
+    if (!Near(camera.Center().x, 64.0F) || !Near(camera.Center().y, 48.0F)) {
+        return 8;
+    }
     return 0;
 }

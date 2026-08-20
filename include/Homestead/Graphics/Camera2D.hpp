@@ -21,6 +21,7 @@ public:
     Camera2D(float viewportWidth, float viewportHeight) noexcept;
 
     void SetCenter(Float2 center) noexcept { center_ = center; }
+    void SetCenterClamped(Float2 center, float worldWidth, float worldHeight) noexcept;
     void SetZoom(float zoom) noexcept;
 
     [[nodiscard]] Float2 Center() const noexcept { return center_; }

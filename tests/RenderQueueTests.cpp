@@ -84,5 +84,9 @@ int main() {
         return 13;
     }
 
+    if (Homestead::SpriteFlagValue(Homestead::SpriteFlag::FlipHorizontal) != 1U) {
+        return 14;
+    }
+
     return 0;
 }

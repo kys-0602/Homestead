@@ -5,14 +5,14 @@
 ## 현재 상태
 
 - 마지막 갱신: 2026-08-20
-- 현재 완료 범위: 단계 0~7 구현
-- 다음 작업: 단계 8 `플레이어와 충돌`
+- 현재 완료 범위: 단계 0~8 구현
+- 다음 작업: 단계 9 `상호작용과 도구`
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `36,864 bytes`
+- 현재 Release EXE: `40,960 bytes`
 - 현재 `data.pak`: `88,216 bytes`
 - 현재 대표 save: 없음
-- 현재 합계: `125,080 bytes`
-- 남은 공간: `1,349,480 bytes`
+- 현재 합계: `129,176 bytes`
+- 남은 공간: `1,345,384 bytes`
 
 ## 단계별 기록
 
@@ -26,6 +26,7 @@
 | 5. 입력과 고정 업데이트 루프 | 완료 | `48394d4` (#9) | 26,112 bytes | +3,584 bytes |
 | 6. 에셋 패커의 최소 버전 | 구현 완료, 시각/D3D 검증 대기 | `bd51ebe` (#10) | 33,280 bytes | +7,168 bytes |
 | 7. 카메라와 타일맵 | 구현 및 시각 검증 완료, D3D Debug Layer 검증 대기 | `b560ff3` (#12) | 36,864 bytes | +3,584 bytes |
+| 8. 플레이어와 충돌 | 구현 및 gameplay 시각 검증 완료, D3D 검증 대기 | 병합 대기 | 40,960 bytes | +4,096 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -247,18 +248,47 @@
 
 - Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
 
-## 다음 작업: 단계 8
+### 단계 8: 플레이어와 충돌
 
-단계 7이 `main`에 병합되었으므로 `IMPLEMENTATION_ROADMAP.md`에 따라 다음 범위만
-진행한다.
+구현:
 
-- `PlayerState`와 최소 `EntityWorld`
-- 정규화된 자유 이동과 발 부분 AABB
-- X/Y축 tile collision과 벽 미끄러짐
-- 플레이어 추적 camera와 map 경계 제한
-- 발 위치 Y 기반 object/player 정렬
+- generation 검사를 포함한 16-slot 고정 용량 `EntityWorld`와 별도 `PlayerState`
+- 플레이어의 현재/이전 발 위치, sprite ID, 이동 속도와 방향/animation 상태
+- 입력 벡터 정규화와 60Hz 고정 update 기반 자유 이동
+- 발 위치 기준 10×6 논리 pixel AABB와 맵 밖을 막힌 영역으로 취급하는 tile collision
+- 나무 줄기, 가로/세로 울타리와 표지판의 실제 발판에 맞춘 object별 collision footprint
+- X/Y축 분리 해결과 벽 미끄러짐
+- 보간된 플레이어 위치를 추적하고 viewport를 맵 경계 안에 고정하는 camera
+- object와 player를 같은 Actor layer에서 발 위치 Y로 정렬하는 render queue
+- 64×64 player source의 실제 발 위치(Y=41) anchor와 좌측 이동 sprite 수평 반전
 
-단계 8에서도 Release EXE와 `data.pak` 크기 및 전체 남은 byte를 기록한다.
+검증:
+
+- Debug/Release `/W4` build 성공
+- 기존 테스트와 PlayerMovement 테스트를 합한 10개가 Debug/Release에서 모두 통과
+- 축 이동과 대각선 이동의 1초 이동 거리가 각각 60 logical pixel로 동일함을 검증
+- 수직 벽을 통과하지 않으면서 Y축 이동이 계속되는 벽 미끄러짐 검증
+- 나무의 수관이 아닌 줄기 footprint에서 충돌하는지 검증
+- 이미 지나친 좁은 object collider가 플레이어를 반대쪽 면으로 되돌리지 않는지 회귀 검증
+- fixed update 전후의 previous/current 위치 보존과 idle 전환 검증
+- camera의 왼쪽/위, 오른쪽/아래 경계 제한과 viewport보다 작은 맵 중앙 고정 검증
+- Debug 앱이 실제 pak과 player sprite를 로드한 상태로 3초간 조기 종료 없이 실행됨
+- 사용자가 실제 표시 창에서 자유/대각선 이동, 좌측 sprite 반전과 object 충돌을 확인하고 수용함
+- 나무·울타리 collision 위치와 순간이동 회귀 수정 후 gameplay 동작을 수동 확인함
+- Release `Homestead.exe`: `40,960 bytes` (단계 7 대비 `+4,096 bytes`)
+- `data.pak`: `88,216 bytes` (단계 7 대비 변경 없음)
+- 대표 save: 없음
+- 제출 합계: `129,176 bytes` (단계 7 대비 `+4,096 bytes`); 상한까지 `1,345,384 bytes`
+
+남은 확인:
+
+- Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
+
+## 다음 작업: 단계 9
+
+`IMPLEMENTATION_ROADMAP.md`에 따라 `상호작용과 도구` 범위를 진행한다.
+
+단계 9에서도 Release EXE와 `data.pak` 크기 및 전체 남은 byte를 기록한다.
 
 ## 기록 갱신 규칙
 

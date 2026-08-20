@@ -4,6 +4,7 @@
 
 #include "Homestead/Assets/AssetStore.hpp"
 #include "Homestead/Core/FixedStep.hpp"
+#include "Homestead/Game/PlayerState.hpp"
 #include "Homestead/Graphics/Camera2D.hpp"
 #include "Homestead/Graphics/Graphics.hpp"
 #include "Homestead/Graphics/Presentation.hpp"
@@ -12,6 +13,7 @@
 #include "Homestead/Platform/Clock.hpp"
 #include "Homestead/Platform/Window.hpp"
 #include "Homestead/World/TileMap.hpp"
+#include "Homestead/World/EntityWorld.hpp"
 
 namespace Homestead {
 
@@ -34,6 +36,8 @@ private:
     Clock clock_;
     AssetStore assets_;
     TileMap tileMap_;
+    EntityWorld entityWorld_;
+    PlayerState player_;
     Graphics graphics_;
     Input input_;
     FixedStepController fixedStep_;

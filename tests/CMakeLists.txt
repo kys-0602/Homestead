@@ -135,3 +135,18 @@ target_compile_options(HomesteadMapCompilerTests PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
 )
 add_test(NAME HomesteadMapCompilerTests COMMAND HomesteadMapCompilerTests)
+
+add_executable(HomesteadPlayerMovementTests
+    PlayerMovementTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Systems/PlayerMovement.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/EntityWorld.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/TileMap.cpp"
+)
+
+target_include_directories(HomesteadPlayerMovementTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+target_compile_options(HomesteadPlayerMovementTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+add_test(NAME HomesteadPlayerMovementTests COMMAND HomesteadPlayerMovementTests)
