@@ -14,6 +14,7 @@
 #include "Homestead/Platform/Window.hpp"
 #include "Homestead/World/TileMap.hpp"
 #include "Homestead/World/EntityWorld.hpp"
+#include "Homestead/Systems/InteractionSystem.hpp"
 
 namespace Homestead {
 
@@ -45,6 +46,7 @@ private:
         static_cast<float>(LogicalWidth),
         static_cast<float>(LogicalHeight)};
     RenderQueue renderQueue_;
+    TileSelection selection_{};
     bool initialized_ = false;
 };
 

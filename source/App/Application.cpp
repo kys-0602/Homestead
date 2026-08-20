@@ -8,9 +8,12 @@
 
 #include "Homestead/Graphics/Presentation.hpp"
 #include "Homestead/Graphics/PlayerRenderer.hpp"
+#include "Homestead/Graphics/SelectionRenderer.hpp"
 #include "Homestead/Graphics/TileMapRenderer.hpp"
 #include "Homestead/Input/Action.hpp"
 #include "Homestead/Systems/PlayerMovement.hpp"
+#include "Homestead/Systems/InteractionSystem.hpp"
+#include "Homestead/Systems/ToolSystem.hpp"
 
 namespace Homestead {
 namespace {
@@ -146,7 +149,8 @@ int Application::Run() noexcept {
 
         if (!TileMapRenderer::Build(tileMap_, camera_, assets_, renderQueue_) ||
             !PlayerRenderer::Add(
-                entityWorld_, player_, alpha, camera_, assets_, renderQueue_)) {
+                entityWorld_, player_, alpha, camera_, assets_, renderQueue_) ||
+            !AddSelectionOverlay(selection_, camera_, assets_, renderQueue_)) {
             return 1;
         }
         renderQueue_.Sort();
@@ -165,12 +169,56 @@ bool Application::FixedUpdate() noexcept {
     movement.y = (input_.Held(Action::MoveDown) ? 1.0F : 0.0F) -
         (input_.Held(Action::MoveUp) ? 1.0F : 0.0F);
 
-    [[maybe_unused]] const bool interactPressed = input_.ConsumePressed(Action::Interact);
-    [[maybe_unused]] const bool useToolPressed = input_.ConsumePressed(Action::UseTool);
+    PhysicalKey interactSource = PhysicalKey::Count;
+    PhysicalKey toolSource = PhysicalKey::Count;
+    const bool interactPressed = input_.ConsumePressed(Action::Interact, interactSource);
+    const bool useToolPressed = input_.ConsumePressed(Action::UseTool, toolSource);
     [[maybe_unused]] const bool menuPressed = input_.ConsumePressed(Action::Menu);
-    return UpdatePlayerMovement(
+    if (!UpdatePlayerMovement(
         entityWorld_, player_, tileMap_, movement,
-        static_cast<float>(FixedStepController::StepSeconds));
+        static_cast<float>(FixedStepController::StepSeconds))) {
+        return false;
+    }
+
+    const TransformComponent* transform = entityWorld_.Transform(player_.entity);
+    if (transform == nullptr) {
+        return false;
+    }
+    camera_.SetCenterClamped(
+        {transform->current.x, transform->current.y},
+        static_cast<float>(tileMap_.Width() * TileSize),
+        static_cast<float>(tileMap_.Height() * TileSize));
+    const WorldPosition playerFeet = transform->current;
+    TileSelection mouseSelection{};
+    if (input_.IsLogicalMouseValid()) {
+        const Float2 mouseWorld = camera_.ScreenToWorld({
+            static_cast<float>(input_.LogicalMouseX()),
+            static_cast<float>(input_.LogicalMouseY())});
+        mouseSelection = SelectMouseTile(
+            playerFeet, {mouseWorld.x, mouseWorld.y}, tileMap_);
+        selection_ = mouseSelection;
+    } else {
+        selection_ = SelectFrontTile(playerFeet, player_.facing, tileMap_);
+    }
+
+    if (interactPressed) {
+        const TileSelection interactionTarget =
+            interactSource == PhysicalKey::MouseRight && input_.IsLogicalMouseValid() ?
+            mouseSelection : SelectFrontTile(playerFeet, player_.facing, tileMap_);
+        selection_ = interactionTarget;
+        [[maybe_unused]] const bool interacted =
+            TryInteract(player_, tileMap_, interactionTarget);
+    }
+    if (useToolPressed) {
+        const TileSelection toolTarget =
+            toolSource == PhysicalKey::MouseLeft && input_.IsLogicalMouseValid() ?
+            mouseSelection : SelectFrontTile(playerFeet, player_.facing, tileMap_);
+        selection_ = toolTarget;
+        if (TryStartToolUse(player_, tileMap_, toolTarget)) {
+            FaceSelection(player_, playerFeet, toolTarget);
+        }
+    }
+    return UpdateToolUse(entityWorld_, player_, tileMap_);
 }
 
 void Application::Shutdown() noexcept {

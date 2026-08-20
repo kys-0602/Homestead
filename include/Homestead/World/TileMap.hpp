@@ -20,13 +20,16 @@ enum class TileGraphic : std::uint16_t {
     FenceHorizontal,
     FenceVertical,
     Sign,
+    FarmlandDry,
+    FarmlandWet,
     Count
 };
 
 enum class TileFlag : std::uint8_t {
     Blocked = 1U << 0U,
     Water = 1U << 1U,
-    Tilled = 1U << 2U
+    Tilled = 1U << 2U,
+    Watered = 1U << 3U
 };
 
 struct Tile {
@@ -42,6 +45,7 @@ public:
     void Clear() noexcept;
 
     [[nodiscard]] const Tile* Get(std::int32_t x, std::int32_t y) const noexcept;
+    [[nodiscard]] Tile* Get(std::int32_t x, std::int32_t y) noexcept;
     [[nodiscard]] std::uint16_t Width() const noexcept { return width_; }
     [[nodiscard]] std::uint16_t Height() const noexcept { return height_; }
     [[nodiscard]] std::uint16_t ChunkColumns() const noexcept { return chunkColumns_; }

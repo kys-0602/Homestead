@@ -18,6 +18,7 @@ public:
     [[nodiscard]] bool Pressed(Action action) const noexcept;
     [[nodiscard]] bool Released(Action action) const noexcept;
     [[nodiscard]] bool ConsumePressed(Action action) noexcept;
+    [[nodiscard]] bool ConsumePressed(Action action, PhysicalKey& source) noexcept;
 
     void SetClientMouse(std::int32_t x, std::int32_t y) noexcept;
     void SetLogicalMouse(std::uint32_t x, std::uint32_t y, bool valid) noexcept;
@@ -40,6 +41,7 @@ private:
     std::array<bool, ActionCount> pressed_{};
     std::array<bool, ActionCount> released_{};
     std::array<bool, ActionCount> pendingPressed_{};
+    std::array<PhysicalKey, ActionCount> pendingSource_{};
     std::int32_t clientMouseX_ = -1;
     std::int32_t clientMouseY_ = -1;
     std::uint32_t logicalMouseX_ = 0;

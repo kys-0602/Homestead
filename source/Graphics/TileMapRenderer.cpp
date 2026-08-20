@@ -21,6 +21,8 @@ AssetId GraphicAssetId(std::uint16_t graphic) noexcept {
     case TileGraphic::FenceHorizontal: return MakeAssetId("decor.fence.horizontal");
     case TileGraphic::FenceVertical: return MakeAssetId("decor.fence.vertical");
     case TileGraphic::Sign: return MakeAssetId("decor.sign");
+    case TileGraphic::FarmlandDry: return MakeAssetId("terrain.farmland.dry");
+    case TileGraphic::FarmlandWet: return MakeAssetId("terrain.farmland.wet");
     case TileGraphic::None:
     case TileGraphic::Count:
         return 0;
@@ -113,8 +115,14 @@ bool TileMapRenderer::Build(
                     return false;
                 }
                 ++result.visitedTiles;
+                std::uint16_t ground = tile->ground;
+                if ((tile->flags & TileFlagValue(TileFlag::Tilled)) != 0) {
+                    ground = static_cast<std::uint16_t>(
+                        (tile->flags & TileFlagValue(TileFlag::Watered)) != 0 ?
+                        TileGraphic::FarmlandWet : TileGraphic::FarmlandDry);
+                }
                 if (!AddGraphic(
-                        tile->ground, x, y, SpriteLayer::Ground,
+                        ground, x, y, SpriteLayer::Ground,
                         camera, assets, queue)) {
                     return false;
                 }

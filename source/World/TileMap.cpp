@@ -56,7 +56,8 @@ bool TileMap::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept {
     chunks_.resize(static_cast<std::size_t>(chunkColumns) * chunkRows);
 
     constexpr std::uint8_t validFlags = TileFlagValue(TileFlag::Blocked) |
-        TileFlagValue(TileFlag::Water) | TileFlagValue(TileFlag::Tilled);
+        TileFlagValue(TileFlag::Water) | TileFlagValue(TileFlag::Tilled) |
+        TileFlagValue(TileFlag::Watered);
     for (std::uint32_t index = 0; index < tileCount; ++index) {
         const std::uint8_t* record = data + MapHeaderSize + index * TileRecordSize;
         Tile tile{};
@@ -106,6 +107,10 @@ const Tile* TileMap::Get(std::int32_t x, std::int32_t y) const noexcept {
         static_cast<std::size_t>(y % TileChunkSize) * TileChunkSize +
         static_cast<std::size_t>(x % TileChunkSize);
     return &chunks_[chunkIndex].tiles[tileIndex];
+}
+
+Tile* TileMap::Get(std::int32_t x, std::int32_t y) noexcept {
+    return const_cast<Tile*>(static_cast<const TileMap&>(*this).Get(x, y));
 }
 
 } // namespace Homestead
