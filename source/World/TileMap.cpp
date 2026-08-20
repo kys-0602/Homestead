@@ -65,9 +65,11 @@ bool TileMap::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept {
         tile.object = ReadU16(record + 2);
         tile.flags = record[4];
         tile.variant = record[5];
+        const bool tilled = (tile.flags & TileFlagValue(TileFlag::Tilled)) != 0;
+        const bool watered = (tile.flags & TileFlagValue(TileFlag::Watered)) != 0;
         if (!IsValidGraphic(tile.ground) || tile.ground == 0 ||
             !IsValidGraphic(tile.object) || (tile.flags & ~validFlags) != 0 ||
-            tile.variant != 0) {
+            (watered && !tilled) || tile.variant != 0) {
             Clear();
             return false;
         }

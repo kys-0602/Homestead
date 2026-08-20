@@ -174,11 +174,6 @@ bool Application::FixedUpdate() noexcept {
     const bool interactPressed = input_.ConsumePressed(Action::Interact, interactSource);
     const bool useToolPressed = input_.ConsumePressed(Action::UseTool, toolSource);
     [[maybe_unused]] const bool menuPressed = input_.ConsumePressed(Action::Menu);
-    if (!UpdatePlayerMovement(
-        entityWorld_, player_, tileMap_, movement,
-        static_cast<float>(FixedStepController::StepSeconds))) {
-        return false;
-    }
 
     const TransformComponent* transform = entityWorld_.Transform(player_.entity);
     if (transform == nullptr) {
@@ -188,7 +183,7 @@ bool Application::FixedUpdate() noexcept {
         {transform->current.x, transform->current.y},
         static_cast<float>(tileMap_.Width() * TileSize),
         static_cast<float>(tileMap_.Height() * TileSize));
-    const WorldPosition playerFeet = transform->current;
+    WorldPosition playerFeet = transform->current;
     TileSelection mouseSelection{};
     if (input_.IsLogicalMouseValid()) {
         const Float2 mouseWorld = camera_.ScreenToWorld({
@@ -216,6 +211,32 @@ bool Application::FixedUpdate() noexcept {
         selection_ = toolTarget;
         if (TryStartToolUse(player_, tileMap_, toolTarget)) {
             FaceSelection(player_, playerFeet, toolTarget);
+        }
+    }
+
+    if (!UpdatePlayerMovement(
+        entityWorld_, player_, tileMap_, movement,
+        static_cast<float>(FixedStepController::StepSeconds))) {
+        return false;
+    }
+    transform = entityWorld_.Transform(player_.entity);
+    if (transform == nullptr) {
+        return false;
+    }
+    playerFeet = transform->current;
+    camera_.SetCenterClamped(
+        {playerFeet.x, playerFeet.y},
+        static_cast<float>(tileMap_.Width() * TileSize),
+        static_cast<float>(tileMap_.Height() * TileSize));
+    if (!interactPressed && !useToolPressed) {
+        if (input_.IsLogicalMouseValid()) {
+            const Float2 mouseWorld = camera_.ScreenToWorld({
+                static_cast<float>(input_.LogicalMouseX()),
+                static_cast<float>(input_.LogicalMouseY())});
+            selection_ = SelectMouseTile(
+                playerFeet, {mouseWorld.x, mouseWorld.y}, tileMap_);
+        } else {
+            selection_ = SelectFrontTile(playerFeet, player_.facing, tileMap_);
         }
     }
     return UpdateToolUse(entityWorld_, player_, tileMap_);
