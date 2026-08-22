@@ -14,6 +14,7 @@
 #include "Homestead/Platform/Clock.hpp"
 #include "Homestead/Platform/Window.hpp"
 #include "Homestead/World/TileMap.hpp"
+#include "Homestead/World/CropField.hpp"
 #include "Homestead/World/EntityWorld.hpp"
 #include "Homestead/Systems/InteractionSystem.hpp"
 
@@ -38,6 +39,7 @@ private:
     Clock clock_;
     AssetStore assets_;
     TileMap tileMap_;
+    CropField crops_;
     EntityWorld entityWorld_;
     PlayerState player_;
     Inventory inventory_;
