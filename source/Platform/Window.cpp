@@ -104,8 +104,11 @@ bool Window::Initialize(HINSTANCE instance, int showCommand, Input& input,
 
     ShowWindow(handle_, showCommand);
     UpdateWindow(handle_);
-    return !fullscreen || ApplyDisplaySettings(windowScale, true);
-}
+    if (fullscreen && !ApplyDisplaySettings(windowScale, true)) {
+        Shutdown();
+        return false;
+    }
+    return true;
 
 bool Window::ApplyDisplaySettings(std::uint8_t windowScale, bool fullscreen) noexcept {
     if (handle_ == nullptr || windowScale < 2 || windowScale > 4) return false;
