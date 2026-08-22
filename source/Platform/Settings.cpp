@@ -76,7 +76,7 @@ bool SettingsSystem::Load(Settings& settings) const noexcept {
         Get32(bytes.data() + 8) != Checksum(bytes.data(), 8)) return false;
     Settings decoded{};
     decoded.windowScale = bytes[5];
-    decoded.fullscreen = (bytes[6] & 1U) != 0;
+    decoded.fullscreen = bytes[6] != 0;
     decoded.masterVolume = static_cast<std::uint8_t>(bytes[7] & 0x0FU);
     decoded.musicVolume = static_cast<std::uint8_t>((bytes[7] >> 4U) & 0x0FU);
     decoded.effectVolume = static_cast<std::uint8_t>(bytes[6] >> 1U);

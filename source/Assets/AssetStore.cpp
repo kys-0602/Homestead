@@ -97,8 +97,6 @@ bool AssetStore::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept
     EntryView atlasEntry{};
     EntryView spriteEntry{};
     EntryView mapEntry{};
-    std::array<EntryView, 7> audioEntries{};
-    std::size_t audioCount = 0;
     std::array<EntryView, MaxPakEntries> entries{};
     AssetId previousId = 0;
     for (std::uint32_t index = 0; index < entryCount; ++index) {
@@ -138,8 +136,6 @@ bool AssetStore::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept
             view.type == 3 && view.id == MakeAssetId("map/farm") &&
             mapEntry.size == 0) {
             mapEntry = view;
-        } else if (view.type == 4 && audioCount < audioEntries.size()) {
-            audioEntries[audioCount++] = view;
         } else {
             return false;
         }
@@ -209,16 +205,6 @@ bool AssetStore::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept
     atlasWidth_ = width;
     atlasHeight_ = height;
     mapBytes_.assign(data + mapEntry.offset, data + mapEntry.offset + mapEntry.size);
-    audio_.reserve(audioCount);
-    for (std::size_t index = 0; index < audioCount; ++index) {
-        const EntryView& entry = audioEntries[index];
-        const std::uint8_t* bytes = data + entry.offset;
-        if (entry.size < 17 || bytes[0]!='H' || bytes[1]!='S' || bytes[2]!='A' || bytes[3]!='2' ||
-            ReadU16(bytes+4)!=1 || ReadU16(bytes+6)!=8000 || ReadU16(bytes+12)!=0 ||
-            bytes[13]!=0 || bytes[14]!=40 || bytes[15]!=0 ||
-            16ULL+(ReadU32(bytes+8)+3ULL)/4ULL != entry.size) { Clear(); return false; }
-        audio_.push_back({entry.id, {bytes, bytes + entry.size}});
-    }
     return true;
 }
 
@@ -229,16 +215,9 @@ const SpriteAsset* AssetStore::FindSprite(AssetId id) const noexcept {
     return found != sprites_.end() && found->id == id ? &*found : nullptr;
 }
 
-const AudioAsset* AssetStore::FindAudio(AssetId id) const noexcept {
-    const auto found = std::lower_bound(audio_.begin(), audio_.end(), id,
-        [](const AudioAsset& audio, AssetId value) { return audio.id < value; });
-    return found != audio_.end() && found->id == id ? &*found : nullptr;
-}
-
 void AssetStore::Clear() noexcept {
     atlasPixels_.clear();
     sprites_.clear();
-    audio_.clear();
     mapBytes_.clear();
     atlasWidth_ = 0;
     atlasHeight_ = 0;

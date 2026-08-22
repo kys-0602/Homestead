@@ -73,11 +73,6 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         window_.Shutdown();
         return false;
     }
-    if (audio_.Initialize(assets_)) {
-        audio_.SetVolumes(settings_.masterVolume, settings_.musicVolume, settings_.effectVolume);
-        [[maybe_unused]] const bool musicStarted =
-            audio_.PlayMusic(MakeAssetId("audio.music.farm"));
-    }
 
     player_.entity = entityWorld_.Create(
         {static_cast<float>(tileMap_.Width() * TileSize) * 0.5F,
@@ -250,7 +245,6 @@ bool Application::FixedUpdate() noexcept {
         const Action action = static_cast<Action>(
             static_cast<std::uint8_t>(Action::Hotbar1) + static_cast<std::uint8_t>(index));
         if (input_.ConsumePressed(action)) {
-            if (selectedSlot_ != index) audio_.PlayEffect(MakeAssetId("audio.ui.move"));
             selectedSlot_ = index;
             inventoryCursor_ = index;
         }
@@ -265,7 +259,6 @@ bool Application::FixedUpdate() noexcept {
         if (left && inventoryCursor_ % 8 > 0) --inventoryCursor_;
         if (right && inventoryCursor_ % 8 < 7) ++inventoryCursor_;
         if ((up || down)) inventoryCursor_ = (inventoryCursor_ + 8) % Inventory::SlotCount;
-        if (left || right || up || down) audio_.PlayEffect(MakeAssetId("audio.ui.move"));
 
         PhysicalKey interactSource = PhysicalKey::Count;
         PhysicalKey source = PhysicalKey::Count;
@@ -282,7 +275,6 @@ bool Application::FixedUpdate() noexcept {
             activate = false;
         }
         if (activate) {
-            audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
             if (moveSource_ == Inventory::SlotCount) {
                 if (inventory_.Slot(inventoryCursor_).item != ItemId::None) moveSource_ = inventoryCursor_;
             } else {
@@ -351,11 +343,8 @@ bool Application::FixedUpdate() noexcept {
         if (player_.toolUse.action == ToolAction::None &&
             crops_.Harvest(inventory_, interactionTarget)) {
             FaceSelection(player_, playerFeet, interactionTarget);
-            if (harvestedCarrots_ < 3) {
-                ++harvestedCarrots_;
-                goalComplete_ = harvestedCarrots_ == 3;
-            }
-            audio_.PlayEffect(MakeAssetId("audio.harvest"));
+            if (harvestedCarrots_ < 3) ++harvestedCarrots_;
+            goalComplete_ = harvestedCarrots_ >= 3;
         } else {
             [[maybe_unused]] const bool interacted =
                 TryInteract(player_, tileMap_, interactionTarget);
@@ -374,7 +363,6 @@ bool Application::FixedUpdate() noexcept {
             player_.toolUse.action == ToolAction::None &&
             crops_.Plant(tileMap_, inventory_, toolTarget, selectedItem)) {
             FaceSelection(player_, playerFeet, toolTarget);
-            audio_.PlayEffect(MakeAssetId("audio.plant"));
         } else if (TryStartToolUse(player_, tileMap_, toolTarget, action)) {
             FaceSelection(player_, playerFeet, toolTarget);
         }
@@ -405,15 +393,7 @@ bool Application::FixedUpdate() noexcept {
             selection_ = SelectFrontTile(playerFeet, player_.facing, tileMap_);
         }
     }
-    const ToolAction impactAction = player_.toolUse.action;
-    const bool impactNow = impactAction != ToolAction::None && !player_.toolUse.applied &&
-        player_.toolUse.elapsedTicks + 1U >= ToolImpactTick;
     if (!UpdateToolUse(entityWorld_, player_, tileMap_)) return false;
-    if (impactNow) {
-        const bool hoe = impactAction == ToolAction::Hoe;
-        audio_.PlayEffect(hoe ? MakeAssetId("audio.hoe") : MakeAssetId("audio.watering"),
-            hoe ? 1.7F : 1.9F);
-    }
     if (instructionTicks_ != 0) --instructionTicks_;
     [[maybe_unused]] const bool unexpectedDayChange = worldClock_.FixedUpdate();
     return !unexpectedDayChange;
@@ -427,7 +407,6 @@ void Application::Shutdown() noexcept {
     [[maybe_unused]] const bool saved = SaveGame();
     [[maybe_unused]] const bool savedSettings = settingsSystem_.Save(settings_);
     graphics_.Shutdown();
-    audio_.Shutdown();
     crops_.Clear();
     worldClock_.Reset();
     inventory_.Clear();
@@ -453,7 +432,6 @@ bool Application::UpdatePauseMenu() noexcept {
     const bool right = input_.ConsumePressed(Action::MoveRight);
     if (up) pauseFocus_ = pauseFocus_ == 0 ? PauseItemCount - 1 : pauseFocus_ - 1;
     if (down) pauseFocus_ = static_cast<std::uint8_t>((pauseFocus_ + 1) % PauseItemCount);
-    if (up || down) audio_.PlayEffect(MakeAssetId("audio.ui.move"));
 
     PhysicalKey interactSource = PhysicalKey::Count;
     PhysicalKey toolSource = PhysicalKey::Count;
@@ -490,9 +468,6 @@ bool Application::UpdatePauseMenu() noexcept {
         settingsChanged = true;
     }
     if (displayChanged && !ApplyDisplaySettings()) return false;
-    if (activate || direction != 0) audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
-    if (settingsChanged) audio_.SetVolumes(
-        settings_.masterVolume, settings_.musicVolume, settings_.effectVolume);
     if (settingsChanged || !paused_) [[maybe_unused]] const bool saved = settingsSystem_.Save(settings_);
     return true;
 }
@@ -561,8 +536,7 @@ bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
     if (transform == nullptr) return false;
     transform->current = {playerX, playerY}; transform->previous = transform->current;
     selectedSlot_ = snapshot.selectedSlot; inventoryCursor_ = selectedSlot_;
-    harvestedCarrots_ = snapshot.harvestedCarrots;
-    goalComplete_ = false;
+    harvestedCarrots_ = snapshot.harvestedCarrots; goalComplete_ = harvestedCarrots_ >= 3;
     instructionTicks_ = 0;
     return true;
 }

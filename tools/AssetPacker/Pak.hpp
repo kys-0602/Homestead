@@ -11,7 +11,6 @@ struct PakStats {
     std::size_t entryCount = 0;
     std::size_t spriteCount = 0;
     std::size_t mapBytes = 0;
-    std::size_t audioBytes = 0;
     std::uintmax_t byteCount = 0;
 };
 

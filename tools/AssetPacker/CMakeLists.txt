@@ -11,7 +11,6 @@ target_compile_options(HomesteadAssetManifest PRIVATE
 )
 
 add_executable(AssetPacker
-    Audio.cpp
     Atlas.cpp
     Image.cpp
     Main.cpp

@@ -1,7 +1,6 @@
 #include "Pak.hpp"
 
 #include "Map.hpp"
-#include "Audio.hpp"
 
 #include <algorithm>
 #include <array>
@@ -205,16 +204,6 @@ bool BuildPak(
     }
     stats.mapBytes = mapStats.byteCount;
     payloads.push_back(std::move(map));
-    constexpr std::array<std::pair<const char*, const char*>, 7> audioFiles{{
-        {"audio.music.farm", "music/FunCrafting.wav"}, {"audio.hoe", "sfx/hoe.wav"},
-        {"audio.watering", "sfx/watering.wav"}, {"audio.plant", "sfx/plant.wav"},
-        {"audio.harvest", "sfx/harvest.wav"}, {"audio.ui.move", "sfx/ui_move.wav"},
-        {"audio.ui.confirm", "sfx/ui_confirm.wav"}}};
-    for (const auto& audioFile : audioFiles) {
-        Payload audio{}; audio.id=Hash(audioFile.first); audio.type=4;
-        if (!BuildAdpcm2(assetRoot / "Audio" / audioFile.second, audio.bytes, error)) return false;
-        stats.audioBytes += audio.bytes.size(); payloads.push_back(std::move(audio));
-    }
     std::sort(payloads.begin(), payloads.end(), [](const Payload& left, const Payload& right) {
         return left.id < right.id;
     });

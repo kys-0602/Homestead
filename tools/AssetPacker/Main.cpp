@@ -49,7 +49,7 @@ int main(int argumentCount, char** arguments) {
     }
     std::cout << "Wrote data.pak with " << pakStats.entryCount << " entries, "
               << pakStats.spriteCount << " sprite records, and "
-              << pakStats.mapBytes << " map bytes, " << pakStats.audioBytes << " audio bytes ("
+              << pakStats.mapBytes << " map bytes ("
               << pakStats.byteCount << " bytes total).\n";
     return 0;
 }
