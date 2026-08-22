@@ -30,7 +30,7 @@ bool AddStatusUI(const WorldClock& clock, std::uint8_t harvested, std::uint8_t g
     const SpriteAsset* pixel = assets.FindSprite(MakeAssetId("terrain.grass"));
     if (pixel == nullptr ||
         !AddFade(clock.FadeAlpha(), 100, *pixel, queue)) return false;
-    if (clock.FadeAlpha() != 0) return true;
+    if (clock.IsTransitioning()) return true;
 
     if (complete && !AddFade(176, 10, *pixel, queue)) return false;
 
