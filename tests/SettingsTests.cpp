@@ -34,6 +34,10 @@ int main() {
         loaded.windowScale != 2 || !loaded.fullscreen || loaded.masterVolume != 7 ||
         loaded.musicVolume != 6 || loaded.effectVolume != 5) return 9;
 
+    settings.fullscreen = false;
+    if (!system.Save(settings) || !system.Load(loaded) || loaded.fullscreen ||
+        loaded.effectVolume != 5) return 12;
+
     wchar_t filePath[MAX_PATH]{};
     swprintf_s(filePath, L"%s\\Homestead\\settings.cfg", root);
     HANDLE file = CreateFileW(filePath, GENERIC_WRITE, 0, nullptr, OPEN_EXISTING,

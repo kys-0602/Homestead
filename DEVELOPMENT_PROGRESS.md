@@ -5,14 +5,14 @@
 ## 현재 상태
 
 - 마지막 갱신: 2026-08-22
-- 현재 완료 범위: 단계 0~14 구현
-- 다음 작업: 단계 15 `오디오`
+- 현재 완료 범위: 단계 0~15 구현
+- 다음 작업: 단계 16 `콘텐츠와 게임 완결`
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `69,120 bytes`
-- 현재 `data.pak`: `86,228 bytes`
+- 현재 Release EXE: `76,288 bytes`
+- 현재 `data.pak`: `339,836 bytes`
 - 현재 대표 save: `66 bytes`
-- 현재 합계: `155,414 bytes`
-- 남은 공간: `1,319,146 bytes`
+- 현재 합계: `416,190 bytes`
+- 남은 공간: `1,058,370 bytes`
 
 ## 단계별 기록
 
@@ -32,7 +32,8 @@
 | 11. 농사 핵심 루프 | 구현 완료, gameplay GUI 검증 대기 | `0db6c8e` (#17) | 49,152 bytes | +2,560 bytes |
 | 12. 시간, 하루 종료와 최소 목표 | 구현 완료, gameplay GUI 검증 대기 | `b02b256` (#18) | 51,200 bytes | +2,048 bytes |
 | 13. 저장과 불러오기 | 구현 완료, 장시간 gameplay 검증 대기 | `74c1a13` (#19) | 62,976 bytes | +11,776 bytes |
-| 14. UI와 설정 정리 | 구현 완료, GUI 검증 대기 | 미커밋 작업 트리 | 69,120 bytes | +6,144 bytes |
+| 14. UI와 설정 정리 | 구현 완료, GUI 검증 대기 | `17e48e6` (#20) | 69,120 bytes | +6,144 bytes |
+| 15. 오디오 | 구현 완료, 실제 청취 검증 진행 중 | 미커밋 작업 트리 | 76,288 bytes | +7,168 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -416,6 +417,7 @@
 - uppercase와 숫자의 실제 5-pixel glyph bounds를 사용해 HUD와 stack count baseline 정렬
 - `GROW 3 CARROTS`, `N ENDS DAY` 안내와 당근 3개 수확 목표
 - 목표 달성 시 반투명 완료 화면과 `GOAL COMPLETE` 표시, world simulation 정지
+- 완료된 저장을 다시 불러올 때 완료 화면을 반복 표시하지 않고, 목표 최초 달성 순간에만 표시
 
 검증:
 
@@ -510,9 +512,46 @@
 - 단계 15에서 master/music/effect 값을 실제 audio bus gain에 연결
 - Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
 
-## 다음 작업: 단계 15
+### 단계 15: 오디오
 
-`IMPLEMENTATION_ROADMAP.md`에 따라 `오디오` 범위를 진행한다.
+구현:
+
+- WAV 원본을 8kHz mono 2-bit ADPCM `HSA2` payload로 변환하는 AssetPacker 경로
+- 배경 음악 1개와 경작·물주기·심기·수확·UI 이동·UI 확인 효과음 6개를 pak type 4로 패킹
+- pak 오디오 header/version/rate/count/range/checksum 검증과 stable `AssetId` 조회
+- 시작 시 선택 오디오를 PCM으로 한 번 복원하는 작은 2-bit ADPCM decoder
+- XAudio2 mastering voice, 반복 music voice와 4개 고정 effect voice pool
+- 배경 음악에 묻히던 괭이질과 물주기 효과음에 각각 1.7배, 1.9배 재생 게인 적용
+- 동일 효과음이 재생 중이면 중복 요청을 거부하는 제한
+- 단계 14 master/music/effect 설정을 실제 voice gain에 연결하고 즉시 변경
+- 전체 124.92초 `FunCrafting` 음악 반복 재생
+- 경작 impact, 물주기 impact, 씨앗 심기, 수확과 inventory/pause UI 이벤트 연결
+- 출력 장치 또는 XAudio2가 없을 때 무음으로 계속 실행하는 fallback
+- 배경음 출처와 사용 조건을 `assets-src/AUDIO_LICENSES.md`에 기록
+
+검증:
+
+- Debug/Release `/W4` build 성공
+- 기존 테스트와 AudioCodec/실제 pak AudioAsset 테스트를 합한 19개가 Debug/Release에서 모두 통과
+- 잘못된 magic과 truncated 2-bit ADPCM payload 거부 검증
+- 실제 생성된 10-entry pak에서 7개 audio stable ID와 payload 로드 검증
+- 오디오 출력 장치가 없는 자동 실행 환경에서 3초간 조기 종료 없이 무음 fallback 동작
+- pak audio payload 합계: `253,439 bytes` (330KiB 오디오 예산까지 `84,481 bytes`)
+- Release `Homestead.exe`: `76,288 bytes` (단계 14 대비 `+7,168 bytes`)
+- `data.pak`: `339,836 bytes` (단계 14 대비 `+253,608 bytes`)
+- 대표 save: `66 bytes`
+- 제출 합계: `416,190 bytes` (단계 14 대비 `+260,776 bytes`); 상한까지 `1,058,370 bytes`
+
+남은 확인:
+
+- 실제 오디오 출력 장치에서 음악 반복 경계와 master/music/effect 0~10 gain 확인
+- 경작·물주기·심기·수확 효과음의 재생 시점과 UI 중복 제한 청취 확인
+- 장시간 실행, pause/inventory 전환과 종료 후 XAudio2 voice 누수 여부 확인
+- Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
+
+## 다음 작업: 단계 16
+
+`IMPLEMENTATION_ROADMAP.md`에 따라 `콘텐츠와 게임 완결` 범위를 진행한다.
 
 ## 기록 갱신 규칙
 

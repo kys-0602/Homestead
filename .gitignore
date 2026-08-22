@@ -70,6 +70,7 @@ $RECYCLE.BIN/
 /assets-src/*
 !/assets-src/.gitkeep
 !/assets-src/ASSET_SELECTION.md
+!/assets-src/AUDIO_LICENSES.md
 !/assets-src/manifest.tsv
 !/assets-src/sprites.tsv
 !/assets-src/player-frames.tsv

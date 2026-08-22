@@ -413,6 +413,8 @@ scene은 입력 차단, 아래 scene 업데이트 여부, 아래 scene 렌더 �
 
 `Audio`는 effect/music bus 음량, 제한된 voice pool, 중복 효과음 억제를 담당한다. 월드 객체는 직접 voice를 잡지 않고 `PlaySound { soundId, volume, pan }` 명령만 보낸다. 음악 스트리밍을 쓸 경우 이중 버퍼를 사용하고 메인 스레드에서 디스크 I/O를 하지 않는다. 다만 전체 데이터가 매우 작다면 압축 데이터를 메모리에 올리는 편이 단순하다.
 
+version 1 오디오는 AssetPacker가 16-bit PCM WAV를 8kHz mono 2-bit ADPCM `HSA2` payload로 결정적으로 변환해 pak type 4 항목으로 저장한다. 런타임은 시작 시 선택된 음악 1개와 효과음 6개를 PCM으로 한 번만 복원하고, XAudio2 source voice가 해당 고정 버퍼를 참조한다. 음악은 source buffer 전체를 무한 반복하며 효과음은 4개 voice pool을 공유한다. 동일 효과음이 아직 재생 중이면 새 요청을 버려 과도한 중복을 막는다. mastering voice는 master 설정을, music/effect source voice는 각 bus 설정을 적용한다. 출력 장치가 없거나 XAudio2 초기화가 실패하면 게임은 무음으로 계속 실행한다.
+
 ## 14. 저장/불러오기
 
 저장 파일은 런타임 객체의 메모리 덤프가 아니라 명시적인 필드 기반 이진 포맷이어야 한다.
