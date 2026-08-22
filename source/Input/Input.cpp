@@ -131,6 +131,14 @@ Action Input::MapAction(PhysicalKey key) noexcept {
         return Action::UseTool;
     case PhysicalKey::Escape:
         return Action::Menu;
+    case PhysicalKey::Digit1: return Action::Hotbar1;
+    case PhysicalKey::Digit2: return Action::Hotbar2;
+    case PhysicalKey::Digit3: return Action::Hotbar3;
+    case PhysicalKey::Digit4: return Action::Hotbar4;
+    case PhysicalKey::Digit5: return Action::Hotbar5;
+    case PhysicalKey::Digit6: return Action::Hotbar6;
+    case PhysicalKey::Digit7: return Action::Hotbar7;
+    case PhysicalKey::Digit8: return Action::Hotbar8;
     case PhysicalKey::Count:
         return Action::Count;
     }

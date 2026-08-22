@@ -26,6 +26,14 @@ bool TranslateVirtualKey(WPARAM virtualKey, PhysicalKey& key) noexcept {
     case VK_RIGHT: key = PhysicalKey::Right; return true;
     case VK_SPACE: key = PhysicalKey::Space; return true;
     case VK_ESCAPE: key = PhysicalKey::Escape; return true;
+    case '1': key = PhysicalKey::Digit1; return true;
+    case '2': key = PhysicalKey::Digit2; return true;
+    case '3': key = PhysicalKey::Digit3; return true;
+    case '4': key = PhysicalKey::Digit4; return true;
+    case '5': key = PhysicalKey::Digit5; return true;
+    case '6': key = PhysicalKey::Digit6; return true;
+    case '7': key = PhysicalKey::Digit7; return true;
+    case '8': key = PhysicalKey::Digit8; return true;
     default: return false;
     }
 }

@@ -14,6 +14,7 @@
 #include "Homestead/Systems/PlayerMovement.hpp"
 #include "Homestead/Systems/InteractionSystem.hpp"
 #include "Homestead/Systems/ToolSystem.hpp"
+#include "Homestead/UI/InventoryUI.hpp"
 
 namespace Homestead {
 namespace {
@@ -76,12 +77,24 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         window_.Shutdown();
         return false;
     }
+    if (inventory_.Add(ItemId::Hoe, 1) != 0 ||
+        inventory_.Add(ItemId::WateringCan, 1) != 0 ||
+        inventory_.Add(ItemId::CarrotSeed, 12) != 0 ||
+        inventory_.Add(ItemId::Carrot, 3) != 0) {
+        inventory_.Clear();
+        entityWorld_.Clear();
+        tileMap_.Clear();
+        assets_.Clear();
+        window_.Shutdown();
+        return false;
+    }
 
     if (!graphics_.Initialize(
             window_.Handle(),
             window_.ClientWidth(),
             window_.ClientHeight(),
             assets_)) {
+        inventory_.Clear();
         entityWorld_.Clear();
         tileMap_.Clear();
         assets_.Clear();
@@ -150,7 +163,9 @@ int Application::Run() noexcept {
         if (!TileMapRenderer::Build(tileMap_, camera_, assets_, renderQueue_) ||
             !PlayerRenderer::Add(
                 entityWorld_, player_, alpha, camera_, assets_, renderQueue_) ||
-            !AddSelectionOverlay(selection_, camera_, assets_, renderQueue_)) {
+            (!inventoryOpen_ && !AddSelectionOverlay(selection_, camera_, assets_, renderQueue_)) ||
+            !AddInventoryUI(inventory_, selectedSlot_, inventoryCursor_,
+                            inventoryOpen_, assets_, renderQueue_)) {
             return 1;
         }
         renderQueue_.Sort();
@@ -163,6 +178,57 @@ int Application::Run() noexcept {
 }
 
 bool Application::FixedUpdate() noexcept {
+    if (input_.ConsumePressed(Action::Menu)) {
+        inventoryOpen_ = !inventoryOpen_;
+        inventoryCursor_ = selectedSlot_;
+        moveSource_ = Inventory::SlotCount;
+    }
+
+    for (std::size_t index = 0; index < Inventory::HotbarSlotCount; ++index) {
+        const Action action = static_cast<Action>(
+            static_cast<std::uint8_t>(Action::Hotbar1) + static_cast<std::uint8_t>(index));
+        if (input_.ConsumePressed(action)) {
+            selectedSlot_ = index;
+            inventoryCursor_ = index;
+        }
+    }
+
+    if (inventoryOpen_) {
+        const bool left = input_.ConsumePressed(Action::MoveLeft);
+        const bool right = input_.ConsumePressed(Action::MoveRight);
+        const bool up = input_.ConsumePressed(Action::MoveUp);
+        const bool down = input_.ConsumePressed(Action::MoveDown);
+        if (left && inventoryCursor_ % 8 > 0) --inventoryCursor_;
+        if (right && inventoryCursor_ % 8 < 7) ++inventoryCursor_;
+        if ((up || down)) inventoryCursor_ = (inventoryCursor_ + 8) % Inventory::SlotCount;
+
+        PhysicalKey interactSource = PhysicalKey::Count;
+        PhysicalKey source = PhysicalKey::Count;
+        const bool interactActivate = input_.ConsumePressed(Action::Interact, interactSource);
+        const bool toolActivate = input_.ConsumePressed(Action::UseTool, source);
+        bool activate = interactActivate || toolActivate;
+        const bool mouseActivate = source == PhysicalKey::MouseLeft ||
+            interactSource == PhysicalKey::MouseRight;
+        if (mouseActivate && input_.IsLogicalMouseValid()) {
+            const int hit = InventorySlotAt(input_.LogicalMouseX(), input_.LogicalMouseY(), true);
+            if (hit >= 0) inventoryCursor_ = static_cast<std::size_t>(hit);
+            else activate = false;
+        } else if (mouseActivate) {
+            activate = false;
+        }
+        if (activate) {
+            if (moveSource_ == Inventory::SlotCount) {
+                if (inventory_.Slot(inventoryCursor_).item != ItemId::None) moveSource_ = inventoryCursor_;
+            } else {
+                if (!inventory_.Move(moveSource_, inventoryCursor_)) {
+                    [[maybe_unused]] const bool exchanged = inventory_.Exchange(moveSource_, inventoryCursor_);
+                }
+                moveSource_ = Inventory::SlotCount;
+            }
+        }
+        return true;
+    }
+
     MovementInput movement{};
     movement.x = (input_.Held(Action::MoveRight) ? 1.0F : 0.0F) -
         (input_.Held(Action::MoveLeft) ? 1.0F : 0.0F);
@@ -173,7 +239,15 @@ bool Application::FixedUpdate() noexcept {
     PhysicalKey toolSource = PhysicalKey::Count;
     const bool interactPressed = input_.ConsumePressed(Action::Interact, interactSource);
     const bool useToolPressed = input_.ConsumePressed(Action::UseTool, toolSource);
-    [[maybe_unused]] const bool menuPressed = input_.ConsumePressed(Action::Menu);
+
+    if (useToolPressed && toolSource == PhysicalKey::MouseLeft && input_.IsLogicalMouseValid()) {
+        const int hotbar = InventorySlotAt(input_.LogicalMouseX(), input_.LogicalMouseY(), false);
+        if (hotbar >= 0) {
+            selectedSlot_ = static_cast<std::size_t>(hotbar);
+            inventoryCursor_ = selectedSlot_;
+            return true;
+        }
+    }
 
     const TransformComponent* transform = entityWorld_.Transform(player_.entity);
     if (transform == nullptr) {
@@ -209,7 +283,11 @@ bool Application::FixedUpdate() noexcept {
             toolSource == PhysicalKey::MouseLeft && input_.IsLogicalMouseValid() ?
             mouseSelection : SelectFrontTile(playerFeet, player_.facing, tileMap_);
         selection_ = toolTarget;
-        if (TryStartToolUse(player_, tileMap_, toolTarget)) {
+        ToolAction action = ToolAction::None;
+        const ItemId selectedItem = inventory_.Slot(selectedSlot_).item;
+        if (selectedItem == ItemId::Hoe) action = ToolAction::Hoe;
+        else if (selectedItem == ItemId::WateringCan) action = ToolAction::Watering;
+        if (TryStartToolUse(player_, tileMap_, toolTarget, action)) {
             FaceSelection(player_, playerFeet, toolTarget);
         }
     }
@@ -248,6 +326,7 @@ void Application::Shutdown() noexcept {
     }
 
     graphics_.Shutdown();
+    inventory_.Clear();
     entityWorld_.Clear();
     tileMap_.Clear();
     assets_.Clear();

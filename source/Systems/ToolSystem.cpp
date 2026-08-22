@@ -77,8 +77,10 @@ AssetId ToolSprite(ToolAction action, FacingDirection facing, std::uint8_t frame
 bool TryStartToolUse(
     PlayerState& player,
     const TileMap& map,
-    const TileSelection& selection) noexcept {
-    if (player.toolUse.action != ToolAction::None || !selection.valid || !selection.inRange) {
+    const TileSelection& selection,
+    ToolAction action) noexcept {
+    if (player.toolUse.action != ToolAction::None || action == ToolAction::None ||
+        !selection.valid || !selection.inRange) {
         return false;
     }
     const Tile* tile = map.Get(selection.x, selection.y);
@@ -86,13 +88,8 @@ bool TryStartToolUse(
         return false;
     }
 
-    ToolAction action = ToolAction::None;
-    if (CanTill(*tile)) {
-        action = ToolAction::Hoe;
-    } else if (CanWater(*tile)) {
-        action = ToolAction::Watering;
-    }
-    if (action == ToolAction::None) {
+    if ((action == ToolAction::Hoe && !CanTill(*tile)) ||
+        (action == ToolAction::Watering && !CanWater(*tile))) {
         return false;
     }
 

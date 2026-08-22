@@ -23,7 +23,7 @@ decor.flower.yellow	decor.flowers	32	0	16	16
 decor.scarecrow	decor.scarecrows	0	0	32	32
 decor.sign	decor.signs	0	0	32	32
 icon.tool.hoe	icons.tools	48	0	16	16
-icon.tool.watering_can	icons.tools	112	0	16	16
+icon.tool.watering_can	icons.tools	96	0	16	16
 font.small	font.small	0	0	135	35
 ui.pointer.idle	ui.pointer	0	0	16	16
 ui.pointer.click_0	ui.pointer	16	0	16	16
