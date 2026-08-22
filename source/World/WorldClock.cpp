@@ -19,7 +19,7 @@ bool WorldClock::FixedUpdate() noexcept {
     ++minuteTick_;
     if (minuteTick_ >= TicksPerMinute) {
         minuteTick_ = 0;
-        minute_ = static_cast<std::uint16_t>(minute_ + 1U);
+        minute_ = static_cast<std::uint16_t>((minute_ + 1U) % (24U * 60U));
     }
     return false;
 }
