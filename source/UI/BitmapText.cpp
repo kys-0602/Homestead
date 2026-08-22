@@ -39,8 +39,9 @@ bool AddBitmapText(const char* text, float x, float y, std::uint32_t color,
             ++text;
             continue;
         }
-        const SpriteAsset* glyph = assets.FindSprite(GlyphId(*text));
-        if (glyph == nullptr) return false;
+        const AssetId glyphId = GlyphId(*text);
+        if (glyphId == 0) return false;
+        const SpriteAsset* glyph = assets.FindSprite(glyphId);
         SpriteCommand command{};
         command.x = cursor + glyph->trimX;
         command.y = y + glyph->trimY;
