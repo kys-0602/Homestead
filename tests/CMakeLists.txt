@@ -183,3 +183,17 @@ target_compile_options(HomesteadInventoryTests PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
 )
 add_test(NAME HomesteadInventoryTests COMMAND HomesteadInventoryTests)
+
+add_executable(HomesteadFarmingTests
+    FarmingTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Inventory.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/CropField.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/TileMap.cpp"
+)
+target_include_directories(HomesteadFarmingTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+target_compile_options(HomesteadFarmingTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+add_test(NAME HomesteadFarmingTests COMMAND HomesteadFarmingTests)

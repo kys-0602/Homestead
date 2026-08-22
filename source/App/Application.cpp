@@ -8,6 +8,7 @@
 
 #include "Homestead/Graphics/Presentation.hpp"
 #include "Homestead/Graphics/PlayerRenderer.hpp"
+#include "Homestead/Graphics/CropRenderer.hpp"
 #include "Homestead/Graphics/SelectionRenderer.hpp"
 #include "Homestead/Graphics/TileMapRenderer.hpp"
 #include "Homestead/Input/Action.hpp"
@@ -161,6 +162,7 @@ int Application::Run() noexcept {
             static_cast<float>(tileMap_.Height() * TileSize));
 
         if (!TileMapRenderer::Build(tileMap_, camera_, assets_, renderQueue_) ||
+            !AddCrops(crops_, camera_, assets_, renderQueue_) ||
             !PlayerRenderer::Add(
                 entityWorld_, player_, alpha, camera_, assets_, renderQueue_) ||
             (!inventoryOpen_ && !AddSelectionOverlay(selection_, camera_, assets_, renderQueue_)) ||
@@ -275,8 +277,13 @@ bool Application::FixedUpdate() noexcept {
             interactSource == PhysicalKey::MouseRight && input_.IsLogicalMouseValid() ?
             mouseSelection : SelectFrontTile(playerFeet, player_.facing, tileMap_);
         selection_ = interactionTarget;
-        [[maybe_unused]] const bool interacted =
-            TryInteract(player_, tileMap_, interactionTarget);
+        if (player_.toolUse.action == ToolAction::None &&
+            crops_.Harvest(inventory_, interactionTarget)) {
+            FaceSelection(player_, playerFeet, interactionTarget);
+        } else {
+            [[maybe_unused]] const bool interacted =
+                TryInteract(player_, tileMap_, interactionTarget);
+        }
     }
     if (useToolPressed) {
         const TileSelection toolTarget =
@@ -287,7 +294,11 @@ bool Application::FixedUpdate() noexcept {
         const ItemId selectedItem = inventory_.Slot(selectedSlot_).item;
         if (selectedItem == ItemId::Hoe) action = ToolAction::Hoe;
         else if (selectedItem == ItemId::WateringCan) action = ToolAction::Watering;
-        if (TryStartToolUse(player_, tileMap_, toolTarget, action)) {
+        if (selectedItem == ItemId::CarrotSeed &&
+            player_.toolUse.action == ToolAction::None &&
+            crops_.Plant(tileMap_, inventory_, toolTarget, selectedItem)) {
+            FaceSelection(player_, playerFeet, toolTarget);
+        } else if (TryStartToolUse(player_, tileMap_, toolTarget, action)) {
             FaceSelection(player_, playerFeet, toolTarget);
         }
     }
@@ -326,6 +337,7 @@ void Application::Shutdown() noexcept {
     }
 
     graphics_.Shutdown();
+    crops_.Clear();
     inventory_.Clear();
     entityWorld_.Clear();
     tileMap_.Clear();

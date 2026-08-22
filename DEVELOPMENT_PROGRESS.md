@@ -5,14 +5,14 @@
 ## 현재 상태
 
 - 마지막 갱신: 2026-08-22
-- 현재 완료 범위: 단계 0~10 구현
-- 다음 작업: 단계 11 `농사 핵심 루프`
+- 현재 완료 범위: 단계 0~11 구현
+- 다음 작업: 단계 12 `시간, 하루 종료와 최소 목표`
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `46,592 bytes`
+- 현재 Release EXE: `49,152 bytes`
 - 현재 `data.pak`: `88,208 bytes`
 - 현재 대표 save: 없음
-- 현재 합계: `134,800 bytes`
-- 남은 공간: `1,339,760 bytes`
+- 현재 합계: `137,360 bytes`
+- 남은 공간: `1,337,200 bytes`
 
 ## 단계별 기록
 
@@ -28,7 +28,8 @@
 | 7. 카메라와 타일맵 | 구현 및 시각 검증 완료, D3D Debug Layer 검증 대기 | `b560ff3` (#12) | 36,864 bytes | +3,584 bytes |
 | 8. 플레이어와 충돌 | 구현 및 gameplay 시각 검증 완료, D3D 검증 대기 | `12b31af` (#14) | 40,960 bytes | +4,096 bytes |
 | 9. 상호작용과 도구 | 구현 및 gameplay 시각 검증 완료, D3D 검증 대기 | 병합 대기 | 44,544 bytes | +3,584 bytes |
-| 10. 인벤토리와 아이템 | 구현 및 hotbar GUI 검증 완료, 세부 GUI 검증 대기 | 현재 브랜치 | 46,592 bytes | +2,048 bytes |
+| 10. 인벤토리와 아이템 | 구현 및 hotbar GUI 검증 완료, 세부 GUI 검증 대기 | `799a4d7` (#16) | 46,592 bytes | +2,048 bytes |
+| 11. 농사 핵심 루프 | 구현 완료, gameplay GUI 검증 대기 | 미커밋 작업 트리 | 49,152 bytes | +2,560 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -362,9 +363,45 @@
 - item stack count 문자 표시는 단계 14의 bitmap text renderer와 함께 추가
 - Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
 
-## 다음 작업: 단계 11
+### 단계 11: 농사 핵심 루프
 
-`IMPLEMENTATION_ROADMAP.md`에 따라 `농사 핵심 루프` 범위를 진행한다.
+구현:
+
+- 당근의 seed/harvest item과 4개 성장 sprite를 연결하는 조밀한 `CropDefinition`
+- 256개 고정 용량 `CropField`와 tile 좌표 기반 `CropInstance`
+- 경작된 빈 tile에만 당근 씨앗을 심고 성공한 뒤에만 씨앗 하나 소비
+- 동일 tile 중복 심기, 범위 밖, 미경작지, object tile과 pool 초과 심기 거부
+- `DayChanged` 시점에 물을 준 작물만 한 stage 성장시키고 모든 tile의 당일 물 상태 초기화
+- 최종 stage 작물만 상호작용으로 수확하고 당근을 inventory에 추가
+- inventory가 가득 차면 수확물을 잃지 않고 작물을 유지
+- 보이는 작물만 `GroundDecoration` layer에 성장 stage별 sprite로 제출하는 `CropRenderer`
+- 3번 seed 선택 후 keyboard/mouse 도구 입력으로 심기, 상호작용 입력으로 수확 연결
+
+검증:
+
+- Debug/Release `/W4` build 성공
+- 기존 테스트와 Farming 테스트를 합한 13개가 Debug/Release에서 모두 통과
+- 성공한 심기만 seed를 소비하고 중복/잘못된 item/미경작 tile은 inventory를 변경하지 않는지 검증
+- 물을 주지 않은 날에는 성장하지 않고, 물을 준 날마다 한 stage만 성장하는지 검증
+- 최종 stage 이후 추가 성장 방지와 매일 `Watered` flag 초기화 검증
+- 성숙 전 수확 거부, 정상 수확의 crop 제거와 당근 획득 검증
+- 가득 찬 inventory에서 수확 실패 시 crop이 사라지지 않는지 검증
+- Debug 앱이 실제 pak과 CropRenderer를 초기화한 상태로 3초간 조기 종료 없이 실행됨
+- Release `Homestead.exe`: `49,152 bytes` (단계 10 대비 `+2,560 bytes`)
+- `data.pak`: `88,208 bytes` (단계 10 대비 변경 없음)
+- 대표 save: 없음
+- 제출 합계: `137,360 bytes` (단계 10 대비 `+2,560 bytes`); 상한까지 `1,337,200 bytes`
+
+남은 확인:
+
+- 실제 표시 창에서 3번 seed의 keyboard/mouse 심기, 중복 심기 거부와 stage 0 sprite 확인
+- 하루 종료 입력과 성장 stage 전환은 단계 12에서 기존 `OnDayChanged` 함수에 연결한 뒤 gameplay 검증
+- 성숙 작물의 상호작용 수확과 inventory 획득을 단계 12의 하루 진행 흐름에서 검증
+- Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
+
+## 다음 작업: 단계 12
+
+`IMPLEMENTATION_ROADMAP.md`에 따라 `시간, 하루 종료와 최소 목표` 범위를 진행한다.
 
 ## 기록 갱신 규칙
 
