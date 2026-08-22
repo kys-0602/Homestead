@@ -19,6 +19,7 @@ public:
     [[nodiscard]] bool Released(Action action) const noexcept;
     [[nodiscard]] bool ConsumePressed(Action action) noexcept;
     [[nodiscard]] bool ConsumePressed(Action action, PhysicalKey& source) noexcept;
+    void DiscardPending() noexcept;
 
     void SetClientMouse(std::int32_t x, std::int32_t y) noexcept;
     void SetLogicalMouse(std::uint32_t x, std::uint32_t y, bool valid) noexcept;

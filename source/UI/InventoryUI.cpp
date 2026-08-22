@@ -3,6 +3,7 @@
 #include "Homestead/Assets/AssetStore.hpp"
 #include "Homestead/Game/Inventory.hpp"
 #include "Homestead/Graphics/RenderQueue.hpp"
+#include "Homestead/UI/BitmapText.hpp"
 
 namespace Homestead {
 namespace {
@@ -56,6 +57,15 @@ bool AddInventoryUI(const Inventory& inventory, std::size_t selectedSlot,
         if (definition != nullptr) {
             const SpriteAsset* item = assets.FindSprite(definition->sprite);
             if (item == nullptr || !AddSprite(*item, x, y, 0xFFFFFFFFU, 1, queue)) return false;
+            if (stack.count > 1) {
+                char countText[3]{};
+                const bool twoDigits = stack.count >= 10;
+                countText[0] = static_cast<char>('0' + (twoDigits ? stack.count / 10 : stack.count));
+                if (twoDigits) countText[1] = static_cast<char>('0' + stack.count % 10);
+                const float textX = x + (twoDigits ? 5.0F : 11.0F);
+                if (!AddBitmapText(countText, textX, y + 9.0F,
+                                   0xFFFFFFFFU, 3, assets, queue)) return false;
+            }
         }
     }
     if (open) {

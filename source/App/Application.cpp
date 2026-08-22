@@ -16,6 +16,7 @@
 #include "Homestead/Systems/InteractionSystem.hpp"
 #include "Homestead/Systems/ToolSystem.hpp"
 #include "Homestead/UI/InventoryUI.hpp"
+#include "Homestead/UI/StatusUI.hpp"
 
 namespace Homestead {
 namespace {
@@ -167,7 +168,9 @@ int Application::Run() noexcept {
                 entityWorld_, player_, alpha, camera_, assets_, renderQueue_) ||
             (!inventoryOpen_ && !AddSelectionOverlay(selection_, camera_, assets_, renderQueue_)) ||
             !AddInventoryUI(inventory_, selectedSlot_, inventoryCursor_,
-                            inventoryOpen_, assets_, renderQueue_)) {
+                            inventoryOpen_, assets_, renderQueue_) ||
+            !AddStatusUI(worldClock_, harvestedCarrots_, 3,
+                         instructionTicks_ != 0, goalComplete_, assets_, renderQueue_)) {
             return 1;
         }
         renderQueue_.Sort();
@@ -180,6 +183,15 @@ int Application::Run() noexcept {
 }
 
 bool Application::FixedUpdate() noexcept {
+    if (worldClock_.IsTransitioning()) {
+        input_.DiscardPending();
+        if (worldClock_.FixedUpdate()) crops_.OnDayChanged(tileMap_);
+        return true;
+    }
+    if (goalComplete_) {
+        input_.DiscardPending();
+        return true;
+    }
     if (input_.ConsumePressed(Action::Menu)) {
         inventoryOpen_ = !inventoryOpen_;
         inventoryCursor_ = selectedSlot_;
@@ -196,6 +208,7 @@ bool Application::FixedUpdate() noexcept {
     }
 
     if (inventoryOpen_) {
+        [[maybe_unused]] const bool ignoredEndDay = input_.ConsumePressed(Action::EndDay);
         const bool left = input_.ConsumePressed(Action::MoveLeft);
         const bool right = input_.ConsumePressed(Action::MoveRight);
         const bool up = input_.ConsumePressed(Action::MoveUp);
@@ -228,6 +241,13 @@ bool Application::FixedUpdate() noexcept {
                 moveSource_ = Inventory::SlotCount;
             }
         }
+        return true;
+    }
+
+    if (input_.ConsumePressed(Action::EndDay) &&
+        player_.toolUse.action == ToolAction::None) {
+        [[maybe_unused]] const bool started = worldClock_.RequestEndDay();
+        instructionTicks_ = 0;
         return true;
     }
 
@@ -280,6 +300,8 @@ bool Application::FixedUpdate() noexcept {
         if (player_.toolUse.action == ToolAction::None &&
             crops_.Harvest(inventory_, interactionTarget)) {
             FaceSelection(player_, playerFeet, interactionTarget);
+            if (harvestedCarrots_ < 3) ++harvestedCarrots_;
+            goalComplete_ = harvestedCarrots_ >= 3;
         } else {
             [[maybe_unused]] const bool interacted =
                 TryInteract(player_, tileMap_, interactionTarget);
@@ -328,7 +350,10 @@ bool Application::FixedUpdate() noexcept {
             selection_ = SelectFrontTile(playerFeet, player_.facing, tileMap_);
         }
     }
-    return UpdateToolUse(entityWorld_, player_, tileMap_);
+    if (!UpdateToolUse(entityWorld_, player_, tileMap_)) return false;
+    if (instructionTicks_ != 0) --instructionTicks_;
+    [[maybe_unused]] const bool unexpectedDayChange = worldClock_.FixedUpdate();
+    return !unexpectedDayChange;
 }
 
 void Application::Shutdown() noexcept {
@@ -338,12 +363,16 @@ void Application::Shutdown() noexcept {
 
     graphics_.Shutdown();
     crops_.Clear();
+    worldClock_.Reset();
     inventory_.Clear();
     entityWorld_.Clear();
     tileMap_.Clear();
     assets_.Clear();
     window_.Shutdown();
     fixedStep_.Reset();
+    instructionTicks_ = 600;
+    harvestedCarrots_ = 0;
+    goalComplete_ = false;
     initialized_ = false;
 }
 
