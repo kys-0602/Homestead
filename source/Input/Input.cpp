@@ -97,6 +97,11 @@ bool Input::ConsumePressed(Action action, PhysicalKey& source) noexcept {
     return pressed;
 }
 
+void Input::DiscardPending() noexcept {
+    pendingPressed_.fill(false);
+    pendingSource_.fill(PhysicalKey::Count);
+}
+
 void Input::SetClientMouse(std::int32_t x, std::int32_t y) noexcept {
     clientMouseX_ = x;
     clientMouseY_ = y;
@@ -131,6 +136,8 @@ Action Input::MapAction(PhysicalKey key) noexcept {
         return Action::UseTool;
     case PhysicalKey::Escape:
         return Action::Menu;
+    case PhysicalKey::N:
+        return Action::EndDay;
     case PhysicalKey::Digit1: return Action::Hotbar1;
     case PhysicalKey::Digit2: return Action::Hotbar2;
     case PhysicalKey::Digit3: return Action::Hotbar3;

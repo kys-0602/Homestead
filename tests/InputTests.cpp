@@ -59,6 +59,12 @@ int main() {
         return 9;
     }
 
+    input.SetPhysicalKey(Homestead::PhysicalKey::N, true);
+    input.SetPhysicalKey(Homestead::PhysicalKey::N, false);
+    if (!input.ConsumePressed(Homestead::Action::EndDay)) {
+        return 10;
+    }
+
     input.SetClientMouse(120, 80);
     input.SetLogicalMouse(30, 20, true);
     input.SetPhysicalKey(Homestead::PhysicalKey::D, true);
@@ -68,7 +74,7 @@ int main() {
         input.ConsumePressed(Homestead::Action::MoveRight) ||
         input.IsLogicalMouseValid() ||
         !input.Released(Homestead::Action::MoveRight)) {
-        return 10;
+        return 11;
     }
 
     return 0;

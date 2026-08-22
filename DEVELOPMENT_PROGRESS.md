@@ -5,14 +5,14 @@
 ## 현재 상태
 
 - 마지막 갱신: 2026-08-22
-- 현재 완료 범위: 단계 0~11 구현
-- 다음 작업: 단계 12 `시간, 하루 종료와 최소 목표`
+- 현재 완료 범위: 단계 0~12 구현
+- 다음 작업: 단계 13 `저장과 불러오기`
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `49,152 bytes`
+- 현재 Release EXE: `51,200 bytes`
 - 현재 `data.pak`: `88,208 bytes`
 - 현재 대표 save: 없음
-- 현재 합계: `137,360 bytes`
-- 남은 공간: `1,337,200 bytes`
+- 현재 합계: `139,408 bytes`
+- 남은 공간: `1,335,152 bytes`
 
 ## 단계별 기록
 
@@ -29,7 +29,8 @@
 | 8. 플레이어와 충돌 | 구현 및 gameplay 시각 검증 완료, D3D 검증 대기 | `12b31af` (#14) | 40,960 bytes | +4,096 bytes |
 | 9. 상호작용과 도구 | 구현 및 gameplay 시각 검증 완료, D3D 검증 대기 | 병합 대기 | 44,544 bytes | +3,584 bytes |
 | 10. 인벤토리와 아이템 | 구현 및 hotbar GUI 검증 완료, 세부 GUI 검증 대기 | `799a4d7` (#16) | 46,592 bytes | +2,048 bytes |
-| 11. 농사 핵심 루프 | 구현 완료, gameplay GUI 검증 대기 | 미커밋 작업 트리 | 49,152 bytes | +2,560 bytes |
+| 11. 농사 핵심 루프 | 구현 완료, gameplay GUI 검증 대기 | `0db6c8e` (#17) | 49,152 bytes | +2,560 bytes |
+| 12. 시간, 하루 종료와 최소 목표 | 구현 완료, gameplay GUI 검증 대기 | 미커밋 작업 트리 | 51,200 bytes | +2,048 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -399,9 +400,45 @@
 - 성숙 작물의 상호작용 수확과 inventory 획득을 단계 12의 하루 진행 흐름에서 검증
 - Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
 
-## 다음 작업: 단계 12
+### 단계 12: 시간, 하루 종료와 최소 목표
 
-`IMPLEMENTATION_ROADMAP.md`에 따라 `시간, 하루 종료와 최소 목표` 범위를 진행한다.
+구현:
+
+- day와 minute를 정수로 보관하고 오전 6시에 시작하는 `WorldClock`
+- 60 fixed tick마다 게임 1분 진행, inventory와 완료 화면에서는 world 시간 일시정지
+- `N` 명시적 입력으로 시작하는 60 tick 하루 종료 전환과 중앙 시점 단일 `DayChanged`
+- 하루 변경 시 단계 11 `CropField::OnDayChanged`를 호출해 작물 성장과 물 상태 초기화
+- 전환 중 world 입력을 차단하고 pending 입력을 폐기해 다음 날 지연 실행 방지
+- 5x7 bitmap font 기반 day/time, 당근 수확 진행도와 초기 안내 HUD
+- bitmap font 숫자 행을 실제 `y=21`에 맞추고 inventory item stack 2~99 수량 표시
+- uppercase와 숫자의 실제 5-pixel glyph bounds를 사용해 HUD와 stack count baseline 정렬
+- `GROW 3 CARROTS`, `N ENDS DAY` 안내와 당근 3개 수확 목표
+- 목표 달성 시 반투명 완료 화면과 `GOAL COMPLETE` 표시, world simulation 정지
+
+검증:
+
+- Debug/Release `/W4` build 성공
+- 기존 테스트와 WorldClock 테스트를 합한 14개가 Debug/Release에서 모두 통과
+- 60 tick당 1분 진행, 하루 종료 중 중복 요청 거부와 날짜 변경 1회 검증
+- 하루 변경 후 오전 6시 초기화, fade 최대 alpha와 전환 종료 검증
+- reset 후 day/minute/transition 초기 상태 복원 검증
+- `N` physical key의 `EndDay` action 변환과 단발 소비 검증
+- Debug 앱이 실제 pak, bitmap HUD와 WorldClock을 초기화한 상태로 3초간 조기 종료 없이 실행됨
+- Release `Homestead.exe`: `51,200 bytes` (단계 11 대비 `+2,048 bytes`)
+- `data.pak`: `88,208 bytes` (단계 11 대비 변경 없음)
+- 대표 save: 없음
+- 제출 합계: `139,408 bytes` (단계 11 대비 `+2,048 bytes`); 상한까지 `1,335,152 bytes`
+
+남은 확인:
+
+- 실제 표시 창에서 bitmap HUD 글자, 안내 위치와 hotbar 겹침 여부 확인
+- `N` 하루 종료 fade, 입력 차단, 날짜 증가와 작물 성장 stage 전환 확인
+- 당근 3개 수확 후 완료 화면과 world simulation 정지 확인
+- Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
+
+## 다음 작업: 단계 13
+
+`IMPLEMENTATION_ROADMAP.md`에 따라 `저장과 불러오기` 범위를 진행한다.
 
 ## 기록 갱신 규칙
 

@@ -172,6 +172,7 @@ add_executable(HomesteadInventoryTests
     InventoryTests.cpp
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Inventory.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/InventoryUI.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/BitmapText.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/RenderQueue.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Assets/AssetStore.cpp"
 )
@@ -197,3 +198,15 @@ target_compile_options(HomesteadFarmingTests PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
 )
 add_test(NAME HomesteadFarmingTests COMMAND HomesteadFarmingTests)
+
+add_executable(HomesteadWorldClockTests
+    WorldClockTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/WorldClock.cpp"
+)
+target_include_directories(HomesteadWorldClockTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+target_compile_options(HomesteadWorldClockTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+add_test(NAME HomesteadWorldClockTests COMMAND HomesteadWorldClockTests)
