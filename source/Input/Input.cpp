@@ -136,6 +136,8 @@ Action Input::MapAction(PhysicalKey key) noexcept {
         return Action::UseTool;
     case PhysicalKey::Escape:
         return Action::Menu;
+    case PhysicalKey::I:
+        return Action::Inventory;
     case PhysicalKey::N:
         return Action::EndDay;
     case PhysicalKey::Digit1: return Action::Hotbar1;

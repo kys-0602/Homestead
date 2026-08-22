@@ -20,7 +20,36 @@ decor.flowers	Outdoor decoration/Flowers.png	0	0	160	160
 decor.scarecrows	Outdoor decoration/Scarecrows.png	0	0	160	32
 decor.signs	Outdoor decoration/Signs.png	0	0	96	528
 icons.tools	Icons/Outline/Tool_Icons_Outline.png	0	0	160	16
-font.small	UI/Cute_Fantasy_Font_5x7.png	0	0	135	35
+font.A	UI/Cute_Fantasy_Font_5x7.png	0	2	5	5
+font.C	UI/Cute_Fantasy_Font_5x7.png	10	2	5	5
+font.D	UI/Cute_Fantasy_Font_5x7.png	15	2	5	5
+font.E	UI/Cute_Fantasy_Font_5x7.png	20	2	5	5
+font.F	UI/Cute_Fantasy_Font_5x7.png	25	2	5	5
+font.G	UI/Cute_Fantasy_Font_5x7.png	30	2	5	5
+font.I	UI/Cute_Fantasy_Font_5x7.png	40	2	5	5
+font.L	UI/Cute_Fantasy_Font_5x7.png	55	2	5	5
+font.M	UI/Cute_Fantasy_Font_5x7.png	60	2	5	5
+font.N	UI/Cute_Fantasy_Font_5x7.png	65	2	5	5
+font.O	UI/Cute_Fantasy_Font_5x7.png	70	2	5	5
+font.P	UI/Cute_Fantasy_Font_5x7.png	75	2	5	5
+font.R	UI/Cute_Fantasy_Font_5x7.png	85	2	5	5
+font.S	UI/Cute_Fantasy_Font_5x7.png	90	2	5	5
+font.T	UI/Cute_Fantasy_Font_5x7.png	95	2	5	5
+font.U	UI/Cute_Fantasy_Font_5x7.png	100	2	5	5
+font.V	UI/Cute_Fantasy_Font_5x7.png	105	2	5	5
+font.W	UI/Cute_Fantasy_Font_5x7.png	110	2	5	5
+font.Y	UI/Cute_Fantasy_Font_5x7.png	120	2	5	5
+font.Z	UI/Cute_Fantasy_Font_5x7.png	125	2	5	5
+font.1	UI/Cute_Fantasy_Font_5x7.png	0	23	5	5
+font.2	UI/Cute_Fantasy_Font_5x7.png	5	23	5	5
+font.3	UI/Cute_Fantasy_Font_5x7.png	10	23	5	5
+font.4	UI/Cute_Fantasy_Font_5x7.png	15	23	5	5
+font.5	UI/Cute_Fantasy_Font_5x7.png	20	23	5	5
+font.6	UI/Cute_Fantasy_Font_5x7.png	25	23	5	5
+font.7	UI/Cute_Fantasy_Font_5x7.png	30	23	5	5
+font.8	UI/Cute_Fantasy_Font_5x7.png	35	23	5	5
+font.9	UI/Cute_Fantasy_Font_5x7.png	40	23	5	5
+font.0	UI/Cute_Fantasy_Font_5x7.png	45	23	5	5
 ui.pointer	UI/Pointer_Click_Anim.png	0	0	64	16
 ui.inventory	UI/UI_Premade.png	0	0	512	256
 ui.popup	UI/UI_Pop_Up.png	0	0	96	96

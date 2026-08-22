@@ -225,3 +225,34 @@ target_compile_options(HomesteadSaveCodecTests PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
 )
 add_test(NAME HomesteadSaveCodecTests COMMAND HomesteadSaveCodecTests)
+
+add_executable(HomesteadSettingsTests
+    SettingsTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Platform/Settings.cpp"
+)
+target_include_directories(HomesteadSettingsTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+target_compile_definitions(HomesteadSettingsTests PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_compile_options(HomesteadSettingsTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+add_test(NAME HomesteadSettingsTests COMMAND HomesteadSettingsTests)
+
+add_executable(HomesteadPauseUITests
+    PauseUITests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/PauseUI.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/StatusUI.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/BitmapText.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/WorldClock.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/RenderQueue.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Assets/AssetStore.cpp"
+)
+target_include_directories(HomesteadPauseUITests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+target_compile_definitions(HomesteadPauseUITests PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_compile_options(HomesteadPauseUITests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+add_test(NAME HomesteadPauseUITests COMMAND HomesteadPauseUITests)

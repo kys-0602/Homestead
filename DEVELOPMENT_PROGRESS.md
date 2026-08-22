@@ -5,14 +5,14 @@
 ## 현재 상태
 
 - 마지막 갱신: 2026-08-22
-- 현재 완료 범위: 단계 0~13 구현
-- 다음 작업: 단계 14 `UI와 설정 정리`
+- 현재 완료 범위: 단계 0~14 구현
+- 다음 작업: 단계 15 `오디오`
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `62,976 bytes`
-- 현재 `data.pak`: `88,208 bytes`
+- 현재 Release EXE: `69,120 bytes`
+- 현재 `data.pak`: `86,228 bytes`
 - 현재 대표 save: `66 bytes`
-- 현재 합계: `151,250 bytes`
-- 남은 공간: `1,323,310 bytes`
+- 현재 합계: `155,414 bytes`
+- 남은 공간: `1,319,146 bytes`
 
 ## 단계별 기록
 
@@ -31,7 +31,8 @@
 | 10. 인벤토리와 아이템 | 구현 및 hotbar GUI 검증 완료, 세부 GUI 검증 대기 | `799a4d7` (#16) | 46,592 bytes | +2,048 bytes |
 | 11. 농사 핵심 루프 | 구현 완료, gameplay GUI 검증 대기 | `0db6c8e` (#17) | 49,152 bytes | +2,560 bytes |
 | 12. 시간, 하루 종료와 최소 목표 | 구현 완료, gameplay GUI 검증 대기 | `b02b256` (#18) | 51,200 bytes | +2,048 bytes |
-| 13. 저장과 불러오기 | 구현 완료, 장시간 gameplay 검증 대기 | 미커밋 작업 트리 | 62,976 bytes | +11,776 bytes |
+| 13. 저장과 불러오기 | 구현 완료, 장시간 gameplay 검증 대기 | `74c1a13` (#19) | 62,976 bytes | +11,776 bytes |
+| 14. UI와 설정 정리 | 구현 완료, GUI 검증 대기 | 미커밋 작업 트리 | 69,120 bytes | +6,144 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -473,9 +474,45 @@
 - 장시간 play save와 최대 tile/crop 상태의 대표 save 크기 측정
 - Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
 
-## 다음 작업: 단계 14
+### 단계 14: UI와 설정 정리
 
-`IMPLEMENTATION_ROADMAP.md`에 따라 `UI와 설정 정리` 범위를 진행한다.
+구현:
+
+- `Escape` 일시정지와 `I` 인벤토리를 별도 action으로 분리하고 두 화면에서 world simulation 정지
+- pause 메뉴에 resume, inventory, window size, fullscreen, master/music/effect volume 항목 배치
+- 방향키/WASD focus 이동과 좌우 값 변경, E/Space 활성화, mouse hover/click을 동일 항목 흐름에 연결
+- 640×360, 960×540, 1280×720 창 크기와 borderless fullscreen 즉시 적용
+- 0~10 master/music/effect 음량 설정 저장; 실제 audio bus 연결은 단계 15 범위
+- `%LOCALAPPDATA%/Homestead/settings.cfg`에 12-byte `HSCF` version 1 설정 저장
+- 설정 magic/version/range/checksum 검증과 temporary write, flush, atomic replace
+- pause/HUD 문구를 `UI/Strings.hpp` 문자열 테이블로 집중
+- 목표 완료 화면에서 E/Space 또는 `E CONTINUE` 영역 click으로 world에 복귀
+- UI에 실제 사용하는 대문자 20개와 숫자 10개만 개별 5×5 글리프로 pak에 포함
+- pause panel과 모든 hit rectangle을 320×180 logical safe area 안에 배치
+
+검증:
+
+- Debug/Release `/W4` build 성공
+- 기존 테스트와 Settings/PauseUI 테스트를 합한 17개가 Debug/Release에서 모두 통과
+- 설정 범위, pause 항목 경계, Escape/I action 분리 검증
+- 격리된 임시 `LOCALAPPDATA`에서 settings 저장/재로드와 checksum 손상 거부 검증
+- 격리된 실제 앱을 두 번 정상 종료해 `settings.cfg` 12 bytes, save/backup 각 66 bytes 생성 및 두 실행 종료 코드 `0` 확인
+- font source를 135×35 전체 sheet에서 사용 글리프 30개로 축소해 `data.pak` `-1,980 bytes`
+- Release `Homestead.exe`: `69,120 bytes` (단계 13 대비 `+6,144 bytes`)
+- `data.pak`: `86,228 bytes` (단계 13 대비 `-1,980 bytes`)
+- 대표 save: `66 bytes`
+- 제출 합계: `155,414 bytes` (단계 13 대비 `+4,164 bytes`); 상한까지 `1,319,146 bytes`
+
+남은 확인:
+
+- 실제 표시 창에서 pause/inventory 전환, keyboard/mouse focus·click과 문구 정렬 확인
+- 3개 창 크기의 integer scaling, 창↔fullscreen 반복 전환, Alt+Tab과 재시작 후 복원 확인
+- 단계 15에서 master/music/effect 값을 실제 audio bus gain에 연결
+- Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
+
+## 다음 작업: 단계 15
+
+`IMPLEMENTATION_ROADMAP.md`에 따라 `오디오` 범위를 진행한다.
 
 ## 기록 갱신 규칙
 

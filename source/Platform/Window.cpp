@@ -9,8 +9,8 @@ namespace {
 
 constexpr wchar_t WindowClassName[] = L"HomesteadWindowClass";
 constexpr wchar_t WindowTitle[] = L"Homestead";
-constexpr LONG InitialClientWidth = 1280;
-constexpr LONG InitialClientHeight = 720;
+constexpr LONG LogicalClientWidth = 320;
+constexpr LONG LogicalClientHeight = 180;
 
 bool TranslateVirtualKey(WPARAM virtualKey, PhysicalKey& key) noexcept {
     switch (virtualKey) {
@@ -20,6 +20,7 @@ bool TranslateVirtualKey(WPARAM virtualKey, PhysicalKey& key) noexcept {
     case 'D': key = PhysicalKey::D; return true;
     case 'E': key = PhysicalKey::E; return true;
     case 'F': key = PhysicalKey::F; return true;
+    case 'I': key = PhysicalKey::I; return true;
     case VK_UP: key = PhysicalKey::Up; return true;
     case VK_DOWN: key = PhysicalKey::Down; return true;
     case VK_LEFT: key = PhysicalKey::Left; return true;
@@ -45,7 +46,8 @@ Window::~Window() noexcept {
     Shutdown();
 }
 
-bool Window::Initialize(HINSTANCE instance, int showCommand, Input& input) noexcept {
+bool Window::Initialize(HINSTANCE instance, int showCommand, Input& input,
+                        std::uint8_t windowScale, bool fullscreen) noexcept {
     if (handle_ != nullptr) {
         return true;
     }
@@ -69,7 +71,7 @@ bool Window::Initialize(HINSTANCE instance, int showCommand, Input& input) noexc
 
     constexpr DWORD windowStyle = WS_OVERLAPPEDWINDOW;
     constexpr DWORD extendedStyle = 0;
-    RECT windowRectangle{0, 0, InitialClientWidth, InitialClientHeight};
+    RECT windowRectangle{0, 0, LogicalClientWidth * windowScale, LogicalClientHeight * windowScale};
     if (AdjustWindowRectEx(&windowRectangle, windowStyle, FALSE, extendedStyle) == FALSE) {
         Shutdown();
         return false;
@@ -102,6 +104,30 @@ bool Window::Initialize(HINSTANCE instance, int showCommand, Input& input) noexc
 
     ShowWindow(handle_, showCommand);
     UpdateWindow(handle_);
+    return !fullscreen || ApplyDisplaySettings(windowScale, true);
+}
+
+bool Window::ApplyDisplaySettings(std::uint8_t windowScale, bool fullscreen) noexcept {
+    if (handle_ == nullptr || windowScale < 2 || windowScale > 4) return false;
+    if (fullscreen) {
+        MONITORINFO monitor{sizeof(monitor)};
+        if (GetMonitorInfoW(MonitorFromWindow(handle_, MONITOR_DEFAULTTONEAREST), &monitor) == FALSE)
+            return false;
+        SetWindowLongPtrW(handle_, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+        if (SetWindowPos(handle_, HWND_TOP, monitor.rcMonitor.left, monitor.rcMonitor.top,
+                         monitor.rcMonitor.right - monitor.rcMonitor.left,
+                         monitor.rcMonitor.bottom - monitor.rcMonitor.top,
+                         SWP_FRAMECHANGED | SWP_SHOWWINDOW) == FALSE) return false;
+    } else {
+        constexpr DWORD style = WS_OVERLAPPEDWINDOW;
+        RECT rectangle{0, 0, LogicalClientWidth * windowScale, LogicalClientHeight * windowScale};
+        if (AdjustWindowRectEx(&rectangle, style, FALSE, 0) == FALSE) return false;
+        SetWindowLongPtrW(handle_, GWL_STYLE, style);
+        if (SetWindowPos(handle_, HWND_NOTOPMOST, 0, 0,
+                         rectangle.right - rectangle.left, rectangle.bottom - rectangle.top,
+                         SWP_FRAMECHANGED | SWP_NOMOVE | SWP_SHOWWINDOW) == FALSE) return false;
+    }
+    fullscreen_ = fullscreen;
     return true;
 }
 
@@ -137,6 +163,7 @@ void Window::Shutdown() noexcept {
     minimized_ = false;
     focused_ = false;
     mouseTracking_ = false;
+    fullscreen_ = false;
 }
 
 LRESULT CALLBACK Window::WindowProcedure(

@@ -8,6 +8,8 @@ class AssetStore;
 class RenderQueue;
 class WorldClock;
 
+[[nodiscard]] bool CompletionContinueAt(std::uint32_t x, std::uint32_t y) noexcept;
+
 [[nodiscard]] bool AddStatusUI(
     const WorldClock& clock,
     std::uint8_t harvested,

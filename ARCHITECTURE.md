@@ -138,6 +138,12 @@ Input::BeginFrame
 
 배포물에는 가급적 `Homestead.exe`, `data.pak` 두 파일만 둔다. 쓰기 가능한 저장 위치는 실행 파일 옆이 아니라 `%LOCALAPPDATA%/Homestead`를 사용한다. 에셋 읽기와 사용자 저장 파일 쓰기는 API를 분리한다.
 
+### Settings
+
+`Application`은 시작 시 `%LOCALAPPDATA%/Homestead/settings.cfg`에서 version 1 설정을 먼저 읽고 그 값으로 `Window`를 생성한다. 설정은 640×360, 960×540, 1280×720 창 배율과 borderless fullscreen 여부, 0~10 범위의 master/music/effect 음량을 가진다. 설정 파일은 `HSCF` magic, version, FNV-1a checksum을 검증하며 temporary write, flush, atomic replace 방식으로 갱신한다. 음량은 단계 15의 audio bus가 소비하고 UI와 영속화는 단계 14에서 소유한다.
+
+Escape는 world simulation을 멈추는 pause action이고 `I`는 inventory action이다. pause 메뉴의 keyboard focus와 mouse hover는 같은 항목 index를 갱신하며 keyboard activate와 mouse click은 같은 변경 함수를 사용한다. UI 문구는 `UI/Strings.hpp`에 모으고 bitmap font는 실제 문구에 필요한 대문자와 숫자 글리프만 `data.pak`에 포함한다.
+
 ## 6. 그래픽 계층
 
 ### Graphics / RenderDevice
