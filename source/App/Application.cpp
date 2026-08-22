@@ -81,6 +81,7 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         inventory_.Add(ItemId::WateringCan, 1) != 0 ||
         inventory_.Add(ItemId::CarrotSeed, 12) != 0 ||
         inventory_.Add(ItemId::Carrot, 3) != 0) {
+        inventory_.Clear();
         entityWorld_.Clear();
         tileMap_.Clear();
         assets_.Clear();
