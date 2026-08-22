@@ -106,7 +106,10 @@ bool DecodeSave(const std::uint8_t* bytes, std::size_t size, SaveSnapshot& snaps
         !reader.U16(tileCount) || !reader.U16(cropCount) || result.day == 0 ||
         result.minute >= 24U * 60U || result.selectedSlot >= Inventory::HotbarSlotCount ||
         result.harvestedCarrots > 3 || tileCount > MaximumTileDeltas || cropCount > CropField::Capacity) return false;
-    result.playerX256 = static_cast<std::int32_t>(x); result.playerY256 = static_cast<std::int32_t>(y);
+    if (x > static_cast<std::uint32_t>(std::numeric_limits<std::int32_t>::max()) ||
+        y > static_cast<std::uint32_t>(std::numeric_limits<std::int32_t>::max())) return false;
+    result.playerX256 = static_cast<std::int32_t>(x);
+    result.playerY256 = static_cast<std::int32_t>(y);
     for (ItemStack& stack : result.inventory) {
         std::uint8_t item = 0;
         if (!reader.U8(item) || !reader.U8(stack.count)) return false;
