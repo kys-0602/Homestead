@@ -256,3 +256,17 @@ target_compile_options(HomesteadPauseUITests PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
 )
 add_test(NAME HomesteadPauseUITests COMMAND HomesteadPauseUITests)
+
+add_executable(HomesteadAudioCodecTests AudioCodecTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Audio/AudioCodec.cpp")
+target_include_directories(HomesteadAudioCodecTests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+target_compile_options(HomesteadAudioCodecTests PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>)
+add_test(NAME HomesteadAudioCodecTests COMMAND HomesteadAudioCodecTests)
+
+add_executable(HomesteadAudioAssetTests AudioAssetTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Assets/AssetStore.cpp")
+target_include_directories(HomesteadAudioAssetTests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+target_compile_definitions(HomesteadAudioAssetTests PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_compile_options(HomesteadAudioAssetTests PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>)
+add_test(NAME HomesteadAudioAssetTests COMMAND HomesteadAudioAssetTests
+    "${CMAKE_BINARY_DIR}/generated-assets/data.pak")

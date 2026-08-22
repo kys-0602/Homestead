@@ -3,6 +3,7 @@
 #include <Windows.h>
 
 #include "Homestead/Assets/AssetStore.hpp"
+#include "Homestead/Audio/Audio.hpp"
 #include "Homestead/Core/FixedStep.hpp"
 #include "Homestead/Game/PlayerState.hpp"
 #include "Homestead/Game/Inventory.hpp"
@@ -48,6 +49,7 @@ private:
     Window window_;
     Clock clock_;
     AssetStore assets_;
+    Audio audio_;
     SaveSystem saves_;
     TileMap tileMap_;
     CropField crops_;

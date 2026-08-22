@@ -128,6 +128,7 @@ target_link_options(Homestead PRIVATE
 target_link_libraries(Homestead PRIVATE
     d3d11
     dxgi
+    xaudio2
 )
 
 add_custom_command(TARGET Homestead POST_BUILD
@@ -143,6 +144,8 @@ add_subdirectory(tools)
 file(GLOB_RECURSE HOMESTEAD_ASSET_SOURCE_FILES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/assets-src/*.png"
     "${CMAKE_CURRENT_SOURCE_DIR}/assets-src/maps/*.map"
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets-src/Audio/*.wav"
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets-src/Audio/*/*.wav"
 )
 if(HOMESTEAD_ASSET_SOURCE_FILES)
     set(HOMESTEAD_ASSET_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated-assets")
