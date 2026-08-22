@@ -3,6 +3,7 @@
 #include "Homestead/Assets/AssetStore.hpp"
 #include "Homestead/Graphics/RenderQueue.hpp"
 #include "Homestead/UI/BitmapText.hpp"
+#include "Homestead/UI/Strings.hpp"
 #include "Homestead/World/WorldClock.hpp"
 
 namespace Homestead {
@@ -23,6 +24,10 @@ bool AddFade(std::uint8_t alpha, std::uint16_t depth,
 }
 
 } // namespace
+
+bool CompletionContinueAt(std::uint32_t x, std::uint32_t y) noexcept {
+    return x >= 126 && x < 194 && y >= 92 && y < 104;
+}
 
 bool AddStatusUI(const WorldClock& clock, std::uint8_t harvested, std::uint8_t goal,
                  bool showInstructions, bool complete, const AssetStore& assets,
@@ -51,13 +56,15 @@ bool AddStatusUI(const WorldClock& clock, std::uint8_t harvested, std::uint8_t g
         !AddBitmapText(time, 262.0F, 4.0F, 0xFFFFFFFFU, 20, assets, queue) ||
         !AddBitmapText(progress, 4.0F, 14.0F, 0xFFFFFFFFU, 20, assets, queue)) return false;
     if (complete) {
-        return AddBitmapText("GOAL COMPLETE", 121.0F, 82.0F,
-                             0xFF80FFFFU, 20, assets, queue);
+        return AddBitmapText(Text::GoalComplete, 121.0F, 82.0F,
+                             0xFF80FFFFU, 20, assets, queue) &&
+            AddBitmapText(Text::Continue, 133.0F, 96.0F,
+                          0xFFFFFFFFU, 20, assets, queue);
     }
     if (showInstructions) {
-        return AddBitmapText("GROW 3 CARROTS", 116.0F, 72.0F,
+        return AddBitmapText(Text::GrowCarrots, 116.0F, 72.0F,
                              0xFFFFFFFFU, 20, assets, queue) &&
-            AddBitmapText("N ENDS DAY", 127.0F, 82.0F,
+            AddBitmapText(Text::EndDay, 127.0F, 82.0F,
                           0xFFFFFFFFU, 20, assets, queue);
     }
     return true;

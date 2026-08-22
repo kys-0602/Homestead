@@ -12,6 +12,7 @@
 #include "Homestead/Graphics/RenderQueue.hpp"
 #include "Homestead/Input/Input.hpp"
 #include "Homestead/Platform/Clock.hpp"
+#include "Homestead/Platform/Settings.hpp"
 #include "Homestead/Platform/Window.hpp"
 #include "Homestead/Save/SaveSystem.hpp"
 #include "Homestead/World/TileMap.hpp"
@@ -39,7 +40,11 @@ private:
     [[nodiscard]] bool CaptureSave(SaveSnapshot& snapshot) const noexcept;
     [[nodiscard]] bool ApplySave(const SaveSnapshot& snapshot) noexcept;
     [[nodiscard]] bool SaveGame() noexcept;
+    [[nodiscard]] bool UpdatePauseMenu() noexcept;
+    [[nodiscard]] bool ApplyDisplaySettings() noexcept;
 
+    SettingsSystem settingsSystem_;
+    Settings settings_;
     Window window_;
     Clock clock_;
     AssetStore assets_;
@@ -62,6 +67,8 @@ private:
     std::size_t inventoryCursor_ = 0;
     std::size_t moveSource_ = Inventory::SlotCount;
     bool inventoryOpen_ = false;
+    bool paused_ = false;
+    std::uint8_t pauseFocus_ = 0;
     std::uint16_t instructionTicks_ = 600;
     std::uint8_t harvestedCarrots_ = 0;
     bool goalComplete_ = false;

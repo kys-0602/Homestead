@@ -16,7 +16,9 @@ public:
     Window(const Window&) = delete;
     Window& operator=(const Window&) = delete;
 
-    [[nodiscard]] bool Initialize(HINSTANCE instance, int showCommand, Input& input) noexcept;
+    [[nodiscard]] bool Initialize(HINSTANCE instance, int showCommand, Input& input,
+                                  std::uint8_t windowScale, bool fullscreen) noexcept;
+    [[nodiscard]] bool ApplyDisplaySettings(std::uint8_t windowScale, bool fullscreen) noexcept;
     [[nodiscard]] bool ProcessMessages() noexcept;
     void Shutdown() noexcept;
 
@@ -39,6 +41,7 @@ private:
     bool minimized_ = false;
     bool focused_ = false;
     bool mouseTracking_ = false;
+    bool fullscreen_ = false;
 };
 
 } // namespace Homestead

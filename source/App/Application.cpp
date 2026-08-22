@@ -17,6 +17,7 @@
 #include "Homestead/Systems/InteractionSystem.hpp"
 #include "Homestead/Systems/ToolSystem.hpp"
 #include "Homestead/UI/InventoryUI.hpp"
+#include "Homestead/UI/PauseUI.hpp"
 #include "Homestead/UI/StatusUI.hpp"
 
 namespace Homestead {
@@ -54,7 +55,10 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         return false;
     }
 
-    if (!window_.Initialize(instance, showCommand, input_)) {
+    [[maybe_unused]] const bool loadedSettings = settingsSystem_.Load(settings_);
+    if (!IsValidSettings(settings_)) settings_ = {};
+    if (!window_.Initialize(instance, showCommand, input_,
+                            settings_.windowScale, settings_.fullscreen)) {
         return false;
     }
 
@@ -180,11 +184,12 @@ int Application::Run() noexcept {
             !AddCrops(crops_, camera_, assets_, renderQueue_) ||
             !PlayerRenderer::Add(
                 entityWorld_, player_, alpha, camera_, assets_, renderQueue_) ||
-            (!inventoryOpen_ && !AddSelectionOverlay(selection_, camera_, assets_, renderQueue_)) ||
+            (!inventoryOpen_ && !paused_ && !AddSelectionOverlay(selection_, camera_, assets_, renderQueue_)) ||
             !AddInventoryUI(inventory_, selectedSlot_, inventoryCursor_,
                             inventoryOpen_, assets_, renderQueue_) ||
             !AddStatusUI(worldClock_, harvestedCarrots_, 3,
-                         instructionTicks_ != 0, goalComplete_, assets_, renderQueue_)) {
+                         instructionTicks_ != 0, goalComplete_, assets_, renderQueue_) ||
+            (paused_ && !AddPauseUI(settings_, pauseFocus_, assets_, renderQueue_))) {
             return 1;
         }
         renderQueue_.Sort();
@@ -205,11 +210,32 @@ bool Application::FixedUpdate() noexcept {
         }
         return true;
     }
-    if (goalComplete_) {
+    if (input_.ConsumePressed(Action::Menu)) {
+        paused_ = !paused_;
+        inventoryOpen_ = false;
+        moveSource_ = Inventory::SlotCount;
+        if (!paused_) [[maybe_unused]] const bool savedSettings = settingsSystem_.Save(settings_);
         input_.DiscardPending();
         return true;
     }
-    if (input_.ConsumePressed(Action::Menu)) {
+    if (paused_) return UpdatePauseMenu();
+    if (goalComplete_) {
+        PhysicalKey interactSource = PhysicalKey::Count;
+        PhysicalKey toolSource = PhysicalKey::Count;
+        const bool interact = input_.ConsumePressed(Action::Interact, interactSource);
+        const bool tool = input_.ConsumePressed(Action::UseTool, toolSource);
+        bool resume = interact || tool;
+        const bool mouse = interactSource == PhysicalKey::MouseRight ||
+            toolSource == PhysicalKey::MouseLeft;
+        if (mouse) {
+            resume = input_.IsLogicalMouseValid() &&
+                CompletionContinueAt(input_.LogicalMouseX(), input_.LogicalMouseY());
+        }
+        if (resume) goalComplete_ = false;
+        input_.DiscardPending();
+        return true;
+    }
+    if (input_.ConsumePressed(Action::Inventory)) {
         inventoryOpen_ = !inventoryOpen_;
         inventoryCursor_ = selectedSlot_;
         moveSource_ = Inventory::SlotCount;
@@ -379,6 +405,7 @@ void Application::Shutdown() noexcept {
     }
 
     [[maybe_unused]] const bool saved = SaveGame();
+    [[maybe_unused]] const bool savedSettings = settingsSystem_.Save(settings_);
     graphics_.Shutdown();
     crops_.Clear();
     worldClock_.Reset();
@@ -391,7 +418,62 @@ void Application::Shutdown() noexcept {
     instructionTicks_ = 600;
     harvestedCarrots_ = 0;
     goalComplete_ = false;
+    inventoryOpen_ = false;
+    paused_ = false;
+    pauseFocus_ = 0;
     initialized_ = false;
+}
+
+bool Application::UpdatePauseMenu() noexcept {
+    [[maybe_unused]] const bool ignoredInventory = input_.ConsumePressed(Action::Inventory);
+    const bool up = input_.ConsumePressed(Action::MoveUp);
+    const bool down = input_.ConsumePressed(Action::MoveDown);
+    const bool left = input_.ConsumePressed(Action::MoveLeft);
+    const bool right = input_.ConsumePressed(Action::MoveRight);
+    if (up) pauseFocus_ = pauseFocus_ == 0 ? PauseItemCount - 1 : pauseFocus_ - 1;
+    if (down) pauseFocus_ = static_cast<std::uint8_t>((pauseFocus_ + 1) % PauseItemCount);
+
+    PhysicalKey interactSource = PhysicalKey::Count;
+    PhysicalKey toolSource = PhysicalKey::Count;
+    const bool interact = input_.ConsumePressed(Action::Interact, interactSource);
+    const bool tool = input_.ConsumePressed(Action::UseTool, toolSource);
+    bool activate = interact || tool;
+    const bool mouse = interactSource == PhysicalKey::MouseRight || toolSource == PhysicalKey::MouseLeft;
+    if (input_.IsLogicalMouseValid()) {
+        const int hover = PauseItemAt(input_.LogicalMouseX(), input_.LogicalMouseY());
+        if (hover >= 0) pauseFocus_ = static_cast<std::uint8_t>(hover);
+        else if (mouse) activate = false;
+    } else if (mouse) activate = false;
+
+    bool displayChanged = false;
+    bool settingsChanged = false;
+    const int direction = right ? 1 : (left ? -1 : 0);
+    if (pauseFocus_ == 0 && activate) paused_ = false;
+    else if (pauseFocus_ == 1 && activate) {
+        paused_ = false; inventoryOpen_ = true; inventoryCursor_ = selectedSlot_;
+    } else if (pauseFocus_ == 2 && (activate || direction != 0)) {
+        settings_.windowScale = direction < 0 ?
+            (settings_.windowScale == 2 ? 4 : settings_.windowScale - 1) :
+            (settings_.windowScale == 4 ? 2 : settings_.windowScale + 1);
+        displayChanged = settingsChanged = true;
+    } else if (pauseFocus_ == 3 && (activate || direction != 0)) {
+        settings_.fullscreen = !settings_.fullscreen;
+        displayChanged = settingsChanged = true;
+    } else if (pauseFocus_ >= 4 && (activate || direction != 0)) {
+        std::uint8_t* volume = pauseFocus_ == 4 ? &settings_.masterVolume :
+            (pauseFocus_ == 5 ? &settings_.musicVolume : &settings_.effectVolume);
+        const int step = direction != 0 ? direction : 1;
+        *volume = static_cast<std::uint8_t>(step < 0 ? (*volume == 0 ? 10 : *volume - 1) :
+                                                    (*volume == 10 ? 0 : *volume + 1));
+        settingsChanged = true;
+    }
+    if (displayChanged && !ApplyDisplaySettings()) return false;
+    if (settingsChanged || !paused_) [[maybe_unused]] const bool saved = settingsSystem_.Save(settings_);
+    return true;
+}
+
+bool Application::ApplyDisplaySettings() noexcept {
+    return window_.ApplyDisplaySettings(settings_.windowScale, settings_.fullscreen);
 }
 
 bool Application::CaptureSave(SaveSnapshot& snapshot) const noexcept {
