@@ -37,6 +37,11 @@ void WorldClock::Reset() noexcept {
     transitionTick_ = 0;
 }
 
+bool WorldClock::Restore(std::uint16_t day, std::uint16_t minute) noexcept {
+    if (day == 0 || minute >= 24U * 60U) return false;
+    day_ = day; minute_ = minute; minuteTick_ = 0; transitionTick_ = 0; return true;
+}
+
 std::uint8_t WorldClock::FadeAlpha() const noexcept {
     if (transitionTick_ == 0) return 0;
     const std::uint16_t distance = transitionTick_ <= DayChangeTick ?

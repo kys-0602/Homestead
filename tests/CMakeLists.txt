@@ -210,3 +210,18 @@ target_compile_options(HomesteadWorldClockTests PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
 )
 add_test(NAME HomesteadWorldClockTests COMMAND HomesteadWorldClockTests)
+
+add_executable(HomesteadSaveCodecTests
+    SaveCodecTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Save/SaveCodec.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Inventory.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/CropField.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/TileMap.cpp"
+)
+target_include_directories(HomesteadSaveCodecTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+target_compile_options(HomesteadSaveCodecTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+add_test(NAME HomesteadSaveCodecTests COMMAND HomesteadSaveCodecTests)

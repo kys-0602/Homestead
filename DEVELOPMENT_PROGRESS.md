@@ -5,14 +5,14 @@
 ## 현재 상태
 
 - 마지막 갱신: 2026-08-22
-- 현재 완료 범위: 단계 0~12 구현
-- 다음 작업: 단계 13 `저장과 불러오기`
+- 현재 완료 범위: 단계 0~13 구현
+- 다음 작업: 단계 14 `UI와 설정 정리`
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `51,200 bytes`
+- 현재 Release EXE: `62,976 bytes`
 - 현재 `data.pak`: `88,208 bytes`
-- 현재 대표 save: 없음
-- 현재 합계: `139,408 bytes`
-- 남은 공간: `1,335,152 bytes`
+- 현재 대표 save: `66 bytes`
+- 현재 합계: `151,250 bytes`
+- 남은 공간: `1,323,310 bytes`
 
 ## 단계별 기록
 
@@ -30,7 +30,8 @@
 | 9. 상호작용과 도구 | 구현 및 gameplay 시각 검증 완료, D3D 검증 대기 | 병합 대기 | 44,544 bytes | +3,584 bytes |
 | 10. 인벤토리와 아이템 | 구현 및 hotbar GUI 검증 완료, 세부 GUI 검증 대기 | `799a4d7` (#16) | 46,592 bytes | +2,048 bytes |
 | 11. 농사 핵심 루프 | 구현 완료, gameplay GUI 검증 대기 | `0db6c8e` (#17) | 49,152 bytes | +2,560 bytes |
-| 12. 시간, 하루 종료와 최소 목표 | 구현 완료, gameplay GUI 검증 대기 | 미커밋 작업 트리 | 51,200 bytes | +2,048 bytes |
+| 12. 시간, 하루 종료와 최소 목표 | 구현 완료, gameplay GUI 검증 대기 | `b02b256` (#18) | 51,200 bytes | +2,048 bytes |
+| 13. 저장과 불러오기 | 구현 완료, 장시간 gameplay 검증 대기 | 미커밋 작업 트리 | 62,976 bytes | +11,776 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -436,9 +437,45 @@
 - 당근 3개 수확 후 완료 화면과 world simulation 정지 확인
 - Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
 
-## 다음 작업: 단계 13
+### 단계 13: 저장과 불러오기
 
-`IMPLEMENTATION_ROADMAP.md`에 따라 `저장과 불러오기` 범위를 진행한다.
+구현:
+
+- `HSSV` magic, version, payload size와 FNV-1a checksum을 가진 version 1 binary save
+- raw struct dump 없이 모든 little-endian field를 명시적으로 encode/decode
+- 플레이어 위치를 1/256 logical pixel 정수로 저장
+- day/minute, 16-slot inventory, selected hotbar, 수확 목표 진행도 저장
+- 원본 map과 다른 `Tilled`/`Watered` tile delta와 활성 crop만 sparse 저장
+- 전체 save 32KiB, tile delta 4,096개, crop 256개 상한
+- 완전한 임시 snapshot 검증 후에만 runtime state에 적용하는 transactional load
+- `%LOCALAPPDATA%/Homestead/representative.sav` primary, `.tmp`, `.bak` 경로
+- temporary write, flush/close, 검증된 기존 primary backup 후 atomic replace
+- 시작 시 primary가 손상되면 backup fallback, 둘 다 없거나 invalid면 안전한 새 게임 유지
+- 하루 변경 직후와 정상 종료 시 자동 저장
+
+검증:
+
+- Debug/Release `/W4` build 성공
+- 기존 테스트와 SaveCodec 테스트를 합한 15개가 Debug/Release에서 모두 통과
+- save round-trip으로 player/time/inventory/tile/crop state 복원 검증
+- bad magic/version, truncated file, checksum 변조와 32KiB 초과 file 거부 검증
+- invalid item ID, stack count, tile flag, crop ID와 excessive delta count 거부 검증
+- 격리된 임시 `LOCALAPPDATA`에서 정상 종료 save 생성 후 재실행 load 성공, 두 실행 종료 코드 `0`
+- 실제 대표 초기 save: `66 bytes` (`32KiB` 목표 이하)
+- Release `Homestead.exe`: `62,976 bytes` (단계 12 대비 `+11,776 bytes`)
+- `data.pak`: `88,208 bytes` (단계 12 대비 변경 없음)
+- 제출 합계: `151,250 bytes` (단계 12 대비 `+11,842 bytes`); 상한까지 `1,323,310 bytes`
+
+남은 확인:
+
+- 실제 gameplay에서 경작·심기·물주기·날짜 진행 후 종료/재실행 상태 복원 확인
+- primary checksum 손상 시 직전 valid backup이 복원되는 file-level 수동 검증
+- 장시간 play save와 최대 tile/crop 상태의 대표 save 크기 측정
+- Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
+
+## 다음 작업: 단계 14
+
+`IMPLEMENTATION_ROADMAP.md`에 따라 `UI와 설정 정리` 범위를 진행한다.
 
 ## 기록 갱신 규칙
 

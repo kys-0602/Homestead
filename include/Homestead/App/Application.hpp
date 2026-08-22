@@ -13,6 +13,7 @@
 #include "Homestead/Input/Input.hpp"
 #include "Homestead/Platform/Clock.hpp"
 #include "Homestead/Platform/Window.hpp"
+#include "Homestead/Save/SaveSystem.hpp"
 #include "Homestead/World/TileMap.hpp"
 #include "Homestead/World/CropField.hpp"
 #include "Homestead/World/EntityWorld.hpp"
@@ -35,10 +36,14 @@ public:
 
 private:
     [[nodiscard]] bool FixedUpdate() noexcept;
+    [[nodiscard]] bool CaptureSave(SaveSnapshot& snapshot) const noexcept;
+    [[nodiscard]] bool ApplySave(const SaveSnapshot& snapshot) noexcept;
+    [[nodiscard]] bool SaveGame() noexcept;
 
     Window window_;
     Clock clock_;
     AssetStore assets_;
+    SaveSystem saves_;
     TileMap tileMap_;
     CropField crops_;
     WorldClock worldClock_;

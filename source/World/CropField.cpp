@@ -83,6 +83,18 @@ void CropField::Clear() noexcept {
     count_ = 0;
 }
 
+bool CropField::Restore(const CropInstance& crop, const TileMap& map) noexcept {
+    const CropDefinition* definition = FindCropDefinition(crop.crop);
+    const Tile* tile = map.Get(crop.tileX, crop.tileY);
+    if (!crop.active || definition == nullptr || crop.stage > definition->finalStage ||
+        tile == nullptr || (tile->flags & TileFlagValue(TileFlag::Tilled)) == 0 ||
+        tile->object != 0 || count_ >= Capacity || Find(crop.tileX, crop.tileY) != nullptr) return false;
+    for (CropInstance& slot : crops_) {
+        if (!slot.active) { slot = crop; ++count_; return true; }
+    }
+    return false;
+}
+
 const CropInstance* CropField::Find(std::int32_t x, std::int32_t y) const noexcept {
     for (const CropInstance& crop : crops_) {
         if (crop.active && crop.tileX == x && crop.tileY == y) return &crop;
