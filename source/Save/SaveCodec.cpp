@@ -54,7 +54,8 @@ bool ValidStack(const ItemStack& stack) noexcept {
 } // namespace
 
 bool EncodeSave(const SaveSnapshot& snapshot, std::vector<std::uint8_t>& bytes) noexcept {
-    if (snapshot.day == 0 || snapshot.minute >= 24U * 60U ||
+    if (snapshot.playerX256 < 0 || snapshot.playerY256 < 0 ||
+        snapshot.day == 0 || snapshot.minute >= 24U * 60U ||
         snapshot.selectedSlot >= Inventory::HotbarSlotCount ||
         snapshot.harvestedCarrots > 3 || snapshot.tileDeltas.size() > MaximumTileDeltas ||
         snapshot.crops.size() > CropField::Capacity) return false;
