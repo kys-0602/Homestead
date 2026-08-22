@@ -5,6 +5,7 @@
 #include "Homestead/Assets/AssetStore.hpp"
 #include "Homestead/Core/FixedStep.hpp"
 #include "Homestead/Game/PlayerState.hpp"
+#include "Homestead/Game/Inventory.hpp"
 #include "Homestead/Graphics/Camera2D.hpp"
 #include "Homestead/Graphics/Graphics.hpp"
 #include "Homestead/Graphics/Presentation.hpp"
@@ -39,6 +40,7 @@ private:
     TileMap tileMap_;
     EntityWorld entityWorld_;
     PlayerState player_;
+    Inventory inventory_;
     Graphics graphics_;
     Input input_;
     FixedStepController fixedStep_;
@@ -47,6 +49,10 @@ private:
         static_cast<float>(LogicalHeight)};
     RenderQueue renderQueue_;
     TileSelection selection_{};
+    std::size_t selectedSlot_ = 0;
+    std::size_t inventoryCursor_ = 0;
+    std::size_t moveSource_ = Inventory::SlotCount;
+    bool inventoryOpen_ = false;
     bool initialized_ = false;
 };
 

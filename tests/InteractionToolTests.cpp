@@ -79,9 +79,9 @@ int main() {
     player.facing = Homestead::FacingDirection::Down;
     const Homestead::TileSelection farm = Homestead::SelectFrontTile(
         feet, Homestead::FacingDirection::Down, map);
-    if (!Homestead::TryStartToolUse(player, map, farm) ||
+    if (!Homestead::TryStartToolUse(player, map, farm, Homestead::ToolAction::Hoe) ||
         player.toolUse.action != Homestead::ToolAction::Hoe ||
-        Homestead::TryStartToolUse(player, map, farm)) return 8;
+        Homestead::TryStartToolUse(player, map, farm, Homestead::ToolAction::Hoe)) return 8;
 
     const Homestead::TransformComponent* before = world.Transform(player.entity);
     if (before == nullptr) return 9;
@@ -114,7 +114,7 @@ int main() {
     while (player.toolUse.action != Homestead::ToolAction::None) {
         if (!Homestead::UpdateToolUse(world, player, map)) return 16;
     }
-    if (!Homestead::TryStartToolUse(player, map, farm) ||
+    if (!Homestead::TryStartToolUse(player, map, farm, Homestead::ToolAction::Watering) ||
         player.toolUse.action != Homestead::ToolAction::Watering) return 17;
     for (unsigned tick = 0; tick < Homestead::ToolImpactTick; ++tick) {
         if (!Homestead::UpdateToolUse(world, player, map)) return 18;
@@ -127,8 +127,8 @@ int main() {
     player.toolUse = {};
     const Homestead::TileSelection path = Homestead::SelectFrontTile(
         feet, Homestead::FacingDirection::Right, map);
-    if (Homestead::TryStartToolUse(player, map, path) ||
-        Homestead::TryStartToolUse(player, map, mouse) ||
-        Homestead::TryStartToolUse(player, map, distant)) return 20;
+    if (Homestead::TryStartToolUse(player, map, path, Homestead::ToolAction::Hoe) ||
+        Homestead::TryStartToolUse(player, map, mouse, Homestead::ToolAction::Hoe) ||
+        Homestead::TryStartToolUse(player, map, distant, Homestead::ToolAction::Hoe)) return 20;
     return 0;
 }

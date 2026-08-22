@@ -167,3 +167,19 @@ target_compile_options(HomesteadInteractionToolTests PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
 )
 add_test(NAME HomesteadInteractionToolTests COMMAND HomesteadInteractionToolTests)
+
+add_executable(HomesteadInventoryTests
+    InventoryTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Inventory.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/InventoryUI.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/RenderQueue.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Assets/AssetStore.cpp"
+)
+target_include_directories(HomesteadInventoryTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+target_compile_definitions(HomesteadInventoryTests PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_compile_options(HomesteadInventoryTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+add_test(NAME HomesteadInventoryTests COMMAND HomesteadInventoryTests)

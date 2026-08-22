@@ -4,15 +4,15 @@
 
 ## 현재 상태
 
-- 마지막 갱신: 2026-08-20
-- 현재 완료 범위: 단계 0~9 구현
-- 다음 작업: 단계 10 `인벤토리와 아이템`
+- 마지막 갱신: 2026-08-22
+- 현재 완료 범위: 단계 0~10 구현
+- 다음 작업: 단계 11 `농사 핵심 루프`
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `44,544 bytes`
-- 현재 `data.pak`: `88,216 bytes`
+- 현재 Release EXE: `46,592 bytes`
+- 현재 `data.pak`: `88,208 bytes`
 - 현재 대표 save: 없음
-- 현재 합계: `132,760 bytes`
-- 남은 공간: `1,341,800 bytes`
+- 현재 합계: `134,800 bytes`
+- 남은 공간: `1,339,760 bytes`
 
 ## 단계별 기록
 
@@ -28,6 +28,7 @@
 | 7. 카메라와 타일맵 | 구현 및 시각 검증 완료, D3D Debug Layer 검증 대기 | `b560ff3` (#12) | 36,864 bytes | +3,584 bytes |
 | 8. 플레이어와 충돌 | 구현 및 gameplay 시각 검증 완료, D3D 검증 대기 | `12b31af` (#14) | 40,960 bytes | +4,096 bytes |
 | 9. 상호작용과 도구 | 구현 및 gameplay 시각 검증 완료, D3D 검증 대기 | 병합 대기 | 44,544 bytes | +3,584 bytes |
+| 10. 인벤토리와 아이템 | 구현 및 hotbar GUI 검증 완료, 세부 GUI 검증 대기 | 현재 브랜치 | 46,592 bytes | +2,048 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -325,9 +326,45 @@
 - keyboard/mouse target overlay와 빠른 click 동작의 추가 수동 확인
 - Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
 
-## 다음 작업: 단계 10
+### 단계 10: 인벤토리와 아이템
 
-`IMPLEMENTATION_ROADMAP.md`에 따라 `인벤토리와 아이템` 범위를 진행한다.
+구현:
+
+- 씨앗, 수확물, 괭이, 물뿌리개를 위한 조밀한 `ItemId`와 불변 `ItemDefinition` 테이블
+- 16칸 고정 용량 `Inventory`와 8칸 hotbar
+- 최대 stack을 지키는 추가, 원자적인 제거, 동일 item 병합 이동과 slot 교환
+- 초기 hotbar에 괭이, 물뿌리개, 당근 씨앗 12개, 당근 3개 지급
+- 선택 slot의 실제 도구에 따라 경작과 물주기가 실행되도록 단계 9 임시 문맥형 도구 선택 교체
+- 숫자키 1~8과 mouse click hotbar 선택
+- Escape inventory overlay, 방향키 cursor, E/Space 또는 mouse click을 이용한 2단계 이동/교환
+- inventory가 열린 동안 이동, 상호작용, 도구와 world simulation 차단
+- 논리 화면 좌표 기반 hotbar/inventory mouse hit-test와 atlas item icon 표시
+
+검증:
+
+- Debug/Release `/W4` build 성공
+- 기존 테스트와 Inventory 테스트를 합한 12개가 Debug/Release에서 모두 통과
+- stack 최대치 분할, 여러 slot 제거, 부족한 수량 제거의 원자성, 병합 이동, 교환 검증
+- 가득 찬 inventory에서 남은 item 수량을 정확히 반환해 item이 사라지지 않는지 검증
+- hotbar와 overlay의 경계 mouse hit-test 및 닫힌 overlay 입력 거부 검증
+- Debug 앱이 실제 pak과 inventory UI를 로드한 상태로 3초간 조기 종료 없이 실행됨
+- 사용자가 숫자키와 mouse click으로 hotbar 선택이 바뀌는지 확인함
+- 원본 tool icon sheet에서 물뿌리개 sprite 좌표를 낚싯대 영역 `x=112`에서 바로 왼쪽 물뿌리개 영역 `x=96`으로 수정
+- 사용자가 수정된 물뿌리개 icon 표시와 선택 후 물주기 동작을 실제 창에서 확인함
+- Release `Homestead.exe`: `46,592 bytes` (단계 9 대비 `+2,048 bytes`)
+- `data.pak`: `88,208 bytes` (단계 9 대비 `-8 bytes`)
+- 대표 save: 없음
+- 제출 합계: `134,800 bytes` (단계 9 대비 `+2,040 bytes`); 상한까지 `1,339,760 bytes`
+
+남은 확인:
+
+- 실제 표시 창에서 inventory 열기/닫기, keyboard/mouse slot 이동·교환과 world 입력 차단 확인
+- item stack count 문자 표시는 단계 14의 bitmap text renderer와 함께 추가
+- Graphics Tools 설치 후 D3D11 resource binding 및 종료 시 live-object 경고 확인
+
+## 다음 작업: 단계 11
+
+`IMPLEMENTATION_ROADMAP.md`에 따라 `농사 핵심 루프` 범위를 진행한다.
 
 ## 기록 갱신 규칙
 
