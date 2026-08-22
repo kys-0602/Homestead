@@ -50,6 +50,7 @@ public:
         const TileSelection& selection) noexcept;
     void OnDayChanged(TileMap& map) noexcept;
     void Clear() noexcept;
+    [[nodiscard]] bool Restore(const CropInstance& crop, const TileMap& map) noexcept;
 
     [[nodiscard]] const CropInstance* Find(std::int32_t x, std::int32_t y) const noexcept;
     [[nodiscard]] const std::array<CropInstance, Capacity>& Crops() const noexcept { return crops_; }

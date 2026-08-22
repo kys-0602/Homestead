@@ -429,6 +429,15 @@ CropState[]
 
 자동 저장은 하루 종료나 맵 전환 같은 안전한 시점에 실행한다.
 
+version 1 save는 `HSSV` magic, 16-byte header, little-endian payload와 FNV-1a
+checksum을 사용한다. 플레이어 위치는 1/256 logical pixel 정수로 저장하고,
+inventory 16칸은 명시적인 item/count 쌍으로 기록한다. 원본 map 대신
+`Tilled`/`Watered` tile delta와 활성 crop만 저장하며 전체 파일은 32KiB를
+초과하면 거부한다. `%LOCALAPPDATA%/Homestead/representative.sav`를 primary로,
+`.tmp`와 `.bak`을 각각 임시 파일과 직전의 검증된 저장으로 사용한다.
+시작 시 primary가 유효하지 않으면 backup을 시도하고, 정상 종료와 하루 변경
+직후 자동 저장한다.
+
 ## 15. 메모리와 성능 정책
 
 1.44MB는 주로 디스크 크기 제한이지 RAM 제한은 아닐 가능성이 크다. 그래도 단순하고 예측 가능한 구조가 코드 크기에도 유리하다.

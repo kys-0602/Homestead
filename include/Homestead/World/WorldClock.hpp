@@ -14,6 +14,7 @@ public:
     [[nodiscard]] bool FixedUpdate() noexcept;
     [[nodiscard]] bool RequestEndDay() noexcept;
     void Reset() noexcept;
+    [[nodiscard]] bool Restore(std::uint16_t day, std::uint16_t minute) noexcept;
 
     [[nodiscard]] std::uint16_t Day() const noexcept { return day_; }
     [[nodiscard]] std::uint16_t Minute() const noexcept { return minute_; }

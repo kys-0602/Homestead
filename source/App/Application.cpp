@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
+#include <cmath>
 
 #include "Homestead/Graphics/Presentation.hpp"
 #include "Homestead/Graphics/PlayerRenderer.hpp"
@@ -89,6 +90,19 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         assets_.Clear();
         window_.Shutdown();
         return false;
+    }
+
+    SaveSnapshot snapshot;
+    const SaveLoadResult loadResult = saves_.Load(snapshot);
+    if ((loadResult == SaveLoadResult::LoadedPrimary ||
+         loadResult == SaveLoadResult::LoadedBackup) && !ApplySave(snapshot)) {
+        crops_.Clear();
+        inventory_.Clear();
+        [[maybe_unused]] const std::uint16_t hoe = inventory_.Add(ItemId::Hoe, 1);
+        [[maybe_unused]] const std::uint16_t watering = inventory_.Add(ItemId::WateringCan, 1);
+        [[maybe_unused]] const std::uint16_t seeds = inventory_.Add(ItemId::CarrotSeed, 12);
+        [[maybe_unused]] const std::uint16_t carrots = inventory_.Add(ItemId::Carrot, 3);
+        worldClock_.Reset();
     }
 
     if (!graphics_.Initialize(
@@ -185,7 +199,10 @@ int Application::Run() noexcept {
 bool Application::FixedUpdate() noexcept {
     if (worldClock_.IsTransitioning()) {
         input_.DiscardPending();
-        if (worldClock_.FixedUpdate()) crops_.OnDayChanged(tileMap_);
+        if (worldClock_.FixedUpdate()) {
+            crops_.OnDayChanged(tileMap_);
+            [[maybe_unused]] const bool saved = SaveGame();
+        }
         return true;
     }
     if (goalComplete_) {
@@ -361,6 +378,7 @@ void Application::Shutdown() noexcept {
         return;
     }
 
+    [[maybe_unused]] const bool saved = SaveGame();
     graphics_.Shutdown();
     crops_.Clear();
     worldClock_.Reset();
@@ -374,6 +392,76 @@ void Application::Shutdown() noexcept {
     harvestedCarrots_ = 0;
     goalComplete_ = false;
     initialized_ = false;
+}
+
+bool Application::CaptureSave(SaveSnapshot& snapshot) const noexcept {
+    const TransformComponent* transform = entityWorld_.Transform(player_.entity);
+    if (transform == nullptr) return false;
+    snapshot = {};
+    snapshot.playerX256 = static_cast<std::int32_t>(std::lround(transform->current.x * 256.0F));
+    snapshot.playerY256 = static_cast<std::int32_t>(std::lround(transform->current.y * 256.0F));
+    snapshot.day = worldClock_.Day(); snapshot.minute = worldClock_.Minute();
+    snapshot.selectedSlot = static_cast<std::uint8_t>(selectedSlot_);
+    snapshot.harvestedCarrots = harvestedCarrots_;
+    for (std::size_t index = 0; index < Inventory::SlotCount; ++index)
+        snapshot.inventory[index] = inventory_.Slot(index);
+    for (std::int32_t y = 0; y < tileMap_.Height(); ++y) {
+        for (std::int32_t x = 0; x < tileMap_.Width(); ++x) {
+            const Tile* tile = tileMap_.Get(x, y);
+            const std::uint8_t dynamic = tile == nullptr ? 0 : static_cast<std::uint8_t>(
+                tile->flags & (TileFlagValue(TileFlag::Tilled) | TileFlagValue(TileFlag::Watered)));
+            if (dynamic != 0) snapshot.tileDeltas.push_back({
+                static_cast<std::uint8_t>(x), static_cast<std::uint8_t>(y), dynamic});
+        }
+    }
+    for (const CropInstance& crop : crops_.Crops()) if (crop.active) snapshot.crops.push_back(crop);
+    return snapshot.tileDeltas.size() <= MaximumTileDeltas;
+}
+
+bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
+    const float playerX = static_cast<float>(snapshot.playerX256) / 256.0F;
+    const float playerY = static_cast<float>(snapshot.playerY256) / 256.0F;
+    if (playerX < 0.0F || playerY < 0.0F ||
+        playerX >= tileMap_.Width() * TileSize || playerY >= tileMap_.Height() * TileSize ||
+        snapshot.selectedSlot >= Inventory::HotbarSlotCount || snapshot.harvestedCarrots > 3) return false;
+    for (std::size_t index = 0; index < snapshot.tileDeltas.size(); ++index) {
+        const SavedTileDelta& delta = snapshot.tileDeltas[index];
+        const Tile* tile = tileMap_.Get(delta.x, delta.y);
+        if (tile == nullptr || tile->object != 0 ||
+            (tile->flags & (TileFlagValue(TileFlag::Blocked) | TileFlagValue(TileFlag::Water))) != 0) return false;
+        for (std::size_t other = 0; other < index; ++other)
+            if (snapshot.tileDeltas[other].x == delta.x && snapshot.tileDeltas[other].y == delta.y) return false;
+    }
+    for (std::size_t index = 0; index < snapshot.crops.size(); ++index) {
+        const CropInstance& crop = snapshot.crops[index];
+        bool tilled = false;
+        for (const SavedTileDelta& delta : snapshot.tileDeltas)
+            if (delta.x == crop.tileX && delta.y == crop.tileY &&
+                (delta.flags & TileFlagValue(TileFlag::Tilled)) != 0) tilled = true;
+        if (!tilled) return false;
+        for (std::size_t other = 0; other < index; ++other)
+            if (snapshot.crops[other].tileX == crop.tileX && snapshot.crops[other].tileY == crop.tileY) return false;
+    }
+    if (!worldClock_.Restore(snapshot.day, snapshot.minute)) return false;
+    inventory_.Clear();
+    for (std::size_t index = 0; index < Inventory::SlotCount; ++index) inventory_.Slot(index) = snapshot.inventory[index];
+    for (const SavedTileDelta& delta : snapshot.tileDeltas) {
+        Tile* tile = tileMap_.Get(delta.x, delta.y); tile->flags |= delta.flags;
+    }
+    crops_.Clear();
+    for (const CropInstance& crop : snapshot.crops) if (!crops_.Restore(crop, tileMap_)) return false;
+    TransformComponent* transform = entityWorld_.Transform(player_.entity);
+    if (transform == nullptr) return false;
+    transform->current = {playerX, playerY}; transform->previous = transform->current;
+    selectedSlot_ = snapshot.selectedSlot; inventoryCursor_ = selectedSlot_;
+    harvestedCarrots_ = snapshot.harvestedCarrots; goalComplete_ = harvestedCarrots_ >= 3;
+    instructionTicks_ = 0;
+    return true;
+}
+
+bool Application::SaveGame() noexcept {
+    SaveSnapshot snapshot;
+    return CaptureSave(snapshot) && saves_.Save(snapshot);
 }
 
 } // namespace Homestead
