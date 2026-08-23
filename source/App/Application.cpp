@@ -224,10 +224,6 @@ bool Application::FixedUpdate() noexcept {
         return true;
     }
     if (paused_) return UpdatePauseMenu();
-    if (input_.ConsumePressed(Action::Market)) {
-        marketOpen_ = !marketOpen_; inventoryOpen_ = false; input_.DiscardPending(); return true;
-    }
-    if (marketOpen_) return UpdateMarket();
     if (goalComplete_) {
         PhysicalKey interactSource = PhysicalKey::Count;
         PhysicalKey toolSource = PhysicalKey::Count;
@@ -244,6 +240,10 @@ bool Application::FixedUpdate() noexcept {
         input_.DiscardPending();
         return true;
     }
+    if (input_.ConsumePressed(Action::Market)) {
+        marketOpen_ = !marketOpen_; inventoryOpen_ = false; input_.DiscardPending(); return true;
+    }
+    if (marketOpen_) return UpdateMarket();
     if (input_.ConsumePressed(Action::Inventory)) {
         inventoryOpen_ = !inventoryOpen_;
         inventoryCursor_ = selectedSlot_;

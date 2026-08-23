@@ -52,6 +52,15 @@ bool ValidStack(const ItemStack& stack) noexcept {
     return definition != nullptr && stack.count != 0 && stack.count <= definition->maximumStack;
 }
 
+bool ValidCrop(const CropInstance& crop) noexcept {
+    const CropDefinition* definition = FindCropDefinition(crop.crop);
+    if (!crop.active || definition == nullptr || crop.tileX < 0 || crop.tileX > 127 ||
+        crop.tileY < 0 || crop.tileY > 127 || crop.wateredDays > definition->growthDays) return false;
+    const std::uint8_t expectedStage = static_cast<std::uint8_t>(
+        (static_cast<unsigned>(crop.wateredDays) * definition->finalStage) / definition->growthDays);
+    return crop.stage == expectedStage;
+}
+
 } // namespace
 
 bool EncodeSave(const SaveSnapshot& snapshot, std::vector<std::uint8_t>& bytes) noexcept {
@@ -75,7 +84,7 @@ bool EncodeSave(const SaveSnapshot& snapshot, std::vector<std::uint8_t>& bytes) 
         U8(payload, delta.x); U8(payload, delta.y); U8(payload, delta.flags);
     }
     for (const CropInstance& crop : snapshot.crops) {
-        if (!crop.active || crop.tileX < 0 || crop.tileX > 127 || crop.tileY < 0 || crop.tileY > 127) return false;
+        if (!ValidCrop(crop)) return false;
         U8(payload, static_cast<std::uint8_t>(crop.tileX)); U8(payload, static_cast<std::uint8_t>(crop.tileY));
         U8(payload, static_cast<std::uint8_t>(crop.crop)); U8(payload, crop.stage); U8(payload, crop.wateredDays);
     }
@@ -103,7 +112,7 @@ bool DecodeSave(const std::uint8_t* bytes, std::size_t size, SaveSnapshot& snaps
     std::uint32_t x = 0, y = 0; std::uint16_t tileCount = 0, cropCount = 0;
     if (!reader.U32(x) || !reader.U32(y) || !reader.U16(result.day) || !reader.U16(result.minute) ||
         !reader.U8(result.selectedSlot) ||
-        !(version == 1 ? ([&reader,&result]() noexcept { std::uint8_t legacy=0; result.gold=20; return reader.U8(legacy); })() : reader.U16(result.gold)) ||
+        !(version == 1 ? ([&reader,&result]() noexcept { std::uint8_t legacy=0; result.gold=20; return reader.U8(legacy) && legacy<=3; })() : reader.U16(result.gold)) ||
         !reader.U16(tileCount) || !reader.U16(cropCount) || result.day == 0 ||
         result.minute >= 24U * 60U || result.selectedSlot >= Inventory::HotbarSlotCount ||
         tileCount > MaximumTileDeltas || cropCount > CropField::Capacity) return false;
@@ -142,10 +151,8 @@ bool DecodeSave(const std::uint8_t* bytes, std::size_t size, SaveSnapshot& snaps
         crop.tileX = x8; crop.tileY = y8;
         crop.crop = version == 1 && id == 1 ? CropId::Carrot : static_cast<CropId>(id);
         crop.active = true;
-        const CropDefinition* definition = FindCropDefinition(crop.crop);
         if (version == 1) crop.wateredDays = crop.stage;
-        if (definition == nullptr || crop.stage > definition->finalStage ||
-            crop.wateredDays > definition->growthDays) return false;
+        if (!ValidCrop(crop)) return false;
         for (std::size_t other = 0; other < index; ++other)
             if (result.crops[other].tileX == crop.tileX && result.crops[other].tileY == crop.tileY) return false;
     }

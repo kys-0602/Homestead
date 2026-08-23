@@ -8,11 +8,11 @@
 - 현재 완료 범위: 단계 0~16 구현
 - 다음 작업: 단계 16 후속 `농장 맵 개선과 집 내부 저장 지점`
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `78,336 bytes`
+- 현재 Release EXE: `78,848 bytes`
 - 현재 `data.pak`: `312,720 bytes`
 - 현재 대표 save: `67 bytes`
-- 현재 합계: `391,123 bytes`
-- 남은 공간: `1,083,437 bytes`
+- 현재 합계: `391,635 bytes`
+- 남은 공간: `1,082,925 bytes`
 
 ## 단계별 기록
 
@@ -34,7 +34,7 @@
 | 13. 저장과 불러오기 | 구현 완료, 장시간 gameplay 검증 대기 | `74c1a13` (#19) | 62,976 bytes | +11,776 bytes |
 | 14. UI와 설정 정리 | 구현 완료, GUI 검증 대기 | `17e48e6` (#20) | 69,120 bytes | +6,144 bytes |
 | 15. 오디오 | 구현 및 실제 청취 검증 완료 | `ceb42d5` | 76,288 bytes | +7,168 bytes |
-| 16. 콘텐츠와 게임 완결 | 구현 완료, 전체 수동 완주 검증 대기 | 미커밋 작업 트리 | 78,336 bytes | +2,048 bytes |
+| 16. 콘텐츠와 게임 완결 | 구현 완료, 전체 수동 완주 검증 대기 | `be0f28c`, 리뷰 수정 미커밋 | 78,848 bytes | +2,560 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -564,19 +564,23 @@
 - version 2 save에 골드와 작물별 물주기 성장 일수를 추가하고 version 1 당근 save migration 지원
 - 최종 맵과 UI에서 사용하지 않는 장식·건물·포인터 sprite 11개와 전용 source allowlist 제거
 - 구매·다작물 재배·중간 저장/불러오기·수확·판매와 100G 도달을 검증하는 테스트 추가
+- 완료 화면에서 시장 입력을 차단해 완료 흐름 중 골드가 감소하지 않도록 수정
+- 최대 골드 초과 판매를 아이템 손실 없이 거부하고 시장 표시 이름·가격을 경제 테이블과 단일화
+- save 인코딩과 디코딩 양쪽에서 작물 ID, 물 준 일수와 파생 성장 단계의 일관성을 검증
+- version 1의 폐기 필드 범위 검증을 유지하고 실제 legacy 당근 작물 migration 회귀 테스트 추가
 
 검증:
 
 - Debug/Release `/W4` build 성공
-- 기존 테스트와 ContentFlow/Economy 테스트를 합한 21개가 Debug에서 모두 통과
+- 기존 테스트와 ContentFlow/Economy 테스트를 합한 21개가 Debug/Release에서 모두 통과
 - 세 작물 구매·성장 기간·save round-trip·수확·판매와 재투자를 통한 100G 도달 검증
 - version 2 save round-trip과 version 1 item/crop ID migration 검증
 - 최종 manifest가 50개 source, 63개 static sprite와 57개 player frame만 허용
 - pak에는 120개 논리 sprite, 106개 고유 영역, 62색 palette만 포함
-- Release `Homestead.exe`: `78,336 bytes` (단계 15 대비 `+2,048 bytes`)
+- Release `Homestead.exe`: `78,848 bytes` (단계 15 대비 `+2,560 bytes`)
 - `data.pak`: `312,720 bytes` (단계 15 대비 `-27,116 bytes`)
 - 대표 save: `67 bytes`
-- 제출 합계: `391,123 bytes` (단계 15 대비 `-25,067 bytes`); 상한까지 `1,083,437 bytes`
+- 제출 합계: `391,635 bytes` (단계 15 대비 `-24,555 bytes`); 상한까지 `1,082,925 bytes`
 
 남은 확인:
 

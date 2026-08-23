@@ -33,12 +33,14 @@ bool Rejects(const std::vector<std::uint8_t>& bytes) {
 }
 
 std::vector<std::uint8_t> LegacySave() {
-    std::vector<std::uint8_t> payload(50,0);
+    std::vector<std::uint8_t> payload(54,0);
     payload[8]=1; payload[10]=104; payload[11]=1; // day 1, minute 360
-    payload[14]=0; payload[15]=0; // selected, harvested
+    payload[12]=0; payload[13]=0; // selected slot, legacy harvested carrots
     payload[18]=3; payload[19]=1; // legacy hoe
     payload[20]=4; payload[21]=1; // legacy watering can
     payload[22]=1; payload[23]=5; // legacy carrot seed
+    payload[16]=1; // crop count
+    payload[50]=3; payload[51]=4; payload[52]=1; payload[53]=2; // legacy carrot crop
     std::vector<std::uint8_t> bytes{'H','S','S','V',1,0,16,0};
     bytes.resize(16); SetU32(bytes,8,static_cast<std::uint32_t>(payload.size()));
     SetU32(bytes,12,Checksum(payload.data(),payload.size()));
@@ -75,9 +77,17 @@ int main() {
 
     source.inventory[2].count = 100;
     if (Homestead::EncodeSave(source, bytes)) return 12;
+    source.inventory[2].count = 9; source.crops[0].wateredDays = 255;
+    if (Homestead::EncodeSave(source, bytes)) return 13;
+    source.crops[0].wateredDays = 2; source.crops[0].stage = 1;
+    if (Homestead::EncodeSave(source, bytes)) return 14;
     const auto legacy=LegacySave(); Homestead::SaveSnapshot migrated;
     if(!Homestead::DecodeSave(legacy.data(),legacy.size(),migrated)||migrated.gold!=20||
        migrated.inventory[0].item!=Homestead::ItemId::Hoe||
-       migrated.inventory[2].item!=Homestead::ItemId::CarrotSeed)return 13;
+       migrated.inventory[2].item!=Homestead::ItemId::CarrotSeed||migrated.crops.size()!=1||
+       migrated.crops[0].crop!=Homestead::CropId::Carrot||migrated.crops[0].stage!=2||
+       migrated.crops[0].wateredDays!=2)return 15;
+    auto invalidLegacy=legacy;invalidLegacy[16+13]=4;RepairChecksum(invalidLegacy);
+    if(!Rejects(invalidLegacy))return 16;
     return 0;
 }

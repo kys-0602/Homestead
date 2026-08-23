@@ -14,5 +14,9 @@ int main() {
         [[maybe_unused]] const bool removed=inventory.Remove(Homestead::ItemId::TomatoSeed,bought);
     }
     if(gold<Homestead::GoalGold)return 6;
+    inventory.Clear();gold=65530;
+    if(inventory.Add(Homestead::ItemId::Wheat,1)!=0||
+       Homestead::SellHarvest(inventory,gold,0)||gold!=65530||
+       inventory.Count(Homestead::ItemId::Wheat)!=1)return 7;
     return 0;
 }
