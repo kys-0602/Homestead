@@ -34,11 +34,10 @@ torch, and lantern sheets are excluded.
 
 - `Tiles/Grass/Grass_1_Middle.png`
 - `Tiles/Grass/Path_Middle.png`
-- `Tiles/Grass/Path_Decoration.png`
 - `Tiles/FarmLand/FarmLand_Tile.png`
 - `Tiles/FarmLand/FarmLand_Wet_Tile.png`
 
-Select one 16x16 grass base, the minimum path edge set, and dry/wet farmland states.
+Select one 16x16 grass base, one path tile, and dry/wet farmland states.
 The other grass palettes, blob test images, beach, cave, cliff, bridge,
 pavement, deck, waterfall, and animated-water sets are excluded.
 
@@ -46,22 +45,19 @@ pavement, deck, waterfall, and animated-water sets are excluded.
 
 - `Crops/Crops.png`
 
-Select one compact vegetable crop with seed-bag icon, growth stages, and
-harvest icon. A second crop may be added only during the content pass if the
-measured atlas budget permits it. `Crops_2.png` is an overlapping subset and is
-excluded, as are berries, grapes, and fruit trees.
+Select wheat, carrot, and tomato, each with a seed-bag icon, four growth stages,
+and harvest icon. `Crops_2.png` is an overlapping subset and is excluded, as are
+all other vegetables, berries, grapes, and fruit trees.
 
 ## Buildings and Environment
 
-- `Buildings/Buildings/Houses/Wood/House_1_Wood_Green_Red.png`
 - `Trees/Big_Oak_Tree.png`
 - `Outdoor decoration/Fences.png`
 - `Outdoor decoration/Flowers.png`
-- `Outdoor decoration/Scarecrows.png`
 - `Outdoor decoration/Signs.png`
 
-Use one farmhouse appearance, one mature oak, and only a few individual
-decoration tiles needed by the final map. Other houses, unique buildings,
+Use one mature oak and only the individual fence, flower, and sign regions
+referenced by the final map. Houses, unique buildings,
 interiors, animals, water decorations, break animations, particles, and colour
 variants are excluded.
 
@@ -77,20 +73,12 @@ duplicates, general resource/food sheets, and all unrelated icons are excluded.
 
 - `UI/Cute_Fantasy_Font_5x7.png`
 - `UI/Pointer_Click_Anim.png`
-- `UI/UI_Premade.png`
-- `UI/UI_Pop_Up.png`
-- `UI/UI_Bars.png`
-- `UI/UI_Button_Icons.png`
-- `UI/UI_Selectors.png`
-- `UI/UI_Sliders.png`
 
 Use the white 5x7 font because it contains upper/lowercase letters, numbers,
 and punctuation and can be tinted by the existing sprite shader. The black 5x9
 font is excluded because it requires a pixel-conversion step before tinting.
-`UI_ALL.png`, the book, loading icon, crosshairs, ribbons, large colour/button
-variant sheets, and duplicate font sheets are excluded. Large approved UI
-sheets are source references only until exact panels and controls are chosen in
-the UI stage.
+`UI_ALL.png`, premade panels, the book, loading icon, crosshairs, ribbons,
+large colour/button variant sheets, and duplicate font sheets are excluded.
 
 ## Explicitly Excluded Categories
 

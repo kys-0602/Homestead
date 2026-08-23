@@ -15,7 +15,9 @@ struct TileSelection;
 
 enum class CropId : std::uint8_t {
     None,
-    Carrot
+    Wheat,
+    Carrot,
+    Tomato
 };
 
 struct CropDefinition {
@@ -23,6 +25,7 @@ struct CropDefinition {
     ItemId seedItem = ItemId::None;
     ItemId harvestItem = ItemId::None;
     std::uint8_t finalStage = 0;
+    std::uint8_t growthDays = 0;
     std::array<AssetId, 4> stageSprites{};
 };
 
@@ -31,6 +34,7 @@ struct CropInstance {
     std::int16_t tileY = 0;
     CropId crop = CropId::None;
     std::uint8_t stage = 0;
+    std::uint8_t wateredDays = 0;
     bool active = false;
 };
 

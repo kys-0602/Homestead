@@ -21,6 +21,7 @@ bool TranslateVirtualKey(WPARAM virtualKey, PhysicalKey& key) noexcept {
     case 'E': key = PhysicalKey::E; return true;
     case 'F': key = PhysicalKey::F; return true;
     case 'I': key = PhysicalKey::I; return true;
+    case 'M': key = PhysicalKey::M; return true;
     case VK_UP: key = PhysicalKey::Up; return true;
     case VK_DOWN: key = PhysicalKey::Down; return true;
     case VK_LEFT: key = PhysicalKey::Left; return true;

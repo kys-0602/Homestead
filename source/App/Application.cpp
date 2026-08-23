@@ -17,6 +17,7 @@
 #include "Homestead/Systems/InteractionSystem.hpp"
 #include "Homestead/Systems/ToolSystem.hpp"
 #include "Homestead/UI/InventoryUI.hpp"
+#include "Homestead/UI/MarketUI.hpp"
 #include "Homestead/UI/PauseUI.hpp"
 #include "Homestead/UI/StatusUI.hpp"
 
@@ -90,9 +91,7 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         return false;
     }
     if (inventory_.Add(ItemId::Hoe, 1) != 0 ||
-        inventory_.Add(ItemId::WateringCan, 1) != 0 ||
-        inventory_.Add(ItemId::CarrotSeed, 12) != 0 ||
-        inventory_.Add(ItemId::Carrot, 3) != 0) {
+        inventory_.Add(ItemId::WateringCan, 1) != 0) {
         inventory_.Clear();
         entityWorld_.Clear();
         tileMap_.Clear();
@@ -109,9 +108,8 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         inventory_.Clear();
         [[maybe_unused]] const std::uint16_t hoe = inventory_.Add(ItemId::Hoe, 1);
         [[maybe_unused]] const std::uint16_t watering = inventory_.Add(ItemId::WateringCan, 1);
-        [[maybe_unused]] const std::uint16_t seeds = inventory_.Add(ItemId::CarrotSeed, 12);
-        [[maybe_unused]] const std::uint16_t carrots = inventory_.Add(ItemId::Carrot, 3);
         worldClock_.Reset();
+        gold_ = StartingGold;
     }
 
     if (!graphics_.Initialize(
@@ -192,8 +190,9 @@ int Application::Run() noexcept {
             (!inventoryOpen_ && !paused_ && !AddSelectionOverlay(selection_, camera_, assets_, renderQueue_)) ||
             !AddInventoryUI(inventory_, selectedSlot_, inventoryCursor_,
                             inventoryOpen_, assets_, renderQueue_) ||
-            !AddStatusUI(worldClock_, harvestedCarrots_, 3,
+            !AddStatusUI(worldClock_, gold_, GoalGold,
                          instructionTicks_ != 0, goalComplete_, assets_, renderQueue_) ||
+            (marketOpen_ && !AddMarketUI(gold_, marketFocus_, assets_, renderQueue_)) ||
             (paused_ && !AddPauseUI(settings_, pauseFocus_, assets_, renderQueue_))) {
             return 1;
         }
@@ -216,6 +215,7 @@ bool Application::FixedUpdate() noexcept {
         return true;
     }
     if (input_.ConsumePressed(Action::Menu)) {
+        if (marketOpen_) { marketOpen_ = false; input_.DiscardPending(); return true; }
         paused_ = !paused_;
         inventoryOpen_ = false;
         moveSource_ = Inventory::SlotCount;
@@ -240,6 +240,10 @@ bool Application::FixedUpdate() noexcept {
         input_.DiscardPending();
         return true;
     }
+    if (input_.ConsumePressed(Action::Market)) {
+        marketOpen_ = !marketOpen_; inventoryOpen_ = false; input_.DiscardPending(); return true;
+    }
+    if (marketOpen_) return UpdateMarket();
     if (input_.ConsumePressed(Action::Inventory)) {
         inventoryOpen_ = !inventoryOpen_;
         inventoryCursor_ = selectedSlot_;
@@ -351,10 +355,6 @@ bool Application::FixedUpdate() noexcept {
         if (player_.toolUse.action == ToolAction::None &&
             crops_.Harvest(inventory_, interactionTarget)) {
             FaceSelection(player_, playerFeet, interactionTarget);
-            if (harvestedCarrots_ < 3) {
-                ++harvestedCarrots_;
-                goalComplete_ = harvestedCarrots_ == 3;
-            }
             audio_.PlayEffect(MakeAssetId("audio.harvest"));
         } else {
             [[maybe_unused]] const bool interacted =
@@ -370,7 +370,8 @@ bool Application::FixedUpdate() noexcept {
         const ItemId selectedItem = inventory_.Slot(selectedSlot_).item;
         if (selectedItem == ItemId::Hoe) action = ToolAction::Hoe;
         else if (selectedItem == ItemId::WateringCan) action = ToolAction::Watering;
-        if (selectedItem == ItemId::CarrotSeed &&
+        const ItemDefinition* selectedDefinition = FindItemDefinition(selectedItem);
+        if (selectedDefinition != nullptr && selectedDefinition->category == ItemCategory::Seed &&
             player_.toolUse.action == ToolAction::None &&
             crops_.Plant(tileMap_, inventory_, toolTarget, selectedItem)) {
             FaceSelection(player_, playerFeet, toolTarget);
@@ -437,7 +438,8 @@ void Application::Shutdown() noexcept {
     window_.Shutdown();
     fixedStep_.Reset();
     instructionTicks_ = 600;
-    harvestedCarrots_ = 0;
+    gold_ = StartingGold;
+    marketOpen_ = false;
     goalComplete_ = false;
     inventoryOpen_ = false;
     paused_ = false;
@@ -447,6 +449,7 @@ void Application::Shutdown() noexcept {
 
 bool Application::UpdatePauseMenu() noexcept {
     [[maybe_unused]] const bool ignoredInventory = input_.ConsumePressed(Action::Inventory);
+    [[maybe_unused]] const bool ignoredMarket = input_.ConsumePressed(Action::Market);
     const bool up = input_.ConsumePressed(Action::MoveUp);
     const bool down = input_.ConsumePressed(Action::MoveDown);
     const bool left = input_.ConsumePressed(Action::MoveLeft);
@@ -501,6 +504,33 @@ bool Application::ApplyDisplaySettings() noexcept {
     return window_.ApplyDisplaySettings(settings_.windowScale, settings_.fullscreen);
 }
 
+bool Application::UpdateMarket() noexcept {
+    [[maybe_unused]] const bool ignoredInventory = input_.ConsumePressed(Action::Inventory);
+    const bool up=input_.ConsumePressed(Action::MoveUp), down=input_.ConsumePressed(Action::MoveDown);
+    marketFocus_=UpdateMarketFocus(marketFocus_,up,down,input_.IsLogicalMouseValid(),
+        input_.LogicalMouseX(),input_.LogicalMouseY());
+    if(up||down) audio_.PlayEffect(MakeAssetId("audio.ui.move"));
+    PhysicalKey interactSource=PhysicalKey::Count,toolSource=PhysicalKey::Count;
+    const bool interact=input_.ConsumePressed(Action::Interact,interactSource);
+    const bool tool=input_.ConsumePressed(Action::UseTool,toolSource);
+    bool activate=interact||tool;
+    const bool mouse=interactSource==PhysicalKey::MouseRight||toolSource==PhysicalKey::MouseLeft;
+    if(input_.IsLogicalMouseValid()) { const int hit=MarketItemAt(input_.LogicalMouseX(),input_.LogicalMouseY());
+        if(hit<0&&mouse) activate=false;
+    } else if(mouse) activate=false;
+    if(activate) {
+        const bool changed=marketFocus_<MarketCropCount?
+            BuySeed(inventory_,gold_,marketFocus_):SellHarvest(inventory_,gold_,marketFocus_-MarketCropCount);
+        if(changed) {
+            audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
+            goalComplete_=gold_>=GoalGold;
+            if(goalComplete_) marketOpen_=false;
+        }
+    }
+    input_.DiscardPending();
+    return true;
+}
+
 bool Application::CaptureSave(SaveSnapshot& snapshot) const noexcept {
     const TransformComponent* transform = entityWorld_.Transform(player_.entity);
     if (transform == nullptr) return false;
@@ -509,7 +539,7 @@ bool Application::CaptureSave(SaveSnapshot& snapshot) const noexcept {
     snapshot.playerY256 = static_cast<std::int32_t>(std::lround(transform->current.y * 256.0F));
     snapshot.day = worldClock_.Day(); snapshot.minute = worldClock_.Minute();
     snapshot.selectedSlot = static_cast<std::uint8_t>(selectedSlot_);
-    snapshot.harvestedCarrots = harvestedCarrots_;
+    snapshot.gold = gold_;
     for (std::size_t index = 0; index < Inventory::SlotCount; ++index)
         snapshot.inventory[index] = inventory_.Slot(index);
     for (std::int32_t y = 0; y < tileMap_.Height(); ++y) {
@@ -530,7 +560,7 @@ bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
     const float playerY = static_cast<float>(snapshot.playerY256) / 256.0F;
     if (playerX < 0.0F || playerY < 0.0F ||
         playerX >= tileMap_.Width() * TileSize || playerY >= tileMap_.Height() * TileSize ||
-        snapshot.selectedSlot >= Inventory::HotbarSlotCount || snapshot.harvestedCarrots > 3) return false;
+        snapshot.selectedSlot >= Inventory::HotbarSlotCount) return false;
     for (std::size_t index = 0; index < snapshot.tileDeltas.size(); ++index) {
         const SavedTileDelta& delta = snapshot.tileDeltas[index];
         const Tile* tile = tileMap_.Get(delta.x, delta.y);
@@ -561,7 +591,7 @@ bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
     if (transform == nullptr) return false;
     transform->current = {playerX, playerY}; transform->previous = transform->current;
     selectedSlot_ = snapshot.selectedSlot; inventoryCursor_ = selectedSlot_;
-    harvestedCarrots_ = snapshot.harvestedCarrots;
+    gold_ = snapshot.gold;
     goalComplete_ = false;
     instructionTicks_ = 0;
     return true;

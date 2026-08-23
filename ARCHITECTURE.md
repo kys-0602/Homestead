@@ -351,6 +351,11 @@ EntityWorld
 - 모든 작물을 매 프레임 갱신하지 않음
 - 성장 일수, 물 필요 여부, 수확 횟수는 정적 `CropDefinition`에서 조회
 
+최종 콘텐츠는 밀·당근·토마토 3종이다. 각각 2·3·4번의 물 준 하루가
+필요하고, `MarketEntry`의 씨앗 구매가와 수확물 판매가로 작은 경제 루프를
+구성한다. 별도 NPC나 대화 시스템 없이 `M` 시장 overlay에서 구매·판매하며,
+새 게임은 20G로 시작해 100G 보유를 완료 목표로 삼는다.
+
 ### 범위에서 제외하는 시스템
 
 현재 버전에는 NPC, 호감도, NPC 일정, 계절, 날씨, 네트워크/협동 기능을 넣지 않는다. 관련 pool, system, 데이터 테이블, UI를 미리 만들지 않는다. 이후 범위가 변경될 때 독립 모듈로 추가한다.
@@ -437,10 +442,12 @@ CropState[]
 
 자동 저장은 하루 종료나 맵 전환 같은 안전한 시점에 실행한다.
 
-version 1 save는 `HSSV` magic, 16-byte header, little-endian payload와 FNV-1a
+version 2 save는 `HSSV` magic, 16-byte header, little-endian payload와 FNV-1a
 checksum을 사용한다. 플레이어 위치는 1/256 logical pixel 정수로 저장하고,
 inventory 16칸은 명시적인 item/count 쌍으로 기록한다. 원본 map 대신
-`Tilled`/`Watered` tile delta와 활성 crop만 저장하며 전체 파일은 32KiB를
+`Tilled`/`Watered` tile delta와 활성 crop만 저장하며 골드와 작물별 누적
+물주기 일수도 명시적으로 기록한다. version 1의 당근·도구 item/crop ID는
+version 2 런타임 ID로 마이그레이션한다. 전체 파일은 32KiB를
 초과하면 거부한다. `%LOCALAPPDATA%/Homestead/representative.sav`를 primary로,
 `.tmp`와 `.bak`을 각각 임시 파일과 직전의 검증된 저장으로 사용한다.
 시작 시 primary가 유효하지 않으면 backup을 시도하고, 정상 종료와 하루 변경

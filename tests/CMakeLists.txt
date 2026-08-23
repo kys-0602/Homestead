@@ -199,6 +199,29 @@ target_compile_options(HomesteadFarmingTests PRIVATE
 )
 add_test(NAME HomesteadFarmingTests COMMAND HomesteadFarmingTests)
 
+add_executable(HomesteadContentFlowTests
+    ContentFlowTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Economy.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Inventory.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Save/SaveCodec.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/CropField.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/TileMap.cpp"
+)
+target_include_directories(HomesteadContentFlowTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+target_compile_options(HomesteadContentFlowTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+add_test(NAME HomesteadContentFlowTests COMMAND HomesteadContentFlowTests)
+
+add_executable(HomesteadEconomyTests EconomyTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Economy.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Inventory.cpp")
+target_include_directories(HomesteadEconomyTests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+target_compile_options(HomesteadEconomyTests PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>)
+add_test(NAME HomesteadEconomyTests COMMAND HomesteadEconomyTests)
+
 add_executable(HomesteadWorldClockTests
     WorldClockTests.cpp
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/WorldClock.cpp"
@@ -242,6 +265,7 @@ add_test(NAME HomesteadSettingsTests COMMAND HomesteadSettingsTests)
 add_executable(HomesteadPauseUITests
     PauseUITests.cpp
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/PauseUI.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/MarketUI.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/StatusUI.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/BitmapText.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/WorldClock.cpp"

@@ -8,10 +8,12 @@ namespace {
 
 AssetId GlyphId(char value) noexcept {
     switch (value) {
-    case 'A': return MakeAssetId("font.A"); case 'C': return MakeAssetId("font.C");
+    case 'A': return MakeAssetId("font.A"); case 'B': return MakeAssetId("font.B");
+    case 'C': return MakeAssetId("font.C");
     case 'D': return MakeAssetId("font.D"); case 'E': return MakeAssetId("font.E");
     case 'F': return MakeAssetId("font.F"); case 'G': return MakeAssetId("font.G");
-    case 'I': return MakeAssetId("font.I"); case 'L': return MakeAssetId("font.L");
+    case 'H': return MakeAssetId("font.H"); case 'I': return MakeAssetId("font.I");
+    case 'K': return MakeAssetId("font.K"); case 'L': return MakeAssetId("font.L");
     case 'M': return MakeAssetId("font.M"); case 'N': return MakeAssetId("font.N");
     case 'O': return MakeAssetId("font.O"); case 'P': return MakeAssetId("font.P");
     case 'R': return MakeAssetId("font.R"); case 'S': return MakeAssetId("font.S");

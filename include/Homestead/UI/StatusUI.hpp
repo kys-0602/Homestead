@@ -12,8 +12,8 @@ class WorldClock;
 
 [[nodiscard]] bool AddStatusUI(
     const WorldClock& clock,
-    std::uint8_t harvested,
-    std::uint8_t goal,
+    std::uint16_t gold,
+    std::uint16_t goal,
     bool showInstructions,
     bool complete,
     const AssetStore& assets,
