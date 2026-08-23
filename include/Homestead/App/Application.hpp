@@ -7,6 +7,7 @@
 #include "Homestead/Core/FixedStep.hpp"
 #include "Homestead/Game/PlayerState.hpp"
 #include "Homestead/Game/Inventory.hpp"
+#include "Homestead/Game/Economy.hpp"
 #include "Homestead/Graphics/Camera2D.hpp"
 #include "Homestead/Graphics/Graphics.hpp"
 #include "Homestead/Graphics/Presentation.hpp"
@@ -42,6 +43,7 @@ private:
     [[nodiscard]] bool ApplySave(const SaveSnapshot& snapshot) noexcept;
     [[nodiscard]] bool SaveGame() noexcept;
     [[nodiscard]] bool UpdatePauseMenu() noexcept;
+    [[nodiscard]] bool UpdateMarket() noexcept;
     [[nodiscard]] bool ApplyDisplaySettings() noexcept;
 
     SettingsSystem settingsSystem_;
@@ -69,10 +71,12 @@ private:
     std::size_t inventoryCursor_ = 0;
     std::size_t moveSource_ = Inventory::SlotCount;
     bool inventoryOpen_ = false;
+    bool marketOpen_ = false;
     bool paused_ = false;
     std::uint8_t pauseFocus_ = 0;
     std::uint16_t instructionTicks_ = 600;
-    std::uint8_t harvestedCarrots_ = 0;
+    std::uint16_t gold_ = StartingGold;
+    std::uint8_t marketFocus_ = 0;
     bool goalComplete_ = false;
     bool initialized_ = false;
 };

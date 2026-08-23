@@ -6,8 +6,12 @@ namespace Homestead {
 namespace {
 
 constexpr ItemDefinition ItemDefinitions[] = {
+    {ItemId::WheatSeed, ItemCategory::Seed, 99, MakeAssetId("crop.wheat.seed_bag")},
+    {ItemId::Wheat, ItemCategory::Harvest, 99, MakeAssetId("crop.wheat.harvest")},
     {ItemId::CarrotSeed, ItemCategory::Seed, 99, MakeAssetId("crop.carrot.seed_bag")},
     {ItemId::Carrot, ItemCategory::Harvest, 99, MakeAssetId("crop.carrot.harvest")},
+    {ItemId::TomatoSeed, ItemCategory::Seed, 99, MakeAssetId("crop.tomato.seed_bag")},
+    {ItemId::Tomato, ItemCategory::Harvest, 99, MakeAssetId("crop.tomato.harvest")},
     {ItemId::Hoe, ItemCategory::Tool, 1, MakeAssetId("icon.tool.hoe")},
     {ItemId::WateringCan, ItemCategory::Tool, 1, MakeAssetId("icon.tool.watering_can")}
 };

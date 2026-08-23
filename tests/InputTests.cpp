@@ -71,6 +71,9 @@ int main() {
     input.SetPhysicalKey(Homestead::PhysicalKey::I, false);
     if (!input.ConsumePressed(Homestead::Action::Menu) ||
         !input.ConsumePressed(Homestead::Action::Inventory)) return 12;
+    input.SetPhysicalKey(Homestead::PhysicalKey::M, true);
+    input.SetPhysicalKey(Homestead::PhysicalKey::M, false);
+    if (!input.ConsumePressed(Homestead::Action::Market)) return 14;
 
     input.SetClientMouse(120, 80);
     input.SetLogicalMouse(30, 20, true);

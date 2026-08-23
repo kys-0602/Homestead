@@ -32,35 +32,52 @@ bool Rejects(const std::vector<std::uint8_t>& bytes) {
     return !Homestead::DecodeSave(bytes.data(), bytes.size(), snapshot);
 }
 
+std::vector<std::uint8_t> LegacySave() {
+    std::vector<std::uint8_t> payload(50,0);
+    payload[8]=1; payload[10]=104; payload[11]=1; // day 1, minute 360
+    payload[14]=0; payload[15]=0; // selected, harvested
+    payload[18]=3; payload[19]=1; // legacy hoe
+    payload[20]=4; payload[21]=1; // legacy watering can
+    payload[22]=1; payload[23]=5; // legacy carrot seed
+    std::vector<std::uint8_t> bytes{'H','S','S','V',1,0,16,0};
+    bytes.resize(16); SetU32(bytes,8,static_cast<std::uint32_t>(payload.size()));
+    SetU32(bytes,12,Checksum(payload.data(),payload.size()));
+    bytes.insert(bytes.end(),payload.begin(),payload.end()); return bytes;
+}
+
 } // namespace
 
 int main() {
     Homestead::SaveSnapshot source;
     source.playerX256 = 12345; source.playerY256 = 23456;
-    source.day = 4; source.minute = 777; source.selectedSlot = 2; source.harvestedCarrots = 1;
+    source.day = 4; source.minute = 777; source.selectedSlot = 2; source.gold = 87;
     source.inventory[0] = {Homestead::ItemId::Hoe, 1};
     source.inventory[1] = {Homestead::ItemId::WateringCan, 1};
     source.inventory[2] = {Homestead::ItemId::CarrotSeed, 9};
     source.tileDeltas.push_back({3, 4, Homestead::TileFlagValue(Homestead::TileFlag::Tilled)});
-    source.crops.push_back({3, 4, Homestead::CropId::Carrot, 2, true});
+    source.crops.push_back({3, 4, Homestead::CropId::Carrot, 2, 2, true});
     std::vector<std::uint8_t> bytes;
     if (!Homestead::EncodeSave(source, bytes) || bytes.size() >= Homestead::MaximumSaveBytes) return 1;
     Homestead::SaveSnapshot decoded;
     if (!Homestead::DecodeSave(bytes.data(), bytes.size(), decoded) || decoded.day != 4 ||
-        decoded.minute != 777 || decoded.inventory[2].count != 9 ||
+        decoded.minute != 777 || decoded.gold != 87 || decoded.inventory[2].count != 9 ||
         decoded.tileDeltas.size() != 1 || decoded.crops.size() != 1 || decoded.crops[0].stage != 2) return 2;
 
     auto damaged = bytes; damaged[0] = 'X'; if (!Rejects(damaged)) return 3;
-    damaged = bytes; SetU16(damaged, 4, 2); if (!Rejects(damaged)) return 4;
+    damaged = bytes; SetU16(damaged, 4, 3); if (!Rejects(damaged)) return 4;
     damaged = bytes; damaged.pop_back(); if (!Rejects(damaged)) return 5;
     damaged = bytes; damaged.back() ^= 1; if (!Rejects(damaged)) return 6;
-    damaged = bytes; damaged[34] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 7;
-    damaged = bytes; SetU16(damaged, 30, 5000); RepairChecksum(damaged); if (!Rejects(damaged)) return 8;
-    damaged = bytes; damaged[68] = 0x80; RepairChecksum(damaged); if (!Rejects(damaged)) return 9;
-    damaged = bytes; damaged[71] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 10;
+    damaged = bytes; damaged[35] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 7;
+    damaged = bytes; SetU16(damaged, 31, 5000); RepairChecksum(damaged); if (!Rejects(damaged)) return 8;
+    damaged = bytes; damaged[69] = 0x80; RepairChecksum(damaged); if (!Rejects(damaged)) return 9;
+    damaged = bytes; damaged[72] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 10;
     damaged = bytes; damaged.resize(Homestead::MaximumSaveBytes + 1); if (!Rejects(damaged)) return 11;
 
     source.inventory[2].count = 100;
     if (Homestead::EncodeSave(source, bytes)) return 12;
+    const auto legacy=LegacySave(); Homestead::SaveSnapshot migrated;
+    if(!Homestead::DecodeSave(legacy.data(),legacy.size(),migrated)||migrated.gold!=20||
+       migrated.inventory[0].item!=Homestead::ItemId::Hoe||
+       migrated.inventory[2].item!=Homestead::ItemId::CarrotSeed)return 13;
     return 0;
 }

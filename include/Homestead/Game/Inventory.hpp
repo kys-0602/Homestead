@@ -10,8 +10,12 @@ namespace Homestead {
 
 enum class ItemId : std::uint8_t {
     None,
+    WheatSeed,
+    Wheat,
     CarrotSeed,
     Carrot,
+    TomatoSeed,
+    Tomato,
     Hoe,
     WateringCan
 };
