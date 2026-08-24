@@ -262,6 +262,11 @@ header와 전체 payload 크기, ID와 flag 범위를 검증한 뒤 row-major re
 
 `AssetStore`는 패키지 인덱스와 로드된 GPU/오디오 자원을 소유한다. 개발 중 hot reload는 별도 개발 빌드 기능으로 두며 최종 빌드에서는 제거한다. 큰 월드라면 맵 청크만 지연 로드하고, 매우 작은 전체 패키지라면 시작 시 메모리에 올리는 쪽이 더 단순하다.
 
+현재 패키지는 stable ID `map/farm`과 `map/house` 두 맵을 가진다. 두 맵은 시작 시
+검증해 메모리에 유지하고 `Application`이 현재 `MapId`에 해당하는 맵만 렌더링과
+충돌에 제공한다. 농작물과 경작 delta는 농장 맵에만 속하며 집에 들어가도 농장
+상태는 메모리에 유지된다.
+
 ## 8. 월드와 맵
 
 ### TileMap
@@ -440,14 +445,16 @@ CropState[]
 - ID 범위, 길이, checksum을 검증한 후 적용한다.
 - 저장 중에는 월드 스냅샷을 고정해 부분 변경을 막는다.
 
-자동 저장은 하루 종료나 맵 전환 같은 안전한 시점에 실행한다.
+자동 저장은 하루 종료 같은 안전한 시점에 실행한다. 집 침대 상호작용은 하루 종료
+전환을 요청하며, 다음 날 오전 6시로 바뀌고 작물 갱신이 끝난 뒤 저장한다.
 
-version 2 save는 `HSSV` magic, 16-byte header, little-endian payload와 FNV-1a
+version 3 save는 `HSSV` magic, 16-byte header, little-endian payload와 FNV-1a
 checksum을 사용한다. 플레이어 위치는 1/256 logical pixel 정수로 저장하고,
 inventory 16칸은 명시적인 item/count 쌍으로 기록한다. 원본 map 대신
 `Tilled`/`Watered` tile delta와 활성 crop만 저장하며 골드와 작물별 누적
-물주기 일수도 명시적으로 기록한다. version 1의 당근·도구 item/crop ID는
-version 2 런타임 ID로 마이그레이션한다. 전체 파일은 32KiB를
+물주기 일수, stable `MapId`와 현재 맵의 플레이어 위치도 명시적으로 기록한다.
+version 1의 당근·도구 item/crop ID와 version 2의 단일 농장 위치는 version 3으로
+마이그레이션한다. 전체 파일은 32KiB를
 초과하면 거부한다. `%LOCALAPPDATA%/Homestead/representative.sav`를 primary로,
 `.tmp`와 `.bak`을 각각 임시 파일과 직전의 검증된 저장으로 사용한다.
 시작 시 primary가 유효하지 않으면 backup을 시도하고, 정상 종료와 하루 변경

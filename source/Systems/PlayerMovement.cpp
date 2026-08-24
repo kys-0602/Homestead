@@ -42,10 +42,10 @@ bool GetCollisionRect(
         result = {tileLeft + 2.0F, tileTop, tileLeft + 14.0F, tileTop + 8.0F};
         break;
     case TileGraphic::FenceHorizontal:
-        result = {tileLeft, tileTop + 8.0F, tileLeft + 16.0F, tileTop + 14.0F};
+        result = {tileLeft + 5.0F, tileTop + 3.0F, tileLeft + 16.0F, tileTop + 14.0F};
         break;
     case TileGraphic::FenceVertical:
-        result = {tileLeft + 5.0F, tileTop, tileLeft + 11.0F, tileTop + 16.0F};
+        result = {tileLeft + 5.0F, tileTop + 3.0F, tileLeft + 11.0F, tileTop + 16.0F};
         break;
     case TileGraphic::Sign:
         result = {tileLeft + 4.0F, tileTop + 8.0F, tileLeft + 12.0F, tileTop + 16.0F};

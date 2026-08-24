@@ -61,6 +61,31 @@ bool DecodeTile(char symbol, Tile& tile) {
         tile.object = static_cast<std::uint16_t>(TileGraphic::Sign);
         tile.flags = TileFlagValue(TileFlag::Blocked);
         return true;
+    case '#':
+        tile.flags = TileFlagValue(TileFlag::Blocked);
+        return true;
+    case 'H':
+        tile.object = static_cast<std::uint16_t>(TileGraphic::Farmhouse);
+        tile.flags = TileFlagValue(TileFlag::Blocked);
+        return true;
+    case ',':
+        tile.ground = static_cast<std::uint16_t>(TileGraphic::WoodFloor);
+        return true;
+    case 'w':
+        tile.ground = static_cast<std::uint16_t>(TileGraphic::WoodFloor);
+        tile.object = static_cast<std::uint16_t>(TileGraphic::InteriorWall);
+        tile.flags = TileFlagValue(TileFlag::Blocked);
+        return true;
+    case 'b':
+        tile.ground = static_cast<std::uint16_t>(TileGraphic::WoodFloor);
+        tile.object = static_cast<std::uint16_t>(TileGraphic::Bed);
+        tile.flags = TileFlagValue(TileFlag::Blocked);
+        return true;
+    case 'd':
+        tile.ground = static_cast<std::uint16_t>(TileGraphic::WoodFloor);
+        tile.object = static_cast<std::uint16_t>(TileGraphic::Door);
+        tile.flags = TileFlagValue(TileFlag::Blocked);
+        return true;
     default:
         return false;
     }

@@ -22,6 +22,11 @@ enum class TileGraphic : std::uint16_t {
     Sign,
     FarmlandDry,
     FarmlandWet,
+    Farmhouse,
+    WoodFloor,
+    InteriorWall,
+    Bed,
+    Door,
     Count
 };
 

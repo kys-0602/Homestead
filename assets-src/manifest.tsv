@@ -48,4 +48,12 @@ font.7	UI/Cute_Fantasy_Font_5x7.png	30	23	5	5
 font.8	UI/Cute_Fantasy_Font_5x7.png	35	23	5	5
 font.9	UI/Cute_Fantasy_Font_5x7.png	40	23	5	5
 font.0	UI/Cute_Fantasy_Font_5x7.png	45	23	5	5
+font.colon	UI/Cute_Fantasy_Font_5x7.png	110	23	5	5
 ui.pointer	UI/Pointer_Click_Anim.png	0	0	64	16
+ui.slot.frame	UI/UI_Frames.png	8	8	32	32
+ui.slot.selected	UI/UI_Frames.png	200	8	32	32
+building.farmhouse	Buildings/Buildings/Houses/Wood/House_1_Wood_Base_Red.png	0	0	96	128
+interior.floor	Buildings/Houses_Interiors/Wood_Floor_Tiles.png	0	0	16	16
+interior.wall	Buildings/Houses_Interiors/Interior_Walls.png	0	0	32	32
+interior.bed	Buildings/House_Decor/Beds.png	0	0	32	32
+interior.door	Buildings/House_Decor/Doors.png	0	0	16	32

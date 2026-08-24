@@ -25,6 +25,7 @@ AssetId GlyphId(char value) noexcept {
     case '4': return MakeAssetId("font.4"); case '5': return MakeAssetId("font.5");
     case '6': return MakeAssetId("font.6"); case '7': return MakeAssetId("font.7");
     case '8': return MakeAssetId("font.8"); case '9': return MakeAssetId("font.9");
+    case ':': return MakeAssetId("font.colon");
     default: return 0;
     }
 }

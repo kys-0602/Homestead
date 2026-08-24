@@ -96,7 +96,8 @@ bool AssetStore::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept
 
     EntryView atlasEntry{};
     EntryView spriteEntry{};
-    EntryView mapEntry{};
+    std::array<EntryView, 2> mapEntries{};
+    std::size_t mapCount = 0;
     std::array<EntryView, 7> audioEntries{};
     std::size_t audioCount = 0;
     std::array<EntryView, MaxPakEntries> entries{};
@@ -134,17 +135,27 @@ bool AssetStore::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept
             view.type == 2 && view.id == MakeAssetId("sprites/main") &&
             spriteEntry.size == 0) {
             spriteEntry = view;
-        } else if (
-            view.type == 3 && view.id == MakeAssetId("map/farm") &&
-            mapEntry.size == 0) {
-            mapEntry = view;
+        } else if (view.type == 3 && mapCount < mapEntries.size() &&
+                   (view.id == MakeAssetId("map/farm") || view.id == MakeAssetId("map/house"))) {
+            mapEntries[mapCount++] = view;
         } else if (view.type == 4 && audioCount < audioEntries.size()) {
             audioEntries[audioCount++] = view;
         } else {
             return false;
         }
     }
-    if (atlasEntry.size < 12 || spriteEntry.size < 4 || mapEntry.size < 24) {
+    if (atlasEntry.size < 12 || spriteEntry.size < 4 || mapCount != mapEntries.size()) {
+        return false;
+    }
+    const AssetId farmId = MakeAssetId("map/farm");
+    const AssetId houseId = MakeAssetId("map/house");
+    bool hasFarm = false;
+    bool hasHouse = false;
+    for (const EntryView& entry : mapEntries) {
+        hasFarm = hasFarm || entry.id == farmId;
+        hasHouse = hasHouse || entry.id == houseId;
+    }
+    if (!hasFarm || !hasHouse) {
         return false;
     }
 
@@ -208,7 +219,14 @@ bool AssetStore::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept
     }
     atlasWidth_ = width;
     atlasHeight_ = height;
-    mapBytes_.assign(data + mapEntry.offset, data + mapEntry.offset + mapEntry.size);
+    maps_.reserve(mapCount);
+    for (std::size_t index = 0; index < mapCount; ++index) {
+        const EntryView& entry = mapEntries[index];
+        if (entry.size < 24) { Clear(); return false; }
+        maps_.push_back({entry.id, {data + entry.offset, data + entry.offset + entry.size}});
+    }
+    std::sort(maps_.begin(), maps_.end(),
+        [](const MapAsset& left, const MapAsset& right) { return left.id < right.id; });
     audio_.reserve(audioCount);
     for (std::size_t index = 0; index < audioCount; ++index) {
         const EntryView& entry = audioEntries[index];
@@ -235,11 +253,17 @@ const AudioAsset* AssetStore::FindAudio(AssetId id) const noexcept {
     return found != audio_.end() && found->id == id ? &*found : nullptr;
 }
 
+const MapAsset* AssetStore::FindMap(AssetId id) const noexcept {
+    const auto found = std::lower_bound(maps_.begin(), maps_.end(), id,
+        [](const MapAsset& map, AssetId value) { return map.id < value; });
+    return found != maps_.end() && found->id == id ? &*found : nullptr;
+}
+
 void AssetStore::Clear() noexcept {
     atlasPixels_.clear();
     sprites_.clear();
     audio_.clear();
-    mapBytes_.clear();
+    maps_.clear();
     atlasWidth_ = 0;
     atlasHeight_ = 0;
 }

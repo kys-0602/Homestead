@@ -33,10 +33,12 @@ std::vector<std::uint8_t> MakeMap() {
             U16(bytes, static_cast<std::uint16_t>(Homestead::TileGraphic::Grass));
             const bool fence = x == 10 && y >= 2 && y <= 12;
             const bool tree = x == 12 && y == 8;
-            const bool blocked = fence || tree;
+            const bool horizontalFence = x == 15 && y == 15;
+            const bool blocked = fence || tree || horizontalFence;
             U16(bytes, fence ?
                 static_cast<std::uint16_t>(Homestead::TileGraphic::FenceVertical) :
-                (tree ? static_cast<std::uint16_t>(Homestead::TileGraphic::OakTree) : 0));
+                (tree ? static_cast<std::uint16_t>(Homestead::TileGraphic::OakTree) :
+                 (horizontalFence ? static_cast<std::uint16_t>(Homestead::TileGraphic::FenceHorizontal) : 0)));
             bytes.push_back(blocked ? Homestead::TileFlagValue(Homestead::TileFlag::Blocked) : 0);
             bytes.push_back(0);
         }
@@ -127,5 +129,13 @@ int main() {
         fallbackWorld.Sprite(fallbackPlayer.entity);
     if (fallbackSprite == nullptr ||
         fallbackSprite->asset != Homestead::MakeAssetId("player.idle.down.0")) return 16;
+    Homestead::EntityWorld horizontalWorld;
+    Homestead::PlayerState horizontalPlayer{};
+    horizontalPlayer.entity = horizontalWorld.Create({234.0F, 250.0F}, 1);
+    for (int step = 0; step < 10; ++step)
+        if (!Homestead::UpdatePlayerMovement(
+                horizontalWorld, horizontalPlayer, map, {1.0F, 0.0F}, 1.0F / 60.0F)) return 17;
+    const Homestead::TransformComponent* horizontal = horizontalWorld.Transform(horizontalPlayer.entity);
+    if (horizontal == nullptr || !Near(horizontal->current.x, 240.0F)) return 18;
     return 0;
 }

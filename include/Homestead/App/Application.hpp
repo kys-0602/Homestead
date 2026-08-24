@@ -42,6 +42,9 @@ private:
     [[nodiscard]] bool CaptureSave(SaveSnapshot& snapshot) const noexcept;
     [[nodiscard]] bool ApplySave(const SaveSnapshot& snapshot) noexcept;
     [[nodiscard]] bool SaveGame() noexcept;
+    [[nodiscard]] TileMap& ActiveMap() noexcept;
+    [[nodiscard]] const TileMap& ActiveMap() const noexcept;
+    [[nodiscard]] bool ChangeMap(MapId destination) noexcept;
     [[nodiscard]] bool UpdatePauseMenu() noexcept;
     [[nodiscard]] bool UpdateMarket() noexcept;
     [[nodiscard]] bool ApplyDisplaySettings() noexcept;
@@ -53,7 +56,8 @@ private:
     AssetStore assets_;
     Audio audio_;
     SaveSystem saves_;
-    TileMap tileMap_;
+    TileMap farmMap_;
+    TileMap houseMap_;
     CropField crops_;
     WorldClock worldClock_;
     EntityWorld entityWorld_;
@@ -75,8 +79,10 @@ private:
     bool paused_ = false;
     std::uint8_t pauseFocus_ = 0;
     std::uint16_t instructionTicks_ = 600;
+    std::uint16_t saveNoticeTicks_ = 0;
     std::uint16_t gold_ = StartingGold;
     std::uint8_t marketFocus_ = 0;
+    MapId currentMap_ = MapId::Farm;
     bool goalComplete_ = false;
     bool initialized_ = false;
 };

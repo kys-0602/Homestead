@@ -41,17 +41,19 @@ int InventorySlotAt(std::uint32_t x, std::uint32_t y, bool open) noexcept {
 bool AddInventoryUI(const Inventory& inventory, std::size_t selectedSlot,
                     std::size_t cursorSlot, bool open, const AssetStore& assets,
                     RenderQueue& queue) noexcept {
-    const SpriteAsset* background = assets.FindSprite(MakeAssetId("terrain.grass"));
-    const SpriteAsset* pointer = assets.FindSprite(MakeAssetId("ui.pointer.idle"));
-    if (background == nullptr || pointer == nullptr) return false;
+    const SpriteAsset* frame = assets.FindSprite(MakeAssetId("ui.slot.frame"));
+    const SpriteAsset* selected = assets.FindSprite(MakeAssetId("ui.slot.selected"));
+    if (frame == nullptr || selected == nullptr) return false;
     const std::size_t end = open ? Inventory::SlotCount : Inventory::HotbarSlotCount;
     for (std::size_t index = 0; index < end; ++index) {
         const bool secondRow = index >= Inventory::HotbarSlotCount;
-        const float x = static_cast<float>(HotbarX + static_cast<int>(index % 8) * InventorySlotSize + 1);
-        const float y = static_cast<float>((secondRow ? InventoryOverlayY : HotbarY) + 1);
-        std::uint32_t tint = index == selectedSlot ? 0xFFFFFFFFU : 0xFFB0B0B0U;
-        if (open && index == cursorSlot) tint = 0xFF70FFFFU;
-        if (!AddSprite(*background, x, y, tint, 0, queue)) return false;
+        const float slotX = static_cast<float>(HotbarX + static_cast<int>(index % 8) * InventorySlotSize);
+        const float slotY = static_cast<float>(secondRow ? InventoryOverlayY : HotbarY);
+        const bool highlighted = index == selectedSlot || (open && index == cursorSlot);
+        if (!AddSprite(highlighted ? *selected : *frame, slotX, slotY,
+                       0xFFFFFFFFU, 0, queue)) return false;
+        const float x = slotX + 8.0F;
+        const float y = slotY + 8.0F;
         const ItemStack& stack = inventory.Slot(index);
         const ItemDefinition* definition = FindItemDefinition(stack.item);
         if (definition != nullptr) {
@@ -67,11 +69,6 @@ bool AddInventoryUI(const Inventory& inventory, std::size_t selectedSlot,
                                    0xFFFFFFFFU, 3, assets, queue)) return false;
             }
         }
-    }
-    if (open) {
-        const float x = static_cast<float>(HotbarX + static_cast<int>(cursorSlot % 8) * InventorySlotSize + 1);
-        const float y = static_cast<float>((cursorSlot >= 8 ? InventoryOverlayY : HotbarY) + 1);
-        if (!AddSprite(*pointer, x, y, 0xC0FFFFFFU, 2, queue)) return false;
     }
     return true;
 }

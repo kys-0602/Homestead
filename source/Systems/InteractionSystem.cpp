@@ -51,6 +51,32 @@ TileSelection SelectMouseTile(
     return MakeSelection(playerFeet, x, y, map);
 }
 
+TileSelection SelectNearbySpecialObject(
+    WorldPosition playerFeet,
+    const TileMap& map) noexcept {
+    constexpr float maximumRange = 40.0F;
+    constexpr float maximumRangeSquared = maximumRange * maximumRange;
+    TileSelection nearest{};
+    float nearestDistance = maximumRangeSquared;
+    for (std::int32_t y = 0; y < map.Height(); ++y) {
+        for (std::int32_t x = 0; x < map.Width(); ++x) {
+            const Tile* tile = map.Get(x, y);
+            if (tile == nullptr) continue;
+            const TileGraphic graphic = static_cast<TileGraphic>(tile->object);
+            if (graphic != TileGraphic::Farmhouse && graphic != TileGraphic::Bed &&
+                graphic != TileGraphic::Door) continue;
+            const float deltaX = (static_cast<float>(x) + 0.5F) * TileSize - playerFeet.x;
+            const float deltaY = (static_cast<float>(y) + 0.5F) * TileSize - playerFeet.y;
+            const float distance = deltaX * deltaX + deltaY * deltaY;
+            if (distance <= nearestDistance) {
+                nearest = {x, y, true, true};
+                nearestDistance = distance;
+            }
+        }
+    }
+    return nearest;
+}
+
 bool TryInteract(
     PlayerState& player,
     const TileMap& map,

@@ -22,7 +22,17 @@ struct TileBounds {
     std::int32_t lastY = -1;
 };
 
+[[nodiscard]] std::uint8_t FarmlandConnectionMask(
+    const TileMap& map,
+    std::int32_t x,
+    std::int32_t y) noexcept;
+
 [[nodiscard]] TileBounds CalculateVisibleTileBounds(
+    const Camera2D& camera,
+    std::uint16_t mapWidth,
+    std::uint16_t mapHeight) noexcept;
+
+[[nodiscard]] TileBounds CalculateVisibleObjectBounds(
     const Camera2D& camera,
     std::uint16_t mapWidth,
     std::uint16_t mapHeight) noexcept;

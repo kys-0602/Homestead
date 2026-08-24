@@ -26,7 +26,7 @@ int main() {
         return 1;
     }
     const std::filesystem::path mapPath = directory / "map.txt";
-    if (!Write(mapPath, "HSM1\t4\t2\n.Tf.\n=|-s\n")) {
+    if (!Write(mapPath, "HSM1\t4\t2\n.Hb,\n#wd.\n")) {
         return 2;
     }
 

@@ -196,15 +196,14 @@ bool BuildPak(
         return false;
     }
     payloads.push_back(std::move(sprites));
-    Payload map{};
-    map.id = Hash("map/farm");
-    map.type = 3;
-    MapStats mapStats{};
-    if (!BuildMapPayload(assetRoot / "maps" / "farm.map", map.bytes, mapStats, error)) {
-        return false;
+    constexpr std::array<std::pair<const char*, const char*>, 2> mapFiles{{
+        {"map/farm", "farm.map"}, {"map/house", "house.map"}}};
+    for (const auto& mapFile : mapFiles) {
+        Payload map{}; map.id = Hash(mapFile.first); map.type = 3;
+        MapStats mapStats{};
+        if (!BuildMapPayload(assetRoot / "maps" / mapFile.second, map.bytes, mapStats, error)) return false;
+        stats.mapBytes += mapStats.byteCount; payloads.push_back(std::move(map));
     }
-    stats.mapBytes = mapStats.byteCount;
-    payloads.push_back(std::move(map));
     constexpr std::array<std::pair<const char*, const char*>, 7> audioFiles{{
         {"audio.music.farm", "music/FunCrafting.wav"}, {"audio.hoe", "sfx/hoe.wav"},
         {"audio.watering", "sfx/watering.wav"}, {"audio.plant", "sfx/plant.wav"},
