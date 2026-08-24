@@ -8,7 +8,7 @@
 namespace Homestead {
 namespace {
 
-constexpr std::uint16_t SaveVersion = 2;
+constexpr std::uint16_t SaveVersion = 3;
 constexpr std::uint16_t HeaderSize = 16;
 
 void U8(std::vector<std::uint8_t>& out, std::uint8_t value) { out.push_back(value); }
@@ -66,14 +66,16 @@ bool ValidCrop(const CropInstance& crop) noexcept {
 bool EncodeSave(const SaveSnapshot& snapshot, std::vector<std::uint8_t>& bytes) noexcept {
     if (snapshot.playerX256 < 0 || snapshot.playerY256 < 0 ||
         snapshot.day == 0 || snapshot.minute >= 24U * 60U ||
-        snapshot.selectedSlot >= Inventory::HotbarSlotCount || snapshot.tileDeltas.size() > MaximumTileDeltas ||
+        snapshot.selectedSlot >= Inventory::HotbarSlotCount || !IsValidMapId(snapshot.mapId) ||
+        snapshot.tileDeltas.size() > MaximumTileDeltas ||
         snapshot.crops.size() > CropField::Capacity) return false;
     std::vector<std::uint8_t> payload;
     payload.reserve(64 + snapshot.tileDeltas.size() * 3 + snapshot.crops.size() * 4);
     U32(payload, static_cast<std::uint32_t>(snapshot.playerX256));
     U32(payload, static_cast<std::uint32_t>(snapshot.playerY256));
     U16(payload, snapshot.day); U16(payload, snapshot.minute);
-    U8(payload, snapshot.selectedSlot); U16(payload, snapshot.gold);
+    U8(payload, snapshot.selectedSlot); U8(payload, static_cast<std::uint8_t>(snapshot.mapId));
+    U16(payload, snapshot.gold);
     U16(payload, static_cast<std::uint16_t>(snapshot.tileDeltas.size()));
     U16(payload, static_cast<std::uint16_t>(snapshot.crops.size()));
     for (const ItemStack& stack : snapshot.inventory) {
@@ -105,13 +107,14 @@ bool DecodeSave(const std::uint8_t* bytes, std::size_t size, SaveSnapshot& snaps
     Reader header(bytes + 4, HeaderSize - 4);
     std::uint16_t version = 0, headerSize = 0; std::uint32_t payloadSize = 0, checksum = 0;
     if (!header.U16(version) || !header.U16(headerSize) || !header.U32(payloadSize) || !header.U32(checksum) ||
-        (version != 1 && version != SaveVersion) || headerSize != HeaderSize || payloadSize != size - HeaderSize ||
+        (version < 1 || version > SaveVersion) || headerSize != HeaderSize || payloadSize != size - HeaderSize ||
         checksum != Checksum(bytes + HeaderSize, payloadSize)) return false;
     Reader reader(bytes + HeaderSize, payloadSize);
     SaveSnapshot result;
     std::uint32_t x = 0, y = 0; std::uint16_t tileCount = 0, cropCount = 0;
     if (!reader.U32(x) || !reader.U32(y) || !reader.U16(result.day) || !reader.U16(result.minute) ||
         !reader.U8(result.selectedSlot) ||
+        !(version < 3 || ([&reader,&result]() noexcept { std::uint8_t id=0; if(!reader.U8(id))return false; result.mapId=static_cast<MapId>(id); return IsValidMapId(result.mapId); })()) ||
         !(version == 1 ? ([&reader,&result]() noexcept { std::uint8_t legacy=0; result.gold=20; return reader.U8(legacy) && legacy<=3; })() : reader.U16(result.gold)) ||
         !reader.U16(tileCount) || !reader.U16(cropCount) || result.day == 0 ||
         result.minute >= 24U * 60U || result.selectedSlot >= Inventory::HotbarSlotCount ||

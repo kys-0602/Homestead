@@ -38,6 +38,10 @@ int main() {
         tileCount * 2 > Homestead::RenderQueue::Capacity) {
         return 4;
     }
+    const Homestead::TileBounds objects =
+        Homestead::CalculateVisibleObjectBounds(camera, 128, 128);
+    if (objects.firstX != 2 || objects.lastX != 29 ||
+        objects.firstY != 5 || objects.lastY != 25) return 9;
 
     camera.SetCenter({-40.0F, -20.0F});
     const Homestead::TileBounds edge =

@@ -69,7 +69,11 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         return false;
     }
 
-    if (!tileMap_.LoadMemory(assets_.MapData(), assets_.MapSize())) {
+    const MapAsset* farmAsset = assets_.FindMap(MakeAssetId("map/farm"));
+    const MapAsset* houseAsset = assets_.FindMap(MakeAssetId("map/house"));
+    if (farmAsset == nullptr || houseAsset == nullptr ||
+        !farmMap_.LoadMemory(farmAsset->bytes.data(), farmAsset->bytes.size()) ||
+        !houseMap_.LoadMemory(houseAsset->bytes.data(), houseAsset->bytes.size())) {
         assets_.Clear();
         window_.Shutdown();
         return false;
@@ -81,11 +85,10 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
     }
 
     player_.entity = entityWorld_.Create(
-        {static_cast<float>(tileMap_.Width() * TileSize) * 0.5F,
-         static_cast<float>(tileMap_.Height() * TileSize) * 0.5F},
+        {16.5F * TileSize, 12.5F * TileSize},
         MakeAssetId("player.idle.down.0"));
     if (!entityWorld_.IsAlive(player_.entity)) {
-        tileMap_.Clear();
+        farmMap_.Clear(); houseMap_.Clear();
         assets_.Clear();
         window_.Shutdown();
         return false;
@@ -94,7 +97,7 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         inventory_.Add(ItemId::WateringCan, 1) != 0) {
         inventory_.Clear();
         entityWorld_.Clear();
-        tileMap_.Clear();
+        farmMap_.Clear(); houseMap_.Clear();
         assets_.Clear();
         window_.Shutdown();
         return false;
@@ -119,7 +122,7 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
             assets_)) {
         inventory_.Clear();
         entityWorld_.Clear();
-        tileMap_.Clear();
+        farmMap_.Clear(); houseMap_.Clear();
         assets_.Clear();
         window_.Shutdown();
         return false;
@@ -180,18 +183,18 @@ int Application::Run() noexcept {
                 (playerTransform->current.y - playerTransform->previous.y) * alpha};
         camera_.SetCenterClamped(
             playerPosition,
-            static_cast<float>(tileMap_.Width() * TileSize),
-            static_cast<float>(tileMap_.Height() * TileSize));
+            static_cast<float>(ActiveMap().Width() * TileSize),
+            static_cast<float>(ActiveMap().Height() * TileSize));
 
-        if (!TileMapRenderer::Build(tileMap_, camera_, assets_, renderQueue_) ||
-            !AddCrops(crops_, camera_, assets_, renderQueue_) ||
+        if (!TileMapRenderer::Build(ActiveMap(), camera_, assets_, renderQueue_) ||
+            (currentMap_ == MapId::Farm && !AddCrops(crops_, camera_, assets_, renderQueue_)) ||
             !PlayerRenderer::Add(
                 entityWorld_, player_, alpha, camera_, assets_, renderQueue_) ||
             (!inventoryOpen_ && !paused_ && !AddSelectionOverlay(selection_, camera_, assets_, renderQueue_)) ||
             !AddInventoryUI(inventory_, selectedSlot_, inventoryCursor_,
                             inventoryOpen_, assets_, renderQueue_) ||
-            !AddStatusUI(worldClock_, gold_, GoalGold,
-                         instructionTicks_ != 0, goalComplete_, assets_, renderQueue_) ||
+            !AddStatusUI(worldClock_, gold_, GoalGold, instructionTicks_ != 0,
+                         saveNoticeTicks_ != 0, goalComplete_, assets_, renderQueue_) ||
             (marketOpen_ && !AddMarketUI(gold_, marketFocus_, assets_, renderQueue_)) ||
             (paused_ && !AddPauseUI(settings_, pauseFocus_, assets_, renderQueue_))) {
             return 1;
@@ -209,11 +212,12 @@ bool Application::FixedUpdate() noexcept {
     if (worldClock_.IsTransitioning()) {
         input_.DiscardPending();
         if (worldClock_.FixedUpdate()) {
-            crops_.OnDayChanged(tileMap_);
-            [[maybe_unused]] const bool saved = SaveGame();
+            crops_.OnDayChanged(farmMap_);
+            if (SaveGame()) saveNoticeTicks_ = 180;
         }
         return true;
     }
+    if (saveNoticeTicks_ != 0) --saveNoticeTicks_;
     if (input_.ConsumePressed(Action::Menu)) {
         if (marketOpen_) { marketOpen_ = false; input_.DiscardPending(); return true; }
         paused_ = !paused_;
@@ -332,8 +336,8 @@ bool Application::FixedUpdate() noexcept {
     }
     camera_.SetCenterClamped(
         {transform->current.x, transform->current.y},
-        static_cast<float>(tileMap_.Width() * TileSize),
-        static_cast<float>(tileMap_.Height() * TileSize));
+        static_cast<float>(ActiveMap().Width() * TileSize),
+        static_cast<float>(ActiveMap().Height() * TileSize));
     WorldPosition playerFeet = transform->current;
     TileSelection mouseSelection{};
     if (input_.IsLogicalMouseValid()) {
@@ -341,30 +345,51 @@ bool Application::FixedUpdate() noexcept {
             static_cast<float>(input_.LogicalMouseX()),
             static_cast<float>(input_.LogicalMouseY())});
         mouseSelection = SelectMouseTile(
-            playerFeet, {mouseWorld.x, mouseWorld.y}, tileMap_);
+            playerFeet, {mouseWorld.x, mouseWorld.y}, ActiveMap());
         selection_ = mouseSelection;
     } else {
-        selection_ = SelectFrontTile(playerFeet, player_.facing, tileMap_);
+        selection_ = SelectFrontTile(playerFeet, player_.facing, ActiveMap());
     }
 
     if (interactPressed) {
-        const TileSelection interactionTarget =
+        TileSelection interactionTarget =
             interactSource == PhysicalKey::MouseRight && input_.IsLogicalMouseValid() ?
-            mouseSelection : SelectFrontTile(playerFeet, player_.facing, tileMap_);
+            mouseSelection : SelectFrontTile(playerFeet, player_.facing, ActiveMap());
+        if (interactSource != PhysicalKey::MouseRight) {
+            const TileSelection nearby = SelectNearbySpecialObject(playerFeet, ActiveMap());
+            if (nearby.valid) interactionTarget = nearby;
+        }
         selection_ = interactionTarget;
         if (player_.toolUse.action == ToolAction::None &&
-            crops_.Harvest(inventory_, interactionTarget)) {
+            currentMap_ == MapId::Farm && crops_.Harvest(inventory_, interactionTarget)) {
             FaceSelection(player_, playerFeet, interactionTarget);
             audio_.PlayEffect(MakeAssetId("audio.harvest"));
         } else {
-            [[maybe_unused]] const bool interacted =
-                TryInteract(player_, tileMap_, interactionTarget);
+            const Tile* tile = interactionTarget.valid ? ActiveMap().Get(interactionTarget.x, interactionTarget.y) : nullptr;
+            const bool enterHouse = currentMap_ == MapId::Farm && interactionTarget.inRange &&
+                tile != nullptr && tile->object == static_cast<std::uint16_t>(TileGraphic::Farmhouse);
+            const bool leaveHouse = currentMap_ == MapId::House && interactionTarget.inRange &&
+                tile != nullptr && tile->object == static_cast<std::uint16_t>(TileGraphic::Door);
+            if ((enterHouse && ChangeMap(MapId::House)) || (leaveHouse && ChangeMap(MapId::Farm))) {
+                audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
+                return true;
+            }
+            if (currentMap_ == MapId::House && interactionTarget.inRange && tile != nullptr &&
+                       tile->object == static_cast<std::uint16_t>(TileGraphic::Bed)) {
+                if (worldClock_.RequestEndDay()) {
+                    instructionTicks_ = 0;
+                    audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
+                }
+            } else {
+                [[maybe_unused]] const bool interacted =
+                    TryInteract(player_, ActiveMap(), interactionTarget);
+            }
         }
     }
     if (useToolPressed) {
         const TileSelection toolTarget =
             toolSource == PhysicalKey::MouseLeft && input_.IsLogicalMouseValid() ?
-            mouseSelection : SelectFrontTile(playerFeet, player_.facing, tileMap_);
+            mouseSelection : SelectFrontTile(playerFeet, player_.facing, ActiveMap());
         selection_ = toolTarget;
         ToolAction action = ToolAction::None;
         const ItemId selectedItem = inventory_.Slot(selectedSlot_).item;
@@ -373,16 +398,16 @@ bool Application::FixedUpdate() noexcept {
         const ItemDefinition* selectedDefinition = FindItemDefinition(selectedItem);
         if (selectedDefinition != nullptr && selectedDefinition->category == ItemCategory::Seed &&
             player_.toolUse.action == ToolAction::None &&
-            crops_.Plant(tileMap_, inventory_, toolTarget, selectedItem)) {
+            currentMap_ == MapId::Farm && crops_.Plant(farmMap_, inventory_, toolTarget, selectedItem)) {
             FaceSelection(player_, playerFeet, toolTarget);
             audio_.PlayEffect(MakeAssetId("audio.plant"));
-        } else if (TryStartToolUse(player_, tileMap_, toolTarget, action)) {
+        } else if (currentMap_ == MapId::Farm && TryStartToolUse(player_, farmMap_, toolTarget, action)) {
             FaceSelection(player_, playerFeet, toolTarget);
         }
     }
 
     if (!UpdatePlayerMovement(
-        entityWorld_, player_, tileMap_, movement,
+        entityWorld_, player_, ActiveMap(), movement,
         static_cast<float>(FixedStepController::StepSeconds))) {
         return false;
     }
@@ -393,23 +418,23 @@ bool Application::FixedUpdate() noexcept {
     playerFeet = transform->current;
     camera_.SetCenterClamped(
         {playerFeet.x, playerFeet.y},
-        static_cast<float>(tileMap_.Width() * TileSize),
-        static_cast<float>(tileMap_.Height() * TileSize));
+        static_cast<float>(ActiveMap().Width() * TileSize),
+        static_cast<float>(ActiveMap().Height() * TileSize));
     if (!interactPressed && !useToolPressed) {
         if (input_.IsLogicalMouseValid()) {
             const Float2 mouseWorld = camera_.ScreenToWorld({
                 static_cast<float>(input_.LogicalMouseX()),
                 static_cast<float>(input_.LogicalMouseY())});
             selection_ = SelectMouseTile(
-                playerFeet, {mouseWorld.x, mouseWorld.y}, tileMap_);
+                playerFeet, {mouseWorld.x, mouseWorld.y}, ActiveMap());
         } else {
-            selection_ = SelectFrontTile(playerFeet, player_.facing, tileMap_);
+            selection_ = SelectFrontTile(playerFeet, player_.facing, ActiveMap());
         }
     }
     const ToolAction impactAction = player_.toolUse.action;
     const bool impactNow = impactAction != ToolAction::None && !player_.toolUse.applied &&
         player_.toolUse.elapsedTicks + 1U >= ToolImpactTick;
-    if (!UpdateToolUse(entityWorld_, player_, tileMap_)) return false;
+    if (!UpdateToolUse(entityWorld_, player_, ActiveMap())) return false;
     if (impactNow) {
         const bool hoe = impactAction == ToolAction::Hoe;
         audio_.PlayEffect(hoe ? MakeAssetId("audio.hoe") : MakeAssetId("audio.watering"),
@@ -433,13 +458,15 @@ void Application::Shutdown() noexcept {
     worldClock_.Reset();
     inventory_.Clear();
     entityWorld_.Clear();
-    tileMap_.Clear();
+    farmMap_.Clear(); houseMap_.Clear();
     assets_.Clear();
     window_.Shutdown();
     fixedStep_.Reset();
     instructionTicks_ = 600;
+    saveNoticeTicks_ = 0;
     gold_ = StartingGold;
     marketOpen_ = false;
+    currentMap_ = MapId::Farm;
     goalComplete_ = false;
     inventoryOpen_ = false;
     paused_ = false;
@@ -539,12 +566,13 @@ bool Application::CaptureSave(SaveSnapshot& snapshot) const noexcept {
     snapshot.playerY256 = static_cast<std::int32_t>(std::lround(transform->current.y * 256.0F));
     snapshot.day = worldClock_.Day(); snapshot.minute = worldClock_.Minute();
     snapshot.selectedSlot = static_cast<std::uint8_t>(selectedSlot_);
+    snapshot.mapId = currentMap_;
     snapshot.gold = gold_;
     for (std::size_t index = 0; index < Inventory::SlotCount; ++index)
         snapshot.inventory[index] = inventory_.Slot(index);
-    for (std::int32_t y = 0; y < tileMap_.Height(); ++y) {
-        for (std::int32_t x = 0; x < tileMap_.Width(); ++x) {
-            const Tile* tile = tileMap_.Get(x, y);
+    for (std::int32_t y = 0; y < farmMap_.Height(); ++y) {
+        for (std::int32_t x = 0; x < farmMap_.Width(); ++x) {
+            const Tile* tile = farmMap_.Get(x, y);
             const std::uint8_t dynamic = tile == nullptr ? 0 : static_cast<std::uint8_t>(
                 tile->flags & (TileFlagValue(TileFlag::Tilled) | TileFlagValue(TileFlag::Watered)));
             if (dynamic != 0) snapshot.tileDeltas.push_back({
@@ -558,12 +586,19 @@ bool Application::CaptureSave(SaveSnapshot& snapshot) const noexcept {
 bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
     const float playerX = static_cast<float>(snapshot.playerX256) / 256.0F;
     const float playerY = static_cast<float>(snapshot.playerY256) / 256.0F;
+    if (!IsValidMapId(snapshot.mapId)) return false;
+    const TileMap& savedMap = snapshot.mapId == MapId::Farm ? farmMap_ : houseMap_;
+    const Tile* playerTile = savedMap.Get(
+        static_cast<std::int32_t>(playerX / TileSize),
+        static_cast<std::int32_t>(playerY / TileSize));
     if (playerX < 0.0F || playerY < 0.0F ||
-        playerX >= tileMap_.Width() * TileSize || playerY >= tileMap_.Height() * TileSize ||
+        playerX >= savedMap.Width() * TileSize || playerY >= savedMap.Height() * TileSize ||
+        playerTile == nullptr ||
+        (playerTile->flags & (TileFlagValue(TileFlag::Blocked) | TileFlagValue(TileFlag::Water))) != 0 ||
         snapshot.selectedSlot >= Inventory::HotbarSlotCount) return false;
     for (std::size_t index = 0; index < snapshot.tileDeltas.size(); ++index) {
         const SavedTileDelta& delta = snapshot.tileDeltas[index];
-        const Tile* tile = tileMap_.Get(delta.x, delta.y);
+        const Tile* tile = farmMap_.Get(delta.x, delta.y);
         if (tile == nullptr || tile->object != 0 ||
             (tile->flags & (TileFlagValue(TileFlag::Blocked) | TileFlagValue(TileFlag::Water))) != 0) return false;
         for (std::size_t other = 0; other < index; ++other)
@@ -583,13 +618,14 @@ bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
     inventory_.Clear();
     for (std::size_t index = 0; index < Inventory::SlotCount; ++index) inventory_.Slot(index) = snapshot.inventory[index];
     for (const SavedTileDelta& delta : snapshot.tileDeltas) {
-        Tile* tile = tileMap_.Get(delta.x, delta.y); tile->flags |= delta.flags;
+        Tile* tile = farmMap_.Get(delta.x, delta.y); tile->flags |= delta.flags;
     }
     crops_.Clear();
-    for (const CropInstance& crop : snapshot.crops) if (!crops_.Restore(crop, tileMap_)) return false;
+    for (const CropInstance& crop : snapshot.crops) if (!crops_.Restore(crop, farmMap_)) return false;
     TransformComponent* transform = entityWorld_.Transform(player_.entity);
     if (transform == nullptr) return false;
     transform->current = {playerX, playerY}; transform->previous = transform->current;
+    currentMap_ = snapshot.mapId;
     selectedSlot_ = snapshot.selectedSlot; inventoryCursor_ = selectedSlot_;
     gold_ = snapshot.gold;
     goalComplete_ = false;
@@ -600,6 +636,31 @@ bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
 bool Application::SaveGame() noexcept {
     SaveSnapshot snapshot;
     return CaptureSave(snapshot) && saves_.Save(snapshot);
+}
+
+TileMap& Application::ActiveMap() noexcept {
+    return currentMap_ == MapId::Farm ? farmMap_ : houseMap_;
+}
+
+const TileMap& Application::ActiveMap() const noexcept {
+    return currentMap_ == MapId::Farm ? farmMap_ : houseMap_;
+}
+
+bool Application::ChangeMap(MapId destination) noexcept {
+    if (!IsValidMapId(destination) || destination == currentMap_) return false;
+    TransformComponent* transform = entityWorld_.Transform(player_.entity);
+    if (transform == nullptr) return false;
+    currentMap_ = destination;
+    const WorldPosition spawn = destination == MapId::House ?
+        WorldPosition{10.5F * TileSize, 9.5F * TileSize} :
+        WorldPosition{8.5F * TileSize, 10.5F * TileSize};
+    transform->current = spawn;
+    transform->previous = spawn;
+    player_.toolUse = {};
+    player_.facing = destination == MapId::House ? FacingDirection::Down : FacingDirection::Up;
+    selection_ = {};
+    input_.DiscardPending();
+    return true;
 }
 
 } // namespace Homestead

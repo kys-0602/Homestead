@@ -25,6 +25,11 @@ struct AudioAsset {
     std::vector<std::uint8_t> bytes;
 };
 
+struct MapAsset {
+    AssetId id = 0;
+    std::vector<std::uint8_t> bytes;
+};
+
 class AssetStore final {
 public:
     [[nodiscard]] bool LoadFile(const wchar_t* path) noexcept;
@@ -33,18 +38,17 @@ public:
 
     [[nodiscard]] const SpriteAsset* FindSprite(AssetId id) const noexcept;
     [[nodiscard]] const AudioAsset* FindAudio(AssetId id) const noexcept;
+    [[nodiscard]] const MapAsset* FindMap(AssetId id) const noexcept;
     [[nodiscard]] const std::uint8_t* AtlasPixels() const noexcept { return atlasPixels_.data(); }
     [[nodiscard]] std::uint16_t AtlasWidth() const noexcept { return atlasWidth_; }
     [[nodiscard]] std::uint16_t AtlasHeight() const noexcept { return atlasHeight_; }
     [[nodiscard]] std::size_t SpriteCount() const noexcept { return sprites_.size(); }
-    [[nodiscard]] const std::uint8_t* MapData() const noexcept { return mapBytes_.data(); }
-    [[nodiscard]] std::size_t MapSize() const noexcept { return mapBytes_.size(); }
 
 private:
     std::vector<std::uint8_t> atlasPixels_;
     std::vector<SpriteAsset> sprites_;
     std::vector<AudioAsset> audio_;
-    std::vector<std::uint8_t> mapBytes_;
+    std::vector<MapAsset> maps_;
     std::uint16_t atlasWidth_ = 0;
     std::uint16_t atlasHeight_ = 0;
 };

@@ -115,11 +115,12 @@ std::vector<std::uint8_t> MakeValidPak() {
     std::vector<Entry> entries{
         {Homestead::MakeAssetId("atlas/main"), 1, &atlas, 0},
         {Homestead::MakeAssetId("sprites/main"), 2, &sprites, 0},
-        {Homestead::MakeAssetId("map/farm"), 3, &map, 0}};
+        {Homestead::MakeAssetId("map/farm"), 3, &map, 0},
+        {Homestead::MakeAssetId("map/house"), 3, &map, 0}};
     std::sort(entries.begin(), entries.end(), [](const Entry& left, const Entry& right) {
         return left.id < right.id;
     });
-    std::uint32_t offset = 104;
+    std::uint32_t offset = 128;
     for (Entry& entry : entries) {
         entry.offset = offset;
         offset += static_cast<std::uint32_t>(entry.payload->size());
@@ -130,9 +131,9 @@ std::vector<std::uint8_t> MakeValidPak() {
     std::vector<std::uint8_t> pak{'H', 'S', 'P', 'K'};
     U16(pak, 1);
     U16(pak, 32);
-    U32(pak, 3);
+    U32(pak, 4);
     U32(pak, 32);
-    U32(pak, 104);
+    U32(pak, 128);
     U32(pak, fileSize);
     U32(pak, 0);
     U32(pak, 0);
@@ -164,7 +165,9 @@ int main() {
     const std::vector<std::uint8_t> valid = MakeValidPak();
     Homestead::AssetStore store;
     if (!store.LoadMemory(valid.data(), valid.size()) || store.AtlasWidth() != 1 ||
-        store.AtlasHeight() != 1 || store.SpriteCount() != 1 || store.MapSize() != 30 ||
+        store.AtlasHeight() != 1 || store.SpriteCount() != 1 ||
+        store.FindMap(Homestead::MakeAssetId("map/farm")) == nullptr ||
+        store.FindMap(Homestead::MakeAssetId("map/house")) == nullptr ||
         store.FindSprite(Homestead::MakeAssetId("terrain.grass")) == nullptr) {
         return 1;
     }

@@ -3,7 +3,7 @@
 namespace Homestead::Text {
 
 inline constexpr char StartTools[] = "1 TILL 2 WATER BUY SEEDS";
-inline constexpr char StartControls[] = "F USE E GET N ENDS DAY";
+inline constexpr char StartControls[] = "F USE E GET SLEEP AT BED";
 inline constexpr char GoalComplete[] = "GOAL COMPLETE";
 inline constexpr char Continue[] = "E CONTINUE";
 inline constexpr char Paused[] = "PAUSED";

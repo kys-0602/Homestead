@@ -15,6 +15,7 @@ class WorldClock;
     std::uint16_t gold,
     std::uint16_t goal,
     bool showInstructions,
+    bool showSaved,
     bool complete,
     const AssetStore& assets,
     RenderQueue& queue) noexcept;

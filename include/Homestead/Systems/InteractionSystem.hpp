@@ -28,6 +28,12 @@ struct TileSelection {
     WorldPosition mouseWorld,
     const TileMap& map) noexcept;
 
+// Large doorway/furniture sprites use one map anchor but accept keyboard
+// interaction from their nearby visible footprint.
+[[nodiscard]] TileSelection SelectNearbySpecialObject(
+    WorldPosition playerFeet,
+    const TileMap& map) noexcept;
+
 [[nodiscard]] bool TryInteract(
     PlayerState& player,
     const TileMap& map,

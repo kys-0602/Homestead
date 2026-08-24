@@ -37,7 +37,9 @@ torch, and lantern sheets are excluded.
 - `Tiles/FarmLand/FarmLand_Tile.png`
 - `Tiles/FarmLand/FarmLand_Wet_Tile.png`
 
-Select one 16x16 grass base, one path tile, and dry/wet farmland states.
+Select one 16x16 grass base and one path tile. Dry and wet farmland each use
+the 16 cardinal-neighbor variants needed to connect user-tilled shapes. Wet
+variants are transparent overlays drawn on the matching dry variant.
 The other grass palettes, blob test images, beach, cave, cliff, bridge,
 pavement, deck, waterfall, and animated-water sets are excluded.
 
@@ -51,14 +53,20 @@ all other vegetables, berries, grapes, and fruit trees.
 
 ## Buildings and Environment
 
+- `Buildings/Buildings/Houses/Wood/House_1_Wood_Base_Red.png`
+- `Buildings/Houses_Interiors/Wood_Floor_Tiles.png`
+- `Buildings/Houses_Interiors/Interior_Walls.png`
+- `Buildings/House_Decor/Beds.png`
+- `Buildings/House_Decor/Doors.png`
 - `Trees/Big_Oak_Tree.png`
 - `Outdoor decoration/Fences.png`
 - `Outdoor decoration/Flowers.png`
 - `Outdoor decoration/Signs.png`
 
-Use one mature oak and only the individual fence, flower, and sign regions
-referenced by the final map. Houses, unique buildings,
-interiors, animals, water decorations, break animations, particles, and colour
+Use one compact wooden farmhouse, one wood floor tile, one wall section, one bed,
+one door, one mature oak, and only the individual fence, flower, and sign regions
+referenced by the two final maps. Other houses, unique buildings, interior
+furniture, animals, water decorations, break animations, particles, and colour
 variants are excluded.
 
 ## Inventory Icons
@@ -73,10 +81,13 @@ duplicates, general resource/food sheets, and all unrelated icons are excluded.
 
 - `UI/Cute_Fantasy_Font_5x7.png`
 - `UI/Pointer_Click_Anim.png`
+- `UI/UI_Frames.png`
 
 Use the white 5x7 font because it contains upper/lowercase letters, numbers,
 and punctuation and can be tinted by the existing sprite shader. The black 5x9
 font is excluded because it requires a pixel-conversion step before tinting.
+Only the letters, digits, and colon currently used by runtime text are selected.
+Two 32x32 orange slot-frame cells provide normal and selected inventory states.
 `UI_ALL.png`, premade panels, the book, loading icon, crosshairs, ribbons,
 large colour/button variant sheets, and duplicate font sheets are excluded.
 

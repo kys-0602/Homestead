@@ -294,3 +294,16 @@ target_compile_definitions(HomesteadAudioAssetTests PRIVATE WIN32_LEAN_AND_MEAN 
 target_compile_options(HomesteadAudioAssetTests PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>)
 add_test(NAME HomesteadAudioAssetTests COMMAND HomesteadAudioAssetTests
     "${CMAKE_BINARY_DIR}/generated-assets/data.pak")
+
+add_executable(HomesteadMapContentTests MapContentTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Assets/AssetStore.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/Camera2D.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/RenderQueue.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/TileMapRenderer.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Systems/InteractionSystem.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/TileMap.cpp")
+target_include_directories(HomesteadMapContentTests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+target_compile_definitions(HomesteadMapContentTests PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_compile_options(HomesteadMapContentTests PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>)
+add_test(NAME HomesteadMapContentTests COMMAND HomesteadMapContentTests
+    "${CMAKE_BINARY_DIR}/generated-assets/data.pak")
