@@ -147,6 +147,17 @@ bool AssetStore::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept
     if (atlasEntry.size < 12 || spriteEntry.size < 4 || mapCount != mapEntries.size()) {
         return false;
     }
+    const AssetId farmId = MakeAssetId("map/farm");
+    const AssetId houseId = MakeAssetId("map/house");
+    bool hasFarm = false;
+    bool hasHouse = false;
+    for (const EntryView& entry : mapEntries) {
+        hasFarm = hasFarm || entry.id == farmId;
+        hasHouse = hasHouse || entry.id == houseId;
+    }
+    if (!hasFarm || !hasHouse) {
+        return false;
+    }
 
     const std::uint8_t* atlas = data + atlasEntry.offset;
     if (atlas[0] != 'H' || atlas[1] != 'S' || atlas[2] != 'P' || atlas[3] != 'A' ||
