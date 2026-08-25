@@ -27,7 +27,7 @@ bool AddFade(std::uint8_t alpha, std::uint16_t depth,
 } // namespace
 
 bool CompletionContinueAt(std::uint32_t x, std::uint32_t y) noexcept {
-    return x >= 126 && x < 194 && y >= 92 && y < 104;
+    return x >= 124 && x < 196 && y >= 90 && y < 108;
 }
 
 bool AddStatusUI(const WorldClock& clock, std::uint16_t gold, std::uint16_t goal,
@@ -60,20 +60,28 @@ bool AddStatusUI(const WorldClock& clock, std::uint16_t gold, std::uint16_t goal
         !AddBitmapText(time, 256.0F, 5.0F, hudTextColor, 20, assets, queue) ||
         !AddBitmapText(progress, 6.0F, 15.0F, hudTextColor, 20, assets, queue)) return false;
     if (complete) {
-        return AddBitmapText(Text::GoalComplete, 121.0F, 82.0F,
-                             0xFF80FFFFU, 20, assets, queue) &&
+        return AddUIPanel(108.0F,68.0F,104.0F,50.0F,
+                          0xFFFFFFFFU,22,assets,queue) &&
+            AddUIPanel(124.0F,90.0F,72.0F,18.0F,
+                       0xFFB87858U,24,assets,queue) &&
+            AddBitmapText(Text::GoalComplete, 121.0F, 78.0F,
+                             hudTextColor, 26, assets, queue) &&
             AddBitmapText(Text::Continue, 133.0F, 96.0F,
-                          0xFFFFFFFFU, 20, assets, queue);
+                          0xFFFFFFFFU, 26, assets, queue);
     }
-    if (showSaved && !AddBitmapText("GAME SAVED", 133.0F, 28.0F,
-                                    0xFF80FFFFU, 20, assets, queue)) return false;
+    if (showSaved && (!AddUIPanel(126.0F,24.0F,68.0F,16.0F,
+                                  0xFFFFFFFFU,22,assets,queue) ||
+        !AddBitmapText("GAME SAVED", 133.0F, 29.0F,
+                       hudTextColor, 24, assets, queue))) return false;
     if (showInstructions) {
-        return AddBitmapText(Text::StartTools, 92.0F, 67.0F,
-                             0xFFFFFFFFU, 20, assets, queue) &&
-            AddBitmapText(Text::StartControls, 95.0F, 77.0F,
-                          0xFFFFFFFFU, 20, assets, queue) &&
+        return AddUIPanel(82.0F,60.0F,156.0F,38.0F,
+                          0xFFFFFFFFU,22,assets,queue) &&
+            AddBitmapText(Text::StartTools, 88.0F, 67.0F,
+                             hudTextColor, 24, assets, queue) &&
+            AddBitmapText(Text::StartControls, 88.0F, 77.0F,
+                          hudTextColor, 24, assets, queue) &&
             AddBitmapText("M MARKET N ENDS DAY", 103.0F, 87.0F,
-                          0xFFFFFFFFU, 20, assets, queue);
+                          hudTextColor, 24, assets, queue);
     }
     return true;
 }
