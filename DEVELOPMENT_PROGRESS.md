@@ -8,11 +8,11 @@
 - 현재 완료 범위: 단계 0~16 구현
 - 다음 작업: 단계 16 후속 맵 콘텐츠 수동 검증
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `85,504 bytes`
-- 현재 `data.pak`: `351,396 bytes`
+- 현재 Release EXE: `87,552 bytes`
+- 현재 `data.pak`: `354,648 bytes`
 - 현재 대표 save: `68 bytes`
-- 현재 합계: `436,968 bytes`
-- 남은 공간: `1,037,592 bytes`
+- 현재 합계: `442,268 bytes`
+- 남은 공간: `1,032,292 bytes`
 
 ## 단계별 기록
 
@@ -35,7 +35,7 @@
 | 14. UI와 설정 정리 | 구현 완료, GUI 검증 대기 | `17e48e6` (#20) | 69,120 bytes | +6,144 bytes |
 | 15. 오디오 | 구현 및 실제 청취 검증 완료 | `ceb42d5` | 76,288 bytes | +7,168 bytes |
 | 16. 콘텐츠와 게임 완결 | 구현 완료, 전체 수동 완주 검증 대기 | `c411174` (#21) | 78,848 bytes | +2,560 bytes |
-| 16 후속. 농장·집 맵 콘텐츠 | 구현 완료, 수동 시각·저장 검증 대기 | 미커밋 작업 트리 | 85,504 bytes | +6,656 bytes |
+| 16 후속. 농장·집 맵 콘텐츠 | 구현 완료, 수동 시각·저장 검증 대기 | `2dfec15`, 후속 UI 미커밋 | 87,552 bytes | +8,704 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -609,6 +609,9 @@
 - save version 3에 현재 map ID와 해당 맵 위치를 기록하며 version 1/2는 농장으로 migration
 - HUD 시간을 콜론 glyph를 포함한 `HH:MM` 형식으로 표시
 - `UI_Frames.png`에서 필요한 기본·선택 슬롯 2개만 추출해 8칸 핫바와 인벤토리에 적용
+- 기본 슬롯 프레임을 9-slice로 재사용해 인벤토리와 시장에 확장 가능한 패널 적용
+- 시장 선택 행 강조, 작물별 씨앗·수확 아이콘과 패널 색상에 맞춘 문자 정렬 적용
+- 인벤토리 슬롯 프레임을 26px로 축소하고 28px 간격으로 배치해 슬롯 사이 2px 여백 확보
 - 시작 안내에 집 침대 저장 방법 추가
 
 검증:
@@ -617,12 +620,12 @@
 - 기존 테스트와 실제 pak의 두 맵 콘텐츠 검증을 합한 22개가 Debug/Release에서 모두 통과
 - pak에 `map/farm`과 `map/house`가 모두 존재하고 집·침대·문 및 양쪽 도착 지점 검증
 - save version 3 집 위치 round-trip, invalid map ID 거부, version 1/2 농장 migration 검증
-- 최종 manifest가 58개 source, 101개 static sprite와 57개 player frame만 허용
-- pak에는 158개 논리 sprite, 144개 고유 영역, 81색 palette와 map payload 6,096 bytes 포함
-- Release `Homestead.exe`: `85,504 bytes` (단계 16 대비 `+6,656 bytes`)
-- `data.pak`: `351,396 bytes` (단계 16 대비 `+38,676 bytes`)
+- 최종 manifest가 58개 source, 110개 static sprite와 57개 player frame만 허용
+- pak에는 167개 논리 sprite, 152개 고유 영역, 81색 palette와 map payload 6,096 bytes 포함
+- Release `Homestead.exe`: `87,552 bytes` (단계 16 대비 `+8,704 bytes`)
+- `data.pak`: `354,648 bytes` (단계 16 대비 `+41,928 bytes`)
 - 대표 save: `68 bytes` (단계 16 대비 `+1 byte`)
-- 제출 합계: `436,968 bytes` (단계 16 대비 `+45,333 bytes`); 상한까지 `1,037,592 bytes`
+- 제출 합계: `442,268 bytes` (단계 16 대비 `+50,633 bytes`); 상한까지 `1,032,292 bytes`
 
 남은 확인:
 

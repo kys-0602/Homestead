@@ -95,6 +95,15 @@ font.colon	font.colon	0	0	5	5
 ui.pointer.idle	ui.pointer	0	0	16	16
 ui.slot.frame	ui.slot.frame	0	0	32	32
 ui.slot.selected	ui.slot.selected	0	0	32	32
+ui.panel.tl	ui.slot.frame	0	0	8	8
+ui.panel.top	ui.slot.frame	8	0	16	8
+ui.panel.tr	ui.slot.frame	24	0	8	8
+ui.panel.left	ui.slot.frame	0	8	8	16
+ui.panel.center	ui.slot.frame	8	8	16	16
+ui.panel.right	ui.slot.frame	24	8	8	16
+ui.panel.bl	ui.slot.frame	0	24	8	8
+ui.panel.bottom	ui.slot.frame	8	24	16	8
+ui.panel.br	ui.slot.frame	24	24	8	8
 building.farmhouse	building.farmhouse	0	0	96	128
 interior.floor.wood	interior.floor	0	0	16	16
 interior.wall.wood	interior.wall	0	0	32	32

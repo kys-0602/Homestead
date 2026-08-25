@@ -9,9 +9,10 @@ class AssetStore;
 class Inventory;
 class RenderQueue;
 
-inline constexpr std::int32_t InventorySlotSize = 32;
-inline constexpr std::int32_t HotbarX = 32;
-inline constexpr std::int32_t HotbarY = 148;
+inline constexpr std::int32_t InventorySlotSize = 28;
+inline constexpr std::int32_t InventoryFrameSize = 26;
+inline constexpr std::int32_t HotbarX = 48;
+inline constexpr std::int32_t HotbarY = 142;
 inline constexpr std::int32_t InventoryOverlayY = 114;
 
 [[nodiscard]] int InventorySlotAt(std::uint32_t x, std::uint32_t y, bool open) noexcept;

@@ -4,6 +4,7 @@
 #include "Homestead/Game/Inventory.hpp"
 #include "Homestead/Graphics/RenderQueue.hpp"
 #include "Homestead/UI/BitmapText.hpp"
+#include "Homestead/UI/UIPanel.hpp"
 
 namespace Homestead {
 namespace {
@@ -22,6 +23,18 @@ bool AddSprite(const SpriteAsset& sprite, float x, float y, std::uint32_t color,
     command.color = color;
     command.depth = depth;
     command.layer = SpriteLayer::UI;
+    return queue.Add(command);
+}
+
+bool AddFrame(const SpriteAsset& sprite, float x, float y,
+              std::uint16_t depth, RenderQueue& queue) noexcept {
+    SpriteCommand command{};
+    command.x=x; command.y=y;
+    command.width=static_cast<float>(InventoryFrameSize);
+    command.height=static_cast<float>(InventoryFrameSize);
+    command.uvX=sprite.x; command.uvY=sprite.y;
+    command.uvWidth=sprite.width; command.uvHeight=sprite.height;
+    command.depth=depth; command.layer=SpriteLayer::UI;
     return queue.Add(command);
 }
 
@@ -44,16 +57,17 @@ bool AddInventoryUI(const Inventory& inventory, std::size_t selectedSlot,
     const SpriteAsset* frame = assets.FindSprite(MakeAssetId("ui.slot.frame"));
     const SpriteAsset* selected = assets.FindSprite(MakeAssetId("ui.slot.selected"));
     if (frame == nullptr || selected == nullptr) return false;
+    if (open && !AddUIPanel(44.0F, 110.0F, 232.0F, 64.0F,
+                            0xFFFFFFFFU, 0, assets, queue)) return false;
     const std::size_t end = open ? Inventory::SlotCount : Inventory::HotbarSlotCount;
     for (std::size_t index = 0; index < end; ++index) {
         const bool secondRow = index >= Inventory::HotbarSlotCount;
         const float slotX = static_cast<float>(HotbarX + static_cast<int>(index % 8) * InventorySlotSize);
         const float slotY = static_cast<float>(secondRow ? InventoryOverlayY : HotbarY);
         const bool highlighted = index == selectedSlot || (open && index == cursorSlot);
-        if (!AddSprite(highlighted ? *selected : *frame, slotX, slotY,
-                       0xFFFFFFFFU, 0, queue)) return false;
-        const float x = slotX + 8.0F;
-        const float y = slotY + 8.0F;
+        if (!AddFrame(highlighted ? *selected : *frame, slotX+1.0F, slotY+1.0F, 0, queue)) return false;
+        const float x = slotX + 6.0F;
+        const float y = slotY + 6.0F;
         const ItemStack& stack = inventory.Slot(index);
         const ItemDefinition* definition = FindItemDefinition(stack.item);
         if (definition != nullptr) {
