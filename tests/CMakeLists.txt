@@ -172,6 +172,7 @@ add_executable(HomesteadInventoryTests
     InventoryTests.cpp
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Inventory.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/InventoryUI.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/UIPanel.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/BitmapText.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/RenderQueue.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Assets/AssetStore.cpp"
@@ -267,7 +268,9 @@ add_executable(HomesteadPauseUITests
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/PauseUI.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/MarketUI.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/StatusUI.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/UIPanel.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/BitmapText.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Inventory.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/WorldClock.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/RenderQueue.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Assets/AssetStore.cpp"

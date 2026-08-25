@@ -88,6 +88,8 @@ and punctuation and can be tinted by the existing sprite shader. The black 5x9
 font is excluded because it requires a pixel-conversion step before tinting.
 Only the letters, digits, and colon currently used by runtime text are selected.
 Two 32x32 orange slot-frame cells provide normal and selected inventory states.
+The normal frame is also divided into nine reusable slices for scalable inventory
+and market panels; no additional complete UI sheet is packed.
 `UI_ALL.png`, premade panels, the book, loading icon, crosshairs, ribbons,
 large colour/button variant sheets, and duplicate font sheets are excluded.
 
