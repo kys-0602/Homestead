@@ -8,8 +8,14 @@ namespace {
 
 bool AddPiece(const SpriteAsset& sprite, float x, float y, float width, float height,
               std::uint32_t color, std::uint16_t depth, RenderQueue& queue) noexcept {
+    if(sprite.sourceWidth==0||sprite.sourceHeight==0)return false;
+    const float scaleX=width/static_cast<float>(sprite.sourceWidth);
+    const float scaleY=height/static_cast<float>(sprite.sourceHeight);
     SpriteCommand command{};
-    command.x=x; command.y=y; command.width=width; command.height=height;
+    command.x=x+static_cast<float>(sprite.trimX)*scaleX;
+    command.y=y+static_cast<float>(sprite.trimY)*scaleY;
+    command.width=static_cast<float>(sprite.width)*scaleX;
+    command.height=static_cast<float>(sprite.height)*scaleY;
     command.uvX=sprite.x; command.uvY=sprite.y;
     command.uvWidth=sprite.width; command.uvHeight=sprite.height;
     command.color=color; command.layer=SpriteLayer::UI; command.depth=depth;
