@@ -8,11 +8,11 @@
 - 현재 완료 범위: 단계 0~16 구현
 - 다음 작업: 단계 16 후속 맵 콘텐츠 수동 검증
 - 제출 크기 상한: `1,474,560 bytes`
-- 현재 Release EXE: `87,552 bytes`
+- 현재 Release EXE: `88,064 bytes`
 - 현재 `data.pak`: `354,648 bytes`
 - 현재 대표 save: `68 bytes`
-- 현재 합계: `442,268 bytes`
-- 남은 공간: `1,032,292 bytes`
+- 현재 합계: `442,780 bytes`
+- 남은 공간: `1,031,780 bytes`
 
 ## 단계별 기록
 
@@ -35,7 +35,7 @@
 | 14. UI와 설정 정리 | 구현 완료, GUI 검증 대기 | `17e48e6` (#20) | 69,120 bytes | +6,144 bytes |
 | 15. 오디오 | 구현 및 실제 청취 검증 완료 | `ceb42d5` | 76,288 bytes | +7,168 bytes |
 | 16. 콘텐츠와 게임 완결 | 구현 완료, 전체 수동 완주 검증 대기 | `c411174` (#21) | 78,848 bytes | +2,560 bytes |
-| 16 후속. 농장·집 맵 콘텐츠 | 구현 완료, 수동 시각·저장 검증 대기 | `2dfec15`, 후속 UI 미커밋 | 87,552 bytes | +8,704 bytes |
+| 16 후속. 농장·집 맵 콘텐츠 | 구현 완료, 수동 시각·저장 검증 대기 | PR #22·#23, 후속 HUD 미커밋 | 88,064 bytes | +9,216 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -613,6 +613,7 @@
 - 시장 선택 행 강조, 작물별 씨앗·수확 아이콘과 패널 색상에 맞춘 문자 정렬 적용
 - 인벤토리 슬롯 프레임을 26px로 축소하고 28px 간격으로 배치해 슬롯 사이 2px 여백 확보
 - 축소 슬롯과 9-slice 패널 렌더링에 atlas trim offset과 원본 크기 비율을 반영
+- 날짜·골드와 시간을 좌우 9-slice HUD 패널로 분리하고 밝은 배경용 갈색 문자 적용
 - 시작 안내에 집 침대 저장 방법 추가
 
 검증:
@@ -623,10 +624,10 @@
 - save version 3 집 위치 round-trip, invalid map ID 거부, version 1/2 농장 migration 검증
 - 최종 manifest가 58개 source, 110개 static sprite와 57개 player frame만 허용
 - pak에는 167개 논리 sprite, 152개 고유 영역, 81색 palette와 map payload 6,096 bytes 포함
-- Release `Homestead.exe`: `87,552 bytes` (단계 16 대비 `+8,704 bytes`)
+- Release `Homestead.exe`: `88,064 bytes` (단계 16 대비 `+9,216 bytes`)
 - `data.pak`: `354,648 bytes` (단계 16 대비 `+41,928 bytes`)
 - 대표 save: `68 bytes` (단계 16 대비 `+1 byte`)
-- 제출 합계: `442,268 bytes` (단계 16 대비 `+50,633 bytes`); 상한까지 `1,032,292 bytes`
+- 제출 합계: `442,780 bytes` (단계 16 대비 `+51,145 bytes`); 상한까지 `1,031,780 bytes`
 
 남은 확인:
 

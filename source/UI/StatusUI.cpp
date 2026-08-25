@@ -4,6 +4,7 @@
 #include "Homestead/Graphics/RenderQueue.hpp"
 #include "Homestead/UI/BitmapText.hpp"
 #include "Homestead/UI/Strings.hpp"
+#include "Homestead/UI/UIPanel.hpp"
 #include "Homestead/World/WorldClock.hpp"
 
 namespace Homestead {
@@ -52,9 +53,12 @@ bool AddStatusUI(const WorldClock& clock, std::uint16_t gold, std::uint16_t goal
     char progress[] = "GOLD 00000 OF 00000";
     for (int index=9;index>=5;--index) { progress[index]=static_cast<char>('0'+gold%10U); gold/=10U; }
     for (int index=18;index>=14;--index) { progress[index]=static_cast<char>('0'+goal%10U); goal/=10U; }
-    if (!AddBitmapText(day, 4.0F, 4.0F, 0xFFFFFFFFU, 20, assets, queue) ||
-        !AddBitmapText(time, 256.0F, 4.0F, 0xFFFFFFFFU, 20, assets, queue) ||
-        !AddBitmapText(progress, 4.0F, 14.0F, 0xFFFFFFFFU, 20, assets, queue)) return false;
+    constexpr std::uint32_t hudTextColor=0xFF603020U;
+    if (!AddUIPanel(0.0F,0.0F,128.0F,26.0F,0xFFFFFFFFU,18,assets,queue) ||
+        !AddUIPanel(250.0F,0.0F,70.0F,16.0F,0xFFFFFFFFU,18,assets,queue) ||
+        !AddBitmapText(day, 6.0F, 5.0F, hudTextColor, 20, assets, queue) ||
+        !AddBitmapText(time, 256.0F, 5.0F, hudTextColor, 20, assets, queue) ||
+        !AddBitmapText(progress, 6.0F, 15.0F, hudTextColor, 20, assets, queue)) return false;
     if (complete) {
         return AddBitmapText(Text::GoalComplete, 121.0F, 82.0F,
                              0xFF80FFFFU, 20, assets, queue) &&
