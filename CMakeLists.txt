@@ -122,7 +122,8 @@ target_compile_options(Homestead PRIVATE
 )
 
 target_link_options(Homestead PRIVATE
-    $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/LTCG /OPT:REF /OPT:ICF>
+    $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/LTCG /OPT:REF /OPT:ICF
+        /MAP:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/Homestead.map>
 )
 
 target_link_libraries(Homestead PRIVATE
@@ -170,6 +171,13 @@ if(HOMESTEAD_ASSET_SOURCE_FILES)
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different
             "${HOMESTEAD_DATA_PAK}"
             "$<TARGET_FILE_DIR:Homestead>/data.pak"
+        COMMAND "${CMAKE_COMMAND}"
+            "-Dbinary_path=$<TARGET_FILE:Homestead>"
+            "-Dpak_path=${HOMESTEAD_DATA_PAK}"
+            "-Dconfiguration=$<CONFIG>"
+            "-Dmaximum_save_size=32768"
+            "-Dsubmission_limit=1474560"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckSubmissionSize.cmake"
         VERBATIM
     )
 endif()
