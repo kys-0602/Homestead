@@ -25,6 +25,12 @@
 
 namespace Homestead {
 
+enum class ApplicationInitializeResult : std::uint8_t {
+    Ready,
+    Cancelled,
+    Failed
+};
+
 class Application final {
 public:
     Application() = default;
@@ -33,7 +39,8 @@ public:
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
 
-    [[nodiscard]] bool Initialize(HINSTANCE instance, int showCommand) noexcept;
+    [[nodiscard]] ApplicationInitializeResult Initialize(
+        HINSTANCE instance, int showCommand) noexcept;
     [[nodiscard]] int Run() noexcept;
     void Shutdown() noexcept;
 

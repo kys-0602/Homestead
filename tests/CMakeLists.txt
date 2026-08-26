@@ -312,3 +312,22 @@ target_compile_definitions(HomesteadMapContentTests PRIVATE WIN32_LEAN_AND_MEAN 
 target_compile_options(HomesteadMapContentTests PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>)
 add_test(NAME HomesteadMapContentTests COMMAND HomesteadMapContentTests
     "${CMAKE_BINARY_DIR}/generated-assets/data.pak")
+
+add_executable(HomesteadStartupLoaderTests StartupLoaderTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/App/StartupLoader.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Assets/AssetStore.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Audio/Audio.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Audio/AudioCodec.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Inventory.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Save/SaveCodec.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Save/SaveSystem.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/CropField.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/TileMap.cpp")
+target_include_directories(HomesteadStartupLoaderTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+target_compile_definitions(HomesteadStartupLoaderTests PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_compile_options(HomesteadStartupLoaderTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>)
+target_link_libraries(HomesteadStartupLoaderTests PRIVATE xaudio2)
+add_test(NAME HomesteadStartupLoaderTests COMMAND HomesteadStartupLoaderTests
+    "${CMAKE_BINARY_DIR}/generated-assets/data.pak")
