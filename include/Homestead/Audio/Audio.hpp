@@ -17,7 +17,8 @@ public:
     Audio(const Audio&) = delete;
     Audio& operator=(const Audio&) = delete;
 
-    [[nodiscard]] bool Initialize(const AssetStore& assets) noexcept;
+    [[nodiscard]] bool Prepare(const AssetStore& assets) noexcept;
+    [[nodiscard]] bool InitializeOutput() noexcept;
     void SetVolumes(std::uint8_t master, std::uint8_t music, std::uint8_t effects) noexcept;
     [[nodiscard]] bool PlayMusic(AssetId id) noexcept;
     void PlayEffect(AssetId id, float gain = 1.0F) noexcept;

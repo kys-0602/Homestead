@@ -1,4 +1,5 @@
 #include "Homestead/App/Application.hpp"
+#include "Homestead/App/StartupLoader.hpp"
 
 #include <Windows.h>
 
@@ -47,38 +48,73 @@ Application::~Application() noexcept {
     Shutdown();
 }
 
-bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
+ApplicationInitializeResult Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
     if (initialized_) {
-        return true;
+        return ApplicationInitializeResult::Ready;
     }
 
     if (!clock_.Initialize()) {
-        return false;
+        return ApplicationInitializeResult::Failed;
     }
 
     [[maybe_unused]] const bool loadedSettings = settingsSystem_.Load(settings_);
     if (!IsValidSettings(settings_)) settings_ = {};
     if (!window_.Initialize(instance, showCommand, input_,
                             settings_.windowScale, settings_.fullscreen)) {
-        return false;
+        return ApplicationInitializeResult::Failed;
     }
 
     wchar_t pakPath[MAX_PATH]{};
-    if (!GetPakPath(pakPath) || !assets_.LoadFile(pakPath)) {
+    if (!GetPakPath(pakPath)) {
         window_.Shutdown();
-        return false;
+        return ApplicationInitializeResult::Failed;
     }
 
-    const MapAsset* farmAsset = assets_.FindMap(MakeAssetId("map/farm"));
-    const MapAsset* houseAsset = assets_.FindMap(MakeAssetId("map/house"));
-    if (farmAsset == nullptr || houseAsset == nullptr ||
-        !farmMap_.LoadMemory(farmAsset->bytes.data(), farmAsset->bytes.size()) ||
-        !houseMap_.LoadMemory(houseAsset->bytes.data(), houseAsset->bytes.size())) {
+    const auto cleanupInitialization = [this]() noexcept {
+        graphics_.Shutdown();
+        audio_.Shutdown();
+        crops_.Clear();
+        inventory_.Clear();
+        entityWorld_.Clear();
+        farmMap_.Clear();
+        houseMap_.Clear();
         assets_.Clear();
         window_.Shutdown();
-        return false;
+    };
+    StartupLoader loader;
+    if (!loader.Start(pakPath, assets_, farmMap_, houseMap_, audio_, saves_)) {
+        cleanupInitialization();
+        return ApplicationInitializeResult::Failed;
     }
-    if (audio_.Initialize(assets_)) {
+
+    std::uint8_t animationFrame = 0;
+    while (!loader.IsFinished()) {
+        input_.BeginFrame();
+        if (!window_.ProcessMessages()) {
+            loader.Cancel();
+            loader.Wait();
+            cleanupInitialization();
+            return ApplicationInitializeResult::Cancelled;
+        }
+        input_.DiscardPending();
+        const StartupStage stage = loader.Stage();
+        const std::uint8_t completed = stage == StartupStage::Assets ? 0 :
+            (stage == StartupStage::Maps ? 1 : (stage == StartupStage::Audio ? 2 : 3));
+        window_.UpdateLoadingScreen(completed, animationFrame++ / 10U);
+        Sleep(16);
+    }
+    loader.Wait();
+    if (loader.Stage() == StartupStage::Cancelled) {
+        cleanupInitialization();
+        return ApplicationInitializeResult::Cancelled;
+    }
+    if (loader.Stage() != StartupStage::Ready) {
+        cleanupInitialization();
+        return ApplicationInitializeResult::Failed;
+    }
+
+    window_.UpdateLoadingScreen(4, animationFrame / 10U);
+    if (loader.AudioPrepared() && audio_.InitializeOutput()) {
         audio_.SetVolumes(settings_.masterVolume, settings_.musicVolume, settings_.effectVolume);
         [[maybe_unused]] const bool musicStarted =
             audio_.PlayMusic(MakeAssetId("audio.music.farm"));
@@ -88,25 +124,18 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
         {16.5F * TileSize, 12.5F * TileSize},
         MakeAssetId("player.idle.down.0"));
     if (!entityWorld_.IsAlive(player_.entity)) {
-        farmMap_.Clear(); houseMap_.Clear();
-        assets_.Clear();
-        window_.Shutdown();
-        return false;
+        cleanupInitialization();
+        return ApplicationInitializeResult::Failed;
     }
     if (inventory_.Add(ItemId::Hoe, 1) != 0 ||
         inventory_.Add(ItemId::WateringCan, 1) != 0) {
-        inventory_.Clear();
-        entityWorld_.Clear();
-        farmMap_.Clear(); houseMap_.Clear();
-        assets_.Clear();
-        window_.Shutdown();
-        return false;
+        cleanupInitialization();
+        return ApplicationInitializeResult::Failed;
     }
 
-    SaveSnapshot snapshot;
-    const SaveLoadResult loadResult = saves_.Load(snapshot);
+    const SaveLoadResult loadResult = loader.LoadResult();
     if ((loadResult == SaveLoadResult::LoadedPrimary ||
-         loadResult == SaveLoadResult::LoadedBackup) && !ApplySave(snapshot)) {
+         loadResult == SaveLoadResult::LoadedBackup) && !ApplySave(loader.Snapshot())) {
         crops_.Clear();
         inventory_.Clear();
         [[maybe_unused]] const std::uint16_t hoe = inventory_.Add(ItemId::Hoe, 1);
@@ -120,16 +149,15 @@ bool Application::Initialize(HINSTANCE instance, int showCommand) noexcept {
             window_.ClientWidth(),
             window_.ClientHeight(),
             assets_)) {
-        inventory_.Clear();
-        entityWorld_.Clear();
-        farmMap_.Clear(); houseMap_.Clear();
-        assets_.Clear();
-        window_.Shutdown();
-        return false;
+        cleanupInitialization();
+        return ApplicationInitializeResult::Failed;
     }
 
+    window_.UpdateLoadingScreen(5, animationFrame / 10U);
+    input_.DiscardPending();
+    window_.EndLoadingScreen();
     initialized_ = true;
-    return true;
+    return ApplicationInitializeResult::Ready;
 }
 
 int Application::Run() noexcept {

@@ -150,6 +150,54 @@ bool Window::ProcessMessages() noexcept {
     return handle_ != nullptr;
 }
 
+void Window::UpdateLoadingScreen(std::uint8_t completedStages, std::uint8_t animationFrame) noexcept {
+    if (handle_ == nullptr || !loadingScreen_) return;
+    loadingStages_ = completedStages > 5 ? 5 : completedStages;
+    loadingAnimation_ = static_cast<std::uint8_t>(animationFrame % 4);
+    InvalidateRect(handle_, nullptr, FALSE);
+    UpdateWindow(handle_);
+}
+
+void Window::PaintLoadingScreen() noexcept {
+    PAINTSTRUCT paint{};
+    HDC context = BeginPaint(handle_, &paint);
+    if (context == nullptr) return;
+    RECT client{};
+    GetClientRect(handle_, &client);
+    HBRUSH background = CreateSolidBrush(RGB(31, 45, 28));
+    HBRUSH empty = CreateSolidBrush(RGB(77, 62, 40));
+    HBRUSH filled = CreateSolidBrush(RGB(221, 171, 79));
+    FillRect(context, &client, background);
+    SetBkMode(context, TRANSPARENT);
+    SetTextColor(context, RGB(245, 224, 169));
+    HFONT previousFont = static_cast<HFONT>(SelectObject(context, GetStockObject(DEFAULT_GUI_FONT)));
+    RECT title{client.left, client.top + (client.bottom - client.top) / 2 - 42,
+               client.right, client.bottom};
+    DrawTextW(context, L"HOMESTEAD", -1, &title, DT_CENTER | DT_SINGLELINE);
+    wchar_t loading[] = L"LOADING...";
+    for (std::uint8_t index = loadingAnimation_; index < 3; ++index) loading[7 + index] = L' ';
+    RECT label{client.left, title.top + 28, client.right, client.bottom};
+    DrawTextW(context, loading, -1, &label, DT_CENTER | DT_SINGLELINE);
+    const LONG clientWidth = client.right - client.left;
+    constexpr LONG segmentWidth = 22;
+    constexpr LONG segmentGap = 5;
+    constexpr LONG segmentCount = 5;
+    const LONG totalWidth = segmentWidth * segmentCount + segmentGap * (segmentCount - 1);
+    const LONG left = client.left + (clientWidth - totalWidth) / 2;
+    const LONG top = label.top + 28;
+    for (LONG index = 0; index < segmentCount; ++index) {
+        RECT segment{left + index * (segmentWidth + segmentGap), top,
+                     left + index * (segmentWidth + segmentGap) + segmentWidth, top + 8};
+        FillRect(context, &segment,
+                 index < static_cast<LONG>(loadingStages_) ? filled : empty);
+    }
+    SelectObject(context, previousFont);
+    DeleteObject(filled);
+    DeleteObject(empty);
+    DeleteObject(background);
+    EndPaint(handle_, &paint);
+}
+
 void Window::Shutdown() noexcept {
     if (handle_ != nullptr) {
         DestroyWindow(handle_);
@@ -169,6 +217,9 @@ void Window::Shutdown() noexcept {
     focused_ = false;
     mouseTracking_ = false;
     fullscreen_ = false;
+    loadingScreen_ = true;
+    loadingStages_ = 0;
+    loadingAnimation_ = 0;
 }
 
 LRESULT CALLBACK Window::WindowProcedure(
@@ -213,6 +264,17 @@ LRESULT Window::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) noexce
         clientHeight_ = static_cast<std::uint32_t>(HIWORD(lParam));
         minimized_ = wParam == SIZE_MINIMIZED || clientWidth_ == 0 || clientHeight_ == 0;
         return 0;
+
+    case WM_ERASEBKGND:
+        if (loadingScreen_) return 1;
+        break;
+
+    case WM_PAINT:
+        if (loadingScreen_) {
+            PaintLoadingScreen();
+            return 0;
+        }
+        break;
 
     case WM_SETFOCUS:
         focused_ = true;

@@ -16,12 +16,19 @@ WAVEFORMATEX Format() noexcept {
 
 Audio::~Audio() noexcept { Shutdown(); }
 
-bool Audio::Initialize(const AssetStore& assets) noexcept {
+bool Audio::Prepare(const AssetStore& assets) noexcept {
+    clips_.clear();
     constexpr AssetId ids[]{MakeAssetId("audio.music.farm"),MakeAssetId("audio.hoe"),
         MakeAssetId("audio.watering"),MakeAssetId("audio.plant"),MakeAssetId("audio.harvest"),
         MakeAssetId("audio.ui.move"),MakeAssetId("audio.ui.confirm")};
-    for (AssetId id:ids) { const AudioAsset* asset=assets.FindAudio(id); if (!asset) return false;
-        Clip clip{id,{}}; if (!DecodeAdpcm2(asset->bytes.data(),asset->bytes.size(),clip.samples)) return false; clips_.push_back(std::move(clip)); }
+    for (AssetId id:ids) { const AudioAsset* asset=assets.FindAudio(id); if (!asset) { clips_.clear(); return false; }
+        Clip clip{id,{}}; if (!DecodeAdpcm2(asset->bytes.data(),asset->bytes.size(),clip.samples)) {
+            clips_.clear(); return false; } clips_.push_back(std::move(clip)); }
+    return true;
+}
+
+bool Audio::InitializeOutput() noexcept {
+    if (clips_.empty()) return false;
     if (FAILED(XAudio2Create(&engine_,0,XAUDIO2_DEFAULT_PROCESSOR)) ||
         FAILED(engine_->CreateMasteringVoice(&mastering_))) { Shutdown(); return false; }
     WAVEFORMATEX format=Format();

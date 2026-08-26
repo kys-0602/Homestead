@@ -20,6 +20,8 @@ public:
                                   std::uint8_t windowScale, bool fullscreen) noexcept;
     [[nodiscard]] bool ApplyDisplaySettings(std::uint8_t windowScale, bool fullscreen) noexcept;
     [[nodiscard]] bool ProcessMessages() noexcept;
+    void UpdateLoadingScreen(std::uint8_t completedStages, std::uint8_t animationFrame) noexcept;
+    void EndLoadingScreen() noexcept { loadingScreen_ = false; }
     void Shutdown() noexcept;
 
     [[nodiscard]] HWND Handle() const noexcept { return handle_; }
@@ -31,6 +33,7 @@ public:
 private:
     static LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
     LRESULT HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) noexcept;
+    void PaintLoadingScreen() noexcept;
 
     HINSTANCE instance_ = nullptr;
     HWND handle_ = nullptr;
@@ -42,6 +45,9 @@ private:
     bool focused_ = false;
     bool mouseTracking_ = false;
     bool fullscreen_ = false;
+    bool loadingScreen_ = true;
+    std::uint8_t loadingStages_ = 0;
+    std::uint8_t loadingAnimation_ = 0;
 };
 
 } // namespace Homestead
