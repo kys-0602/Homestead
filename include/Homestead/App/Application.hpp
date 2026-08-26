@@ -88,6 +88,7 @@ private:
     std::uint8_t pauseFocus_ = 0;
     std::uint16_t instructionTicks_ = 600;
     std::uint16_t saveNoticeTicks_ = 0;
+    std::uint32_t weatherTicks_ = 0;
     std::uint16_t gold_ = StartingGold;
     std::uint8_t marketFocus_ = 0;
     MapId currentMap_ = MapId::Farm;

@@ -13,6 +13,7 @@
 #include "Homestead/Graphics/CropRenderer.hpp"
 #include "Homestead/Graphics/SelectionRenderer.hpp"
 #include "Homestead/Graphics/TileMapRenderer.hpp"
+#include "Homestead/Graphics/WeatherRenderer.hpp"
 #include "Homestead/Input/Action.hpp"
 #include "Homestead/Systems/PlayerMovement.hpp"
 #include "Homestead/Systems/InteractionSystem.hpp"
@@ -198,6 +199,7 @@ int Application::Run() noexcept {
                 return 1;
             }
         }
+        weatherTicks_ += fixedFrame.steps;
 
         const TransformComponent* playerTransform = entityWorld_.Transform(player_.entity);
         if (playerTransform == nullptr) {
@@ -219,6 +221,8 @@ int Application::Run() noexcept {
             !PlayerRenderer::Add(
                 entityWorld_, player_, alpha, camera_, assets_, renderQueue_) ||
             (!inventoryOpen_ && !paused_ && !AddSelectionOverlay(selection_, camera_, assets_, renderQueue_)) ||
+            (currentMap_ == MapId::Farm &&
+             !AddCloudShadows(weatherTicks_, camera_, assets_, renderQueue_)) ||
             !AddInventoryUI(inventory_, selectedSlot_, inventoryCursor_,
                             inventoryOpen_, assets_, renderQueue_) ||
             !AddStatusUI(worldClock_, gold_, GoalGold, instructionTicks_ != 0,
@@ -493,6 +497,7 @@ void Application::Shutdown() noexcept {
     paused_ = false;
     saveOnDayChange_ = false;
     pauseFocus_ = 0;
+    weatherTicks_ = 0;
     initialized_ = false;
 }
 

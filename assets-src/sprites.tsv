@@ -110,3 +110,7 @@ interior.floor.wood	interior.floor	0	0	16	16
 interior.wall.wood	interior.wall	0	0	32	32
 interior.bed	interior.bed	0	0	32	32
 interior.door	interior.door	0	0	16	32
+effect.cloud.0	effect.cloud.0	0	0	38	25
+effect.cloud.1	effect.cloud.1	0	0	28	24
+effect.cloud.2	effect.cloud.2	0	0	44	34
+effect.cloud.3	effect.cloud.3	0	0	27	21

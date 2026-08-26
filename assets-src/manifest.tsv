@@ -58,3 +58,7 @@ interior.floor	Buildings/Houses_Interiors/Wood_Floor_Tiles.png	0	0	16	16
 interior.wall	Buildings/Houses_Interiors/Interior_Walls.png	0	0	32	32
 interior.bed	Buildings/House_Decor/Beds.png	0	0	32	32
 interior.door	Buildings/House_Decor/Doors.png	0	0	16	32
+effect.cloud.0	Weather effects/Clouds.png	14	19	38	25
+effect.cloud.1	Weather effects/Clouds.png	82	20	28	24
+effect.cloud.2	Weather effects/Clouds.png	9	79	44	34
+effect.cloud.3	Weather effects/Clouds.png	83	86	27	21

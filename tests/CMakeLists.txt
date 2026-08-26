@@ -287,6 +287,19 @@ target_compile_options(HomesteadPauseUITests PRIVATE
 add_test(NAME HomesteadPauseUITests COMMAND HomesteadPauseUITests
     "${CMAKE_BINARY_DIR}/generated-assets/data.pak")
 
+add_executable(HomesteadWeatherRendererTests WeatherRendererTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Assets/AssetStore.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/Camera2D.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/RenderQueue.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/WeatherRenderer.cpp")
+target_include_directories(HomesteadWeatherRendererTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+target_compile_definitions(HomesteadWeatherRendererTests PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_compile_options(HomesteadWeatherRendererTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>)
+add_test(NAME HomesteadWeatherRendererTests COMMAND HomesteadWeatherRendererTests
+    "${CMAKE_BINARY_DIR}/generated-assets/data.pak")
+
 add_executable(HomesteadAudioCodecTests AudioCodecTests.cpp
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Audio/AudioCodec.cpp")
 target_include_directories(HomesteadAudioCodecTests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../include")
