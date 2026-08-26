@@ -25,12 +25,25 @@ int main(int argumentCount, char** arguments) {
         !house.LoadMemory(houseAsset->bytes.data(), houseAsset->bytes.size())) return 4;
     const Homestead::Tile* farmhouse = farm.Get(8, 7);
     const Homestead::Tile* farmSpawn = farm.Get(8, 10);
+    const Homestead::Tile* requestSign = farm.Get(10, 11);
     const Homestead::Tile* bed = house.Get(3, 3);
     const Homestead::Tile* door = house.Get(10, 10);
     const Homestead::Tile* houseSpawn = house.Get(10, 9);
+    unsigned signCount = 0;
+    for (std::int32_t y = 0; y < farm.Height(); ++y) {
+        for (std::int32_t x = 0; x < farm.Width(); ++x) {
+            const Homestead::Tile* tile = farm.Get(x, y);
+            if (tile != nullptr && tile->object ==
+                static_cast<std::uint16_t>(Homestead::TileGraphic::Sign)) ++signCount;
+        }
+    }
     if (farm.Width() != 32 || farm.Height() != 24 || house.Width() != 20 || house.Height() != 12 ||
         farmhouse == nullptr || farmhouse->object != static_cast<std::uint16_t>(Homestead::TileGraphic::Farmhouse) ||
         farmSpawn == nullptr || farmSpawn->flags != 0 ||
+        signCount != 1 ||
+        requestSign == nullptr ||
+        requestSign->object != static_cast<std::uint16_t>(Homestead::TileGraphic::Sign) ||
+        (requestSign->flags & Homestead::TileFlagValue(Homestead::TileFlag::Blocked)) == 0 ||
         bed == nullptr || bed->object != static_cast<std::uint16_t>(Homestead::TileGraphic::Bed) ||
         door == nullptr || door->object != static_cast<std::uint16_t>(Homestead::TileGraphic::Door) ||
         houseSpawn == nullptr || houseSpawn->flags != 0) return 5;
@@ -40,9 +53,12 @@ int main(int argumentCount, char** arguments) {
         {5.0F * Homestead::TileSize, 3.5F * Homestead::TileSize}, house);
     const Homestead::TileSelection doorSelection = Homestead::SelectNearbySpecialObject(
         {10.5F * Homestead::TileSize, 9.5F * Homestead::TileSize}, house);
+    const Homestead::TileSelection signSelection = Homestead::SelectNearbySpecialObject(
+        {8.5F * Homestead::TileSize, 10.5F * Homestead::TileSize}, farm);
     if (!farmhouseSelection.valid || farmhouseSelection.x != 8 || farmhouseSelection.y != 7 ||
         !bedSelection.valid || bedSelection.x != 3 || bedSelection.y != 3 ||
-        !doorSelection.valid || doorSelection.x != 10 || doorSelection.y != 10) return 6;
+        !doorSelection.valid || doorSelection.x != 10 || doorSelection.y != 10 ||
+        !signSelection.valid || signSelection.x != 10 || signSelection.y != 11) return 6;
     Homestead::Tile* center = farm.Get(20, 18);
     Homestead::Tile* up = farm.Get(20, 17);
     Homestead::Tile* right = farm.Get(21, 18);

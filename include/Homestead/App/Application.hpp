@@ -8,6 +8,7 @@
 #include "Homestead/Game/PlayerState.hpp"
 #include "Homestead/Game/Inventory.hpp"
 #include "Homestead/Game/Economy.hpp"
+#include "Homestead/Game/DailyRequest.hpp"
 #include "Homestead/Graphics/Camera2D.hpp"
 #include "Homestead/Graphics/Graphics.hpp"
 #include "Homestead/Graphics/Presentation.hpp"
@@ -54,6 +55,7 @@ private:
     [[nodiscard]] bool ChangeMap(MapId destination) noexcept;
     [[nodiscard]] bool UpdatePauseMenu() noexcept;
     [[nodiscard]] bool UpdateMarket() noexcept;
+    [[nodiscard]] bool UpdateDailyRequest() noexcept;
     [[nodiscard]] bool ApplyDisplaySettings() noexcept;
 
     SettingsSystem settingsSystem_;
@@ -83,14 +85,17 @@ private:
     std::size_t moveSource_ = Inventory::SlotCount;
     bool inventoryOpen_ = false;
     bool marketOpen_ = false;
+    bool dailyRequestOpen_ = false;
     bool paused_ = false;
     bool saveOnDayChange_ = false;
     std::uint8_t pauseFocus_ = 0;
     std::uint16_t instructionTicks_ = 600;
     std::uint16_t saveNoticeTicks_ = 0;
+    std::uint16_t dailyRequestNoticeTicks_ = 0;
     std::uint32_t weatherTicks_ = 0;
     std::uint16_t gold_ = StartingGold;
     std::uint8_t marketFocus_ = 0;
+    DailyRequestState dailyRequestState_{};
     MapId currentMap_ = MapId::Farm;
     bool goalComplete_ = false;
     bool initialized_ = false;

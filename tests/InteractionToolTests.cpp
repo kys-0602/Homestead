@@ -59,6 +59,8 @@ int main() {
     const Homestead::TileSelection front = Homestead::SelectFrontTile(
         feet, Homestead::FacingDirection::Up, map);
     if (!front.valid || !front.inRange || front.x != 2 || front.y != 1) return 2;
+    const Homestead::TileSelection nearby = Homestead::SelectNearbySpecialObject(feet, map);
+    if (!nearby.valid || !nearby.inRange || nearby.x != 2 || nearby.y != 1) return 2;
 
     const Homestead::TileSelection mouse = Homestead::SelectMouseTile(
         feet, {72.0F, 40.0F}, map);

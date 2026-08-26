@@ -55,7 +55,7 @@ tree.oak.big	trees.oak.big	64	0	64	80
 decor.fence.vertical	decor.fences	0	0	16	16
 decor.fence.horizontal	decor.fences	16	0	16	16
 decor.flower.white	decor.flowers	0	0	16	16
-decor.sign	decor.signs	0	0	32	32
+decor.sign	decor.signs	0	0	16	16
 icon.tool.hoe	icons.tools	48	0	16	16
 icon.tool.watering_can	icons.tools	96	0	16	16
 font.A	font.A	0	0	5	5
