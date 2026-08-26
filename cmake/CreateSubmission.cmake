@@ -1,0 +1,38 @@
+foreach(required binary_path pak_path save_path submission_directory manifest_path submission_limit)
+    if(NOT DEFINED ${required})
+        message(FATAL_ERROR "Missing submission argument: ${required}")
+    endif()
+endforeach()
+
+if(NOT configuration STREQUAL "Release")
+    message(FATAL_ERROR "HomesteadSubmission must be built with the Release configuration")
+endif()
+
+foreach(input binary_path pak_path save_path)
+    if(NOT EXISTS "${${input}}")
+        message(FATAL_ERROR "Missing submission input: ${${input}}")
+    endif()
+endforeach()
+
+file(REMOVE_RECURSE "${submission_directory}")
+file(MAKE_DIRECTORY "${submission_directory}")
+file(COPY "${binary_path}" "${pak_path}" "${save_path}" DESTINATION "${submission_directory}")
+
+set(total_size 0)
+set(manifest "Homestead final submission\n")
+foreach(name Homestead.exe data.pak representative.sav)
+    set(path "${submission_directory}/${name}")
+    file(SIZE "${path}" size)
+    file(SHA256 "${path}" hash)
+    math(EXPR total_size "${total_size} + ${size}")
+    string(APPEND manifest "${hash}  ${size}  ${name}\n")
+endforeach()
+
+math(EXPR remaining "${submission_limit} - ${total_size}")
+if(total_size GREATER submission_limit)
+    message(FATAL_ERROR "Submission exceeds ${submission_limit} bytes: ${total_size}")
+endif()
+
+string(APPEND manifest "TOTAL  ${total_size}\nREMAINING  ${remaining}\n")
+file(WRITE "${manifest_path}" "${manifest}")
+message(STATUS "Final submission: total=${total_size}, remaining=${remaining} bytes")

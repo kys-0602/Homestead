@@ -22,5 +22,10 @@ int main() {
     clock.Reset();
     if (clock.Day() != 1 || clock.Minute() != Homestead::WorldClock::StartMinute ||
         clock.IsTransitioning()) return 7;
+    if (!clock.Restore(65535, 1439) || !clock.RequestEndDay()) return 8;
+    changes = 0;
+    while (clock.IsTransitioning()) if (clock.FixedUpdate()) ++changes;
+    if (changes != 1 || clock.Day() != 65535 ||
+        clock.Minute() != Homestead::WorldClock::StartMinute) return 9;
     return 0;
 }

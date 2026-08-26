@@ -153,6 +153,19 @@ build/release/Release/Homestead.exe
 .\build\release\Release\Homestead.exe
 ```
 
+### 7.1 최종 제출 폴더 생성
+
+Release 구성 후 제출 전용 target을 빌드한다.
+
+```powershell
+cmake --build --preset release --target HomesteadSubmission
+```
+
+`build/release/submission`에는 `Homestead.exe`, `data.pak`,
+`representative.sav` 세 파일만 생성된다. 각 파일의 byte 크기와 SHA-256,
+전체 합계는 제출 폴더 밖의 `build/release/submission-manifest.txt`에 기록된다.
+이 target은 Debug 구성에서 실패하며 전체 합계가 1,474,560 bytes를 넘으면 실패한다.
+
 ## 8. VS Code 명령으로 빌드
 
 터미널 명령 대신 CMake Tools 확장을 사용할 수도 있다.

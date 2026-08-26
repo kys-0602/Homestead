@@ -123,7 +123,7 @@ target_compile_options(Homestead PRIVATE
 
 target_link_options(Homestead PRIVATE
     $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/LTCG /OPT:REF /OPT:ICF
-        /MAP:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/Homestead.map>
+        /Brepro /MAP:${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/Homestead.map>
 )
 
 target_link_libraries(Homestead PRIVATE
@@ -167,6 +167,30 @@ if(HOMESTEAD_ASSET_SOURCE_FILES)
     )
     add_custom_target(HomesteadAssets ALL DEPENDS "${HOMESTEAD_DATA_PAK}")
     add_dependencies(Homestead HomesteadAssets)
+
+    set(HOMESTEAD_REPRESENTATIVE_SAVE
+        "${CMAKE_CURRENT_BINARY_DIR}/generated-assets/representative.sav")
+    add_custom_command(
+        OUTPUT "${HOMESTEAD_REPRESENTATIVE_SAVE}"
+        COMMAND $<TARGET_FILE:SubmissionSaveGenerator> "${HOMESTEAD_REPRESENTATIVE_SAVE}"
+        DEPENDS SubmissionSaveGenerator
+        VERBATIM
+    )
+    add_custom_target(HomesteadRepresentativeSave DEPENDS "${HOMESTEAD_REPRESENTATIVE_SAVE}")
+
+    add_custom_target(HomesteadSubmission
+        COMMAND "${CMAKE_COMMAND}"
+            "-Dbinary_path=$<TARGET_FILE:Homestead>"
+            "-Dpak_path=${HOMESTEAD_DATA_PAK}"
+            "-Dsave_path=${HOMESTEAD_REPRESENTATIVE_SAVE}"
+            "-Dsubmission_directory=${CMAKE_CURRENT_BINARY_DIR}/submission"
+            "-Dmanifest_path=${CMAKE_CURRENT_BINARY_DIR}/submission-manifest.txt"
+            "-Dconfiguration=$<CONFIG>"
+            "-Dsubmission_limit=1474560"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CreateSubmission.cmake"
+        DEPENDS Homestead HomesteadRepresentativeSave
+        VERBATIM
+    )
     add_custom_command(TARGET Homestead POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different
             "${HOMESTEAD_DATA_PAK}"

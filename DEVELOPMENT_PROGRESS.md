@@ -5,14 +5,14 @@
 ## 현재 상태
 
 - 마지막 갱신: 2026-08-25
-- 현재 완료 범위: 단계 0~17 구현
-- 다음 작업: 단계 18 안정화와 제출 검증
+- 현재 완료 범위: 단계 0~17 완료, 단계 18 자동 검증 구현
+- 다음 작업: 단계 18 실제 GUI·검증 PC 수동 확인
 - 제출 크기 상한: `1,474,560 bytes`
 - 현재 Release EXE: `88,576 bytes`
 - 현재 `data.pak`: `354,648 bytes`
-- 현재 대표 save: `80 bytes`
-- 현재 합계: `443,304 bytes`
-- 남은 공간: `1,031,256 bytes`
+- 현재 대표 save: `155 bytes`
+- 현재 합계: `443,379 bytes`
+- 남은 공간: `1,031,181 bytes`
 
 ## 단계별 기록
 
@@ -35,8 +35,9 @@
 | 14. UI와 설정 정리 | 구현 완료, GUI 검증 대기 | `17e48e6` (#20) | 69,120 bytes | +6,144 bytes |
 | 15. 오디오 | 구현 및 실제 청취 검증 완료 | `ceb42d5` | 76,288 bytes | +7,168 bytes |
 | 16. 콘텐츠와 게임 완결 | 구현 완료, 전체 수동 완주 검증 대기 | `c411174` (#21) | 78,848 bytes | +2,560 bytes |
-| 16 후속. 농장·집 맵 콘텐츠 | 구현 완료, 수동 시각·저장 검증 대기 | PR #22~#25, 후속 pause UI 미커밋 | 88,576 bytes | +9,728 bytes |
-| 17. 크기 최적화 | 구현 및 개발 PC 검증 완료, 검증 PC 확인 대기 | 커밋 대기 | 88,576 bytes | 0 bytes |
+| 16 후속. 농장·집 맵 콘텐츠 | 구현 완료, 수동 시각·저장 검증 대기 | PR #22~#26 | 88,576 bytes | +9,728 bytes |
+| 17. 크기 최적화 | 구현 및 개발 PC 검증 완료, 검증 PC 확인 대기 | `d9435c1` (#27) | 88,576 bytes | 0 bytes |
+| 18. 안정화와 제출 검증 | 자동 검증 완료, GUI·검증 PC 확인 대기 | 커밋 대기 | 88,576 bytes | 0 bytes |
 
 ### 단계 0: 프로젝트 기준선
 
@@ -666,6 +667,41 @@
 - 별도 검증 PC에서 clean Release 빌드 결과와 Visual C++ Runtime 설치 조건 확인
 - UPX는 현재 약 1MB의 여유가 있어 적용하지 않으며, 최종 제출 단계에서 미적용 상태의 실행·백신 검사
 - 단계 18에서 전체 gameplay, 창·입력·오디오·저장·손상 파일·장시간 안정성 회귀 검증
+
+### 단계 18: 안정화와 제출 검증
+
+구현:
+
+- `HomesteadSubmission` Release target이 EXE, pak, 생성된 대표 save만 별도 제출 폴더에 배치
+- 12일차, 세 작물, 24개 변경 타일과 진행 inventory를 포함한 version 3 대표 save를 결정적으로 생성
+- 제출 폴더 밖 manifest에 세 파일의 byte 크기, SHA-256, 전체 합계와 남은 공간 기록
+- `/Brepro` 링크 옵션을 적용해 경로가 다른 Release 빌드에서도 동일한 실행 파일 생성
+- 최대 날짜 65,535에서 하루가 더 지나도 0으로 순환하지 않도록 포화 처리
+- 음악의 상업적 이용·수정·무표기 허용 조건을 라이선스 기록에 명시
+
+자동 검증:
+
+- Debug/Release `/W4` 빌드 성공 및 양쪽 22개 테스트 모두 통과
+- 대표 save를 실제 decoder로 다시 열어 날짜, 작물 3개와 변경 타일 24개 확인
+- 최대 날짜의 하루 전환 후 날짜 65,535 유지, 시간 초기화와 day-change event 1회 확인
+- 서로 다른 두 Release 빌드 디렉터리에서 EXE, pak, save의 SHA-256 완전 일치
+- 제출 폴더에 세 파일만 존재하며 Release 실행 파일이 해당 폴더에서 3초 이상 실행 유지
+- PE 의존성 확인: Windows D3D11·Kernel/User API와 동적 Visual C++ Runtime만 사용
+- 최종 EXE `88,576 bytes`, pak `354,648 bytes`, 대표 save `155 bytes`
+- 제출 합계 `443,379 bytes`; 상한까지 `1,031,181 bytes`
+- SHA-256: EXE `3ff574bb802c6e4c707d53cd24ca69d2ea892d4064ccc2149ee1c7171f409270`
+- SHA-256: pak `387673dc3350001f26b8fe846a0df115241b2e405969adad40b70cbae93d1d9a`
+- SHA-256: save `710fbf4512e8dff4980cbdfa780d81383243b749bd7ebc83e24cf3f9d45dfa37`
+
+남은 수동 확인:
+
+- 실제 창에서 새 게임부터 100G 완료까지 플레이하고 저장·불러오기·하루 변경·수확 확인
+- inventory full, 맵 가장자리, 빠른 메뉴 전환과 잘못된 입력 확인
+- 최소화, 여러 창 크기, 비정수 letterbox, focus loss, Alt+Tab, Alt+F4 반복 확인
+- sprite bleeding, pixel 흔들림, Y 정렬과 D3D11 debug layer/live object 확인
+- primary/backup save 손상 및 pak 누락 시 사용자에게 안전하게 실패하는지 확인
+- Windows 10 Direct3D 11.0 검증 PC에서 Visual C++ Runtime 설치 조건과 오디오 포함 실행 확인
+- 구매 pixel-art의 원본 라이선스 문서와 최종 제출 규정 재확인
 
 ## 기록 갱신 규칙
 
