@@ -248,7 +248,9 @@ target_include_directories(HomesteadSaveCodecTests PRIVATE
 target_compile_options(HomesteadSaveCodecTests PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
 )
-add_test(NAME HomesteadSaveCodecTests COMMAND HomesteadSaveCodecTests)
+add_dependencies(HomesteadSaveCodecTests HomesteadRepresentativeSave)
+add_test(NAME HomesteadSaveCodecTests COMMAND HomesteadSaveCodecTests
+    "${CMAKE_BINARY_DIR}/generated-assets/representative.sav")
 
 add_executable(HomesteadSettingsTests
     SettingsTests.cpp

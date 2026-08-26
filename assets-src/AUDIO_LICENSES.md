@@ -4,6 +4,8 @@
 
 - Source: https://whitefoxgaming.itch.io/crafting-daydreams-free-game-music
 - Local source: `Audio/music/FunCrafting.wav`
+- License terms confirmed by the project owner: royalty-free, unlimited commercial
+  use, attribution not required, and modification allowed.
 
 The downloaded source audio remains local under `assets-src/Audio/` and is not
 committed or included directly in the submission. The build converts only the

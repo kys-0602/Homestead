@@ -1,6 +1,7 @@
 #include "Homestead/World/WorldClock.hpp"
 
 #include <algorithm>
+#include <limits>
 
 namespace Homestead {
 
@@ -9,7 +10,7 @@ bool WorldClock::FixedUpdate() noexcept {
         ++transitionTick_;
         const bool dayChanged = transitionTick_ == DayChangeTick;
         if (dayChanged) {
-            ++day_;
+            if (day_ != std::numeric_limits<std::uint16_t>::max()) ++day_;
             minute_ = StartMinute;
             minuteTick_ = 0;
         }

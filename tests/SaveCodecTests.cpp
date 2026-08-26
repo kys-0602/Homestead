@@ -3,6 +3,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fstream>
+#include <iterator>
 #include <vector>
 
 namespace {
@@ -58,7 +60,7 @@ std::vector<std::uint8_t> LegacySave() {
 
 } // namespace
 
-int main() {
+int main(int argumentCount, char** arguments) {
     Homestead::SaveSnapshot source;
     source.playerX256 = 12345; source.playerY256 = 23456;
     source.day = 4; source.minute = 777; source.selectedSlot = 2;
@@ -104,5 +106,15 @@ int main() {
        migrated.crops[0].wateredDays!=2||migrated.mapId!=Homestead::MapId::Farm)return 16;
     auto invalidLegacy=legacy;invalidLegacy[16+13]=4;RepairChecksum(invalidLegacy);
     if(!Rejects(invalidLegacy))return 17;
+    if (argumentCount != 2) return 18;
+    std::ifstream input(arguments[1], std::ios::binary);
+    if (!input) return 19;
+    const std::vector<std::uint8_t> representative{
+        std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+    Homestead::SaveSnapshot submitted;
+    if (representative.empty() || representative.size() > Homestead::MaximumSaveBytes ||
+        !Homestead::DecodeSave(representative.data(), representative.size(), submitted) ||
+        submitted.day != 12 || submitted.crops.size() != 3 || submitted.tileDeltas.size() != 24)
+        return 20;
     return 0;
 }
