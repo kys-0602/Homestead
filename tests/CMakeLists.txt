@@ -223,6 +223,31 @@ target_include_directories(HomesteadEconomyTests PRIVATE "${CMAKE_CURRENT_SOURCE
 target_compile_options(HomesteadEconomyTests PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>)
 add_test(NAME HomesteadEconomyTests COMMAND HomesteadEconomyTests)
 
+add_executable(HomesteadDailyRequestTests DailyRequestTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/DailyRequest.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Inventory.cpp")
+target_include_directories(HomesteadDailyRequestTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+target_compile_options(HomesteadDailyRequestTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>)
+add_test(NAME HomesteadDailyRequestTests COMMAND HomesteadDailyRequestTests)
+
+add_executable(HomesteadDailyRequestUITests DailyRequestUITests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Assets/AssetStore.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/DailyRequest.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Inventory.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Graphics/RenderQueue.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/BitmapText.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/DailyRequestUI.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/UI/UIPanel.cpp")
+target_include_directories(HomesteadDailyRequestUITests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+target_compile_definitions(HomesteadDailyRequestUITests PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_compile_options(HomesteadDailyRequestUITests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>)
+add_test(NAME HomesteadDailyRequestUITests COMMAND HomesteadDailyRequestUITests
+    "${CMAKE_BINARY_DIR}/generated-assets/data.pak")
+
 add_executable(HomesteadWorldClockTests
     WorldClockTests.cpp
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/WorldClock.cpp"

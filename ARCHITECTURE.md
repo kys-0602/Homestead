@@ -377,6 +377,15 @@ TAKE_ITEM, ADD_MONEY, START_QUEST, WARP, END
 
 `EventQueue`는 `ItemPickedUp`, `DayChanged`, `CropHarvested` 같은 짧은 값 타입 이벤트를 한 프레임 동안 전달한다. 영구 상태 전달 수단으로 이벤트 큐를 사용하지 않는다. 퀘스트와 컷신용 bytecode VM은 현재 범위에서 제외한다.
 
+### 일일 의뢰
+
+확장 콘텐츠로 하루에 하나의 작물 납품 의뢰만 지원한다. `Game/DailyRequest`가 날짜로부터
+작물·수량·보상을 재현 가능하게 만들고 inventory를 직접 검사해 원자적으로 납품한다.
+농장 `Sign` 상호작용은 `DailyRequestUI`를 열며 UI는 게임 상태를 변경하지 않는다.
+현재 날짜가 의뢰 ID이므로 save에는 당일 완료 boolean만 기록한다. 날짜 전환 시 이를
+초기화하고 침대 전용 저장 경로로 저장한다. 범용 퀘스트 VM, NPC, 부분 납품과 여러 동시
+의뢰는 도입하지 않는다.
+
 ### 시간과 날짜
 
 `WorldClock`은 day와 minute를 정수로 관리한다. `DayChanged`에서 작물 성장과 일일 상태를 일괄 갱신한다. 계절과 날씨 상태는 저장하거나 갱신하지 않는다.

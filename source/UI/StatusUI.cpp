@@ -31,7 +31,8 @@ bool CompletionContinueAt(std::uint32_t x, std::uint32_t y) noexcept {
 }
 
 bool AddStatusUI(const WorldClock& clock, std::uint16_t gold, std::uint16_t goal,
-                 bool showInstructions, bool showSaved, bool complete, const AssetStore& assets,
+                 bool showInstructions, bool showSaved, bool showRequestComplete,
+                 bool complete, const AssetStore& assets,
                  RenderQueue& queue) noexcept {
     const SpriteAsset* pixel = assets.FindSprite(MakeAssetId("terrain.grass"));
     if (pixel == nullptr ||
@@ -73,6 +74,10 @@ bool AddStatusUI(const WorldClock& clock, std::uint16_t gold, std::uint16_t goal
                                   0xFFFFFFFFU,22,assets,queue) ||
         !AddBitmapText("GAME SAVED", 133.0F, 29.0F,
                        hudTextColor, 24, assets, queue))) return false;
+    if (showRequestComplete && (!AddUIPanel(117.0F,24.0F,86.0F,16.0F,
+                                            0xFFFFFFFFU,22,assets,queue) ||
+        !AddBitmapText("REQUEST DONE", 124.0F, 29.0F,
+                       hudTextColor, 24, assets, queue))) return false;
     if (showInstructions) {
         return AddUIPanel(82.0F,60.0F,156.0F,38.0F,
                           0xFFFFFFFFU,22,assets,queue) &&
@@ -80,7 +85,7 @@ bool AddStatusUI(const WorldClock& clock, std::uint16_t gold, std::uint16_t goal
                              hudTextColor, 24, assets, queue) &&
             AddBitmapText(Text::StartControls, 88.0F, 77.0F,
                           hudTextColor, 24, assets, queue) &&
-            AddBitmapText("M MARKET", 139.0F, 87.0F,
+            AddBitmapText("M MARKET E READ SIGN", 100.0F, 87.0F,
                           hudTextColor, 24, assets, queue);
     }
     return true;

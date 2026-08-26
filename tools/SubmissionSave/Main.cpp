@@ -13,6 +13,7 @@ int main(int argumentCount, char** arguments) {
     snapshot.day = 12;
     snapshot.minute = 14 * 60 + 30;
     snapshot.gold = 76;
+    snapshot.dailyRequestCompleted = true;
     snapshot.selectedSlot = 2;
     snapshot.inventory[0] = {Homestead::ItemId::Hoe, 1};
     snapshot.inventory[1] = {Homestead::ItemId::WateringCan, 1};

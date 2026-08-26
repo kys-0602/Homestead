@@ -4,6 +4,20 @@
 #include "Pak.hpp"
 
 #include <iostream>
+#include <filesystem>
+
+namespace {
+
+void RemoveIntermediateAtlasFiles(const std::filesystem::path& outputDirectory) noexcept {
+    std::error_code error;
+    std::filesystem::remove(outputDirectory / "atlas.rgba", error);
+    error.clear();
+    std::filesystem::remove(outputDirectory / "atlas.pal", error);
+    error.clear();
+    std::filesystem::remove(outputDirectory / "atlas.tsv", error);
+}
+
+} // namespace
 
 int main(int argumentCount, char** arguments) {
     if (argumentCount != 3) {
@@ -51,5 +65,7 @@ int main(int argumentCount, char** arguments) {
               << pakStats.spriteCount << " sprite records, and "
               << pakStats.mapBytes << " map bytes, " << pakStats.audioBytes << " audio bytes ("
               << pakStats.byteCount << " bytes total).\n";
+    // These are packer intermediates; the runtime consumes only data.pak.
+    RemoveIntermediateAtlasFiles(outputDirectory);
     return 0;
 }

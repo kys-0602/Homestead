@@ -28,6 +28,7 @@ struct SaveSnapshot {
     std::uint8_t selectedSlot = 0;
     MapId mapId = MapId::Farm;
     std::uint16_t gold = 20;
+    bool dailyRequestCompleted = false;
     std::array<ItemStack, Inventory::SlotCount> inventory{};
     std::vector<SavedTileDelta> tileDeltas;
     std::vector<CropInstance> crops;

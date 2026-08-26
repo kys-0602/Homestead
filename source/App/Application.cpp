@@ -20,6 +20,7 @@
 #include "Homestead/Systems/ToolSystem.hpp"
 #include "Homestead/UI/InventoryUI.hpp"
 #include "Homestead/UI/MarketUI.hpp"
+#include "Homestead/UI/DailyRequestUI.hpp"
 #include "Homestead/UI/PauseUI.hpp"
 #include "Homestead/UI/StatusUI.hpp"
 
@@ -226,8 +227,12 @@ int Application::Run() noexcept {
             !AddInventoryUI(inventory_, selectedSlot_, inventoryCursor_,
                             inventoryOpen_, assets_, renderQueue_) ||
             !AddStatusUI(worldClock_, gold_, GoalGold, instructionTicks_ != 0,
-                         saveNoticeTicks_ != 0, goalComplete_, assets_, renderQueue_) ||
+                         saveNoticeTicks_ != 0, dailyRequestNoticeTicks_ != 0,
+                         goalComplete_, assets_, renderQueue_) ||
             (marketOpen_ && !AddMarketUI(gold_, marketFocus_, assets_, renderQueue_)) ||
+            (dailyRequestOpen_ && !AddDailyRequestUI(
+                BuildDailyRequest(worldClock_.Day()), dailyRequestState_, inventory_, gold_,
+                assets_, renderQueue_)) ||
             (paused_ && !AddPauseUI(settings_, pauseFocus_, assets_, renderQueue_))) {
             return 1;
         }
@@ -245,13 +250,16 @@ bool Application::FixedUpdate() noexcept {
         input_.DiscardPending();
         if (worldClock_.FixedUpdate()) {
             crops_.OnDayChanged(farmMap_);
+            dailyRequestState_.completed = false;
             if (saveOnDayChange_ && SaveGame()) saveNoticeTicks_ = 180;
             saveOnDayChange_ = false;
         }
         return true;
     }
     if (saveNoticeTicks_ != 0) --saveNoticeTicks_;
+    if (dailyRequestNoticeTicks_ != 0) --dailyRequestNoticeTicks_;
     if (input_.ConsumePressed(Action::Menu)) {
+        if (dailyRequestOpen_) { dailyRequestOpen_ = false; input_.DiscardPending(); return true; }
         if (marketOpen_) { marketOpen_ = false; input_.DiscardPending(); return true; }
         paused_ = !paused_;
         inventoryOpen_ = false;
@@ -277,6 +285,7 @@ bool Application::FixedUpdate() noexcept {
         input_.DiscardPending();
         return true;
     }
+    if (dailyRequestOpen_) return UpdateDailyRequest();
     if (input_.ConsumePressed(Action::Market)) {
         marketOpen_ = !marketOpen_; inventoryOpen_ = false; input_.DiscardPending(); return true;
     }
@@ -395,11 +404,21 @@ bool Application::FixedUpdate() noexcept {
                 tile != nullptr && tile->object == static_cast<std::uint16_t>(TileGraphic::Farmhouse);
             const bool leaveHouse = currentMap_ == MapId::House && interactionTarget.inRange &&
                 tile != nullptr && tile->object == static_cast<std::uint16_t>(TileGraphic::Door);
+            const bool openRequests = currentMap_ == MapId::Farm && interactionTarget.inRange &&
+                tile != nullptr && tile->object == static_cast<std::uint16_t>(TileGraphic::Sign);
             if ((enterHouse && ChangeMap(MapId::House)) || (leaveHouse && ChangeMap(MapId::Farm))) {
                 audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
                 return true;
             }
-            if (currentMap_ == MapId::House && interactionTarget.inRange && tile != nullptr &&
+            if (openRequests) {
+                FaceSelection(player_, playerFeet, interactionTarget);
+                dailyRequestOpen_ = true;
+                inventoryOpen_ = false;
+                marketOpen_ = false;
+                audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
+                input_.DiscardPending();
+                return true;
+            } else if (currentMap_ == MapId::House && interactionTarget.inRange && tile != nullptr &&
                        tile->object == static_cast<std::uint16_t>(TileGraphic::Bed)) {
                 if (worldClock_.RequestEndDay()) {
                     saveOnDayChange_ = true;
@@ -489,14 +508,17 @@ void Application::Shutdown() noexcept {
     fixedStep_.Reset();
     instructionTicks_ = 600;
     saveNoticeTicks_ = 0;
+    dailyRequestNoticeTicks_ = 0;
     gold_ = StartingGold;
     marketOpen_ = false;
+    dailyRequestOpen_ = false;
     currentMap_ = MapId::Farm;
     goalComplete_ = false;
     inventoryOpen_ = false;
     paused_ = false;
     saveOnDayChange_ = false;
     pauseFocus_ = 0;
+    dailyRequestState_ = {};
     weatherTicks_ = 0;
     initialized_ = false;
 }
@@ -587,6 +609,31 @@ bool Application::UpdateMarket() noexcept {
     return true;
 }
 
+bool Application::UpdateDailyRequest() noexcept {
+    [[maybe_unused]] const bool ignoredInventory = input_.ConsumePressed(Action::Inventory);
+    [[maybe_unused]] const bool ignoredMarket = input_.ConsumePressed(Action::Market);
+    PhysicalKey interactSource = PhysicalKey::Count;
+    PhysicalKey toolSource = PhysicalKey::Count;
+    const bool interact = input_.ConsumePressed(Action::Interact, interactSource);
+    const bool tool = input_.ConsumePressed(Action::UseTool, toolSource);
+    bool activate = interact || tool;
+    const bool mouse = interactSource == PhysicalKey::MouseRight ||
+        toolSource == PhysicalKey::MouseLeft;
+    if (mouse) {
+        activate = input_.IsLogicalMouseValid() &&
+            DailyRequestButtonAt(input_.LogicalMouseX(), input_.LogicalMouseY());
+    }
+    if (activate && CompleteDailyRequest(
+            BuildDailyRequest(worldClock_.Day()), dailyRequestState_, inventory_, gold_)) {
+        dailyRequestNoticeTicks_ = 180;
+        audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
+        goalComplete_ = gold_ >= GoalGold;
+        if (goalComplete_) dailyRequestOpen_ = false;
+    }
+    input_.DiscardPending();
+    return true;
+}
+
 bool Application::CaptureSave(SaveSnapshot& snapshot) const noexcept {
     const TransformComponent* transform = entityWorld_.Transform(player_.entity);
     if (transform == nullptr) return false;
@@ -597,6 +644,7 @@ bool Application::CaptureSave(SaveSnapshot& snapshot) const noexcept {
     snapshot.selectedSlot = static_cast<std::uint8_t>(selectedSlot_);
     snapshot.mapId = currentMap_;
     snapshot.gold = gold_;
+    snapshot.dailyRequestCompleted = dailyRequestState_.completed;
     for (std::size_t index = 0; index < Inventory::SlotCount; ++index)
         snapshot.inventory[index] = inventory_.Slot(index);
     for (std::int32_t y = 0; y < farmMap_.Height(); ++y) {
@@ -657,6 +705,8 @@ bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
     currentMap_ = snapshot.mapId;
     selectedSlot_ = snapshot.selectedSlot; inventoryCursor_ = selectedSlot_;
     gold_ = snapshot.gold;
+    dailyRequestState_.completed = snapshot.dailyRequestCompleted;
+    dailyRequestOpen_ = false;
     goalComplete_ = false;
     instructionTicks_ = 0;
     return true;
@@ -680,6 +730,7 @@ bool Application::ChangeMap(MapId destination) noexcept {
     TransformComponent* transform = entityWorld_.Transform(player_.entity);
     if (transform == nullptr) return false;
     currentMap_ = destination;
+    dailyRequestOpen_ = false;
     const WorldPosition spawn = destination == MapId::House ?
         WorldPosition{10.5F * TileSize, 9.5F * TileSize} :
         WorldPosition{8.5F * TileSize, 10.5F * TileSize};
