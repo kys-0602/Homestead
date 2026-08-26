@@ -16,6 +16,7 @@ AssetId GlyphId(char value) noexcept {
     case 'K': return MakeAssetId("font.K"); case 'L': return MakeAssetId("font.L");
     case 'M': return MakeAssetId("font.M"); case 'N': return MakeAssetId("font.N");
     case 'O': return MakeAssetId("font.O"); case 'P': return MakeAssetId("font.P");
+    case 'Q': return MakeAssetId("font.Q");
     case 'R': return MakeAssetId("font.R"); case 'S': return MakeAssetId("font.S");
     case 'T': return MakeAssetId("font.T"); case 'U': return MakeAssetId("font.U");
     case 'V': return MakeAssetId("font.V"); case 'W': return MakeAssetId("font.W");

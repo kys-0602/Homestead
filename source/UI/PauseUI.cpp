@@ -36,11 +36,11 @@ bool AddPauseUI(const Settings& settings, std::uint8_t focus,
                 const AssetStore& assets, RenderQueue& queue) noexcept {
     const SpriteAsset* pointer = assets.FindSprite(MakeAssetId("ui.pointer.idle"));
     if (pointer == nullptr || !AddUIPanel(static_cast<float>(PanelX),static_cast<float>(PanelY),
-        static_cast<float>(PanelWidth),126.0F,0xFFFFFFFFU,40,assets,queue) ||
+        static_cast<float>(PanelWidth),140.0F,0xFFFFFFFFU,40,assets,queue) ||
         !AddBitmapText(Text::Paused, 142.0F, 34.0F, 0xFF603020U, 43, assets, queue)) return false;
     constexpr const char* labels[PauseItemCount] = {
         Text::Resume, Text::Inventory, Text::WindowSize, Text::Fullscreen,
-        Text::Master, Text::Music, Text::Effects};
+        Text::Master, Text::Music, Text::Effects, Text::Quit};
     for (std::uint8_t index = 0; index < PauseItemCount; ++index) {
         const float y = static_cast<float>(ItemY + index * ItemHeight + 4);
         if (index == focus && !AddUIFill(78.0F,static_cast<float>(ItemY+index*ItemHeight),

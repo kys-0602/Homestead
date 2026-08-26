@@ -59,12 +59,6 @@ int main() {
         return 9;
     }
 
-    input.SetPhysicalKey(Homestead::PhysicalKey::N, true);
-    input.SetPhysicalKey(Homestead::PhysicalKey::N, false);
-    if (!input.ConsumePressed(Homestead::Action::EndDay)) {
-        return 10;
-    }
-
     input.SetPhysicalKey(Homestead::PhysicalKey::Escape, true);
     input.SetPhysicalKey(Homestead::PhysicalKey::Escape, false);
     input.SetPhysicalKey(Homestead::PhysicalKey::I, true);

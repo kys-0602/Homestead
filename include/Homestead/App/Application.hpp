@@ -84,6 +84,7 @@ private:
     bool inventoryOpen_ = false;
     bool marketOpen_ = false;
     bool paused_ = false;
+    bool saveOnDayChange_ = false;
     std::uint8_t pauseFocus_ = 0;
     std::uint16_t instructionTicks_ = 600;
     std::uint16_t saveNoticeTicks_ = 0;

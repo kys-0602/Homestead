@@ -241,7 +241,8 @@ bool Application::FixedUpdate() noexcept {
         input_.DiscardPending();
         if (worldClock_.FixedUpdate()) {
             crops_.OnDayChanged(farmMap_);
-            if (SaveGame()) saveNoticeTicks_ = 180;
+            if (saveOnDayChange_ && SaveGame()) saveNoticeTicks_ = 180;
+            saveOnDayChange_ = false;
         }
         return true;
     }
@@ -293,7 +294,6 @@ bool Application::FixedUpdate() noexcept {
     }
 
     if (inventoryOpen_) {
-        [[maybe_unused]] const bool ignoredEndDay = input_.ConsumePressed(Action::EndDay);
         const bool left = input_.ConsumePressed(Action::MoveLeft);
         const bool right = input_.ConsumePressed(Action::MoveRight);
         const bool up = input_.ConsumePressed(Action::MoveUp);
@@ -328,13 +328,6 @@ bool Application::FixedUpdate() noexcept {
                 moveSource_ = Inventory::SlotCount;
             }
         }
-        return true;
-    }
-
-    if (input_.ConsumePressed(Action::EndDay) &&
-        player_.toolUse.action == ToolAction::None) {
-        [[maybe_unused]] const bool started = worldClock_.RequestEndDay();
-        instructionTicks_ = 0;
         return true;
     }
 
@@ -405,6 +398,7 @@ bool Application::FixedUpdate() noexcept {
             if (currentMap_ == MapId::House && interactionTarget.inRange && tile != nullptr &&
                        tile->object == static_cast<std::uint16_t>(TileGraphic::Bed)) {
                 if (worldClock_.RequestEndDay()) {
+                    saveOnDayChange_ = true;
                     instructionTicks_ = 0;
                     audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
                 }
@@ -478,7 +472,6 @@ void Application::Shutdown() noexcept {
         return;
     }
 
-    [[maybe_unused]] const bool saved = SaveGame();
     [[maybe_unused]] const bool savedSettings = settingsSystem_.Save(settings_);
     graphics_.Shutdown();
     audio_.Shutdown();
@@ -498,6 +491,7 @@ void Application::Shutdown() noexcept {
     goalComplete_ = false;
     inventoryOpen_ = false;
     paused_ = false;
+    saveOnDayChange_ = false;
     pauseFocus_ = 0;
     initialized_ = false;
 }
@@ -539,13 +533,15 @@ bool Application::UpdatePauseMenu() noexcept {
     } else if (pauseFocus_ == 3 && (activate || direction != 0)) {
         settings_.fullscreen = !settings_.fullscreen;
         displayChanged = settingsChanged = true;
-    } else if (pauseFocus_ >= 4 && (activate || direction != 0)) {
+    } else if (pauseFocus_ >= 4 && pauseFocus_ <= 6 && (activate || direction != 0)) {
         std::uint8_t* volume = pauseFocus_ == 4 ? &settings_.masterVolume :
             (pauseFocus_ == 5 ? &settings_.musicVolume : &settings_.effectVolume);
         const int step = direction != 0 ? direction : 1;
         *volume = static_cast<std::uint8_t>(step < 0 ? (*volume == 0 ? 10 : *volume - 1) :
                                                     (*volume == 10 ? 0 : *volume + 1));
         settingsChanged = true;
+    } else if (pauseFocus_ == 7 && activate) {
+        window_.RequestClose();
     }
     if (displayChanged && !ApplyDisplaySettings()) return false;
     if (activate || direction != 0) audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));

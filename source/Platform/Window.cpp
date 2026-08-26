@@ -28,7 +28,6 @@ bool TranslateVirtualKey(WPARAM virtualKey, PhysicalKey& key) noexcept {
     case VK_RIGHT: key = PhysicalKey::Right; return true;
     case VK_SPACE: key = PhysicalKey::Space; return true;
     case VK_ESCAPE: key = PhysicalKey::Escape; return true;
-    case 'N': key = PhysicalKey::N; return true;
     case '1': key = PhysicalKey::Digit1; return true;
     case '2': key = PhysicalKey::Digit2; return true;
     case '3': key = PhysicalKey::Digit3; return true;
@@ -148,6 +147,10 @@ bool Window::ProcessMessages() noexcept {
     }
 
     return handle_ != nullptr;
+}
+
+void Window::RequestClose() noexcept {
+    if (handle_ != nullptr) PostMessageW(handle_, WM_CLOSE, 0, 0);
 }
 
 void Window::UpdateLoadingScreen(std::uint8_t completedStages, std::uint8_t animationFrame) noexcept {

@@ -140,8 +140,6 @@ Action Input::MapAction(PhysicalKey key) noexcept {
         return Action::Inventory;
     case PhysicalKey::M:
         return Action::Market;
-    case PhysicalKey::N:
-        return Action::EndDay;
     case PhysicalKey::Digit1: return Action::Hotbar1;
     case PhysicalKey::Digit2: return Action::Hotbar2;
     case PhysicalKey::Digit3: return Action::Hotbar3;

@@ -14,6 +14,7 @@ inline constexpr char Fullscreen[] = "FULLSCREEN";
 inline constexpr char Master[] = "MASTER";
 inline constexpr char Music[] = "MUSIC";
 inline constexpr char Effects[] = "EFFECTS";
+inline constexpr char Quit[] = "QUIT";
 inline constexpr char On[] = "ON";
 inline constexpr char Off[] = "OFF";
 

@@ -20,6 +20,7 @@ public:
                                   std::uint8_t windowScale, bool fullscreen) noexcept;
     [[nodiscard]] bool ApplyDisplaySettings(std::uint8_t windowScale, bool fullscreen) noexcept;
     [[nodiscard]] bool ProcessMessages() noexcept;
+    void RequestClose() noexcept;
     void UpdateLoadingScreen(std::uint8_t completedStages, std::uint8_t animationFrame) noexcept;
     void EndLoadingScreen() noexcept { loadingScreen_ = false; }
     void Shutdown() noexcept;

@@ -284,7 +284,8 @@ target_compile_definitions(HomesteadPauseUITests PRIVATE WIN32_LEAN_AND_MEAN NOM
 target_compile_options(HomesteadPauseUITests PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
 )
-add_test(NAME HomesteadPauseUITests COMMAND HomesteadPauseUITests)
+add_test(NAME HomesteadPauseUITests COMMAND HomesteadPauseUITests
+    "${CMAKE_BINARY_DIR}/generated-assets/data.pak")
 
 add_executable(HomesteadAudioCodecTests AudioCodecTests.cpp
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Audio/AudioCodec.cpp")
