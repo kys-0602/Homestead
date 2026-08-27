@@ -8,8 +8,6 @@ class AssetStore;
 class RenderQueue;
 class WorldClock;
 
-[[nodiscard]] bool CompletionContinueAt(std::uint32_t x, std::uint32_t y) noexcept;
-
 [[nodiscard]] bool AddStatusUI(
     const WorldClock& clock,
     std::uint16_t gold,
@@ -17,7 +15,6 @@ class WorldClock;
     bool showInstructions,
     bool showSaved,
     bool showRequestComplete,
-    bool complete,
     const AssetStore& assets,
     RenderQueue& queue) noexcept;
 

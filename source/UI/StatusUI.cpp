@@ -26,20 +26,15 @@ bool AddFade(std::uint8_t alpha, std::uint16_t depth,
 
 } // namespace
 
-bool CompletionContinueAt(std::uint32_t x, std::uint32_t y) noexcept {
-    return x >= 124 && x < 196 && y >= 90 && y < 108;
-}
-
 bool AddStatusUI(const WorldClock& clock, std::uint16_t gold, std::uint16_t goal,
                  bool showInstructions, bool showSaved, bool showRequestComplete,
-                 bool complete, const AssetStore& assets,
+                 const AssetStore& assets,
                  RenderQueue& queue) noexcept {
     const SpriteAsset* pixel = assets.FindSprite(MakeAssetId("terrain.grass"));
     if (pixel == nullptr ||
         !AddFade(clock.FadeAlpha(), 100, *pixel, queue)) return false;
     if (clock.IsTransitioning()) return true;
 
-    if (complete && !AddFade(176, 10, *pixel, queue)) return false;
 
     char day[] = "DAY 00";
     day[4] = static_cast<char>('0' + (clock.Day() / 10U) % 10U);
@@ -60,16 +55,6 @@ bool AddStatusUI(const WorldClock& clock, std::uint16_t gold, std::uint16_t goal
         !AddBitmapText(day, 6.0F, 5.0F, hudTextColor, 20, assets, queue) ||
         !AddBitmapText(time, 256.0F, 5.0F, hudTextColor, 20, assets, queue) ||
         !AddBitmapText(progress, 6.0F, 15.0F, hudTextColor, 20, assets, queue)) return false;
-    if (complete) {
-        return AddUIPanel(108.0F,68.0F,104.0F,50.0F,
-                          0xFFFFFFFFU,22,assets,queue) &&
-            AddUIPanel(124.0F,90.0F,72.0F,18.0F,
-                       0xFFB87858U,24,assets,queue) &&
-            AddBitmapText(Text::GoalComplete, 121.0F, 78.0F,
-                             hudTextColor, 26, assets, queue) &&
-            AddBitmapText(Text::Continue, 133.0F, 96.0F,
-                          0xFFFFFFFFU, 26, assets, queue);
-    }
     if (showSaved && (!AddUIPanel(126.0F,24.0F,68.0F,16.0F,
                                   0xFFFFFFFFU,22,assets,queue) ||
         !AddBitmapText("GAME SAVED", 133.0F, 29.0F,

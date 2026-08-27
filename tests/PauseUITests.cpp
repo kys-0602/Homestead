@@ -1,5 +1,4 @@
 #include "Homestead/UI/PauseUI.hpp"
-#include "Homestead/UI/StatusUI.hpp"
 #include "Homestead/UI/MarketUI.hpp"
 #include "Homestead/Assets/AssetStore.hpp"
 #include "Homestead/Graphics/RenderQueue.hpp"
@@ -19,11 +18,6 @@ int main(int argumentCount, char** arguments) {
         Homestead::PauseItemAt(252, 48) != -1 ||
         Homestead::PauseItemAt(68, 47) != -1 ||
         Homestead::PauseItemAt(68, 160) != -1) return 3;
-    if (!Homestead::CompletionContinueAt(124, 90) ||
-        !Homestead::CompletionContinueAt(195, 107) ||
-        Homestead::CompletionContinueAt(123, 90) ||
-        Homestead::CompletionContinueAt(196, 107) ||
-        Homestead::CompletionContinueAt(124, 108)) return 4;
     if(Homestead::MarketItemAt(70,62)!=0||Homestead::MarketItemAt(249,151)!=5||
        Homestead::MarketItemAt(69,62)!=-1||Homestead::MarketItemAt(70,152)!=-1)return 5;
     if(Homestead::UpdateMarketFocus(2,true,false,true,80,62)!=1||
