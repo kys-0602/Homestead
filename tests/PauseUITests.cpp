@@ -18,8 +18,8 @@ int main(int argumentCount, char** arguments) {
         Homestead::PauseItemAt(252, 48) != -1 ||
         Homestead::PauseItemAt(68, 47) != -1 ||
         Homestead::PauseItemAt(68, 160) != -1) return 3;
-    if(Homestead::MarketItemAt(70,62)!=0||Homestead::MarketItemAt(249,151)!=5||
-       Homestead::MarketItemAt(69,62)!=-1||Homestead::MarketItemAt(70,152)!=-1)return 5;
+    if(Homestead::MarketItemAt(50,55)!=0||Homestead::MarketItemAt(166,125)!=11||
+       Homestead::MarketItemAt(49,55)!=-1||Homestead::MarketItemAt(50,139)!=-1)return 5;
     if(Homestead::UpdateMarketFocus(2,true,false,true,80,62)!=1||
        Homestead::UpdateMarketFocus(2,false,true,true,80,62)!=3||
        Homestead::UpdateMarketFocus(2,false,false,true,80,62)!=0)return 6;

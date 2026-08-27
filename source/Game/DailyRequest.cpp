@@ -16,24 +16,21 @@ struct RequestDefinition {
     std::uint8_t countRange;
 };
 
-constexpr std::array<RequestDefinition, 3> Definitions{{
+constexpr std::array<RequestDefinition, MarketCropCount> Definitions{{
     {CropId::Wheat, ItemId::Wheat, 0, 3, 3},
     {CropId::Carrot, ItemId::Carrot, 1, 2, 3},
-    {CropId::Tomato, ItemId::Tomato, 2, 1, 3}}};
-constexpr std::array<std::array<std::uint8_t, 3>, 6> Permutations{{
-    {{0, 1, 2}}, {{0, 2, 1}}, {{1, 0, 2}},
-    {{1, 2, 0}}, {{2, 0, 1}}, {{2, 1, 0}}}};
-constexpr std::uint32_t DefinitionCount = 3;
-constexpr std::uint32_t PermutationCount = 6;
+    {CropId::Tomato, ItemId::Tomato, 2, 1, 3},
+    {CropId::Potato, ItemId::Potato, 3, 3, 3},
+    {CropId::Corn, ItemId::Corn, 4, 2, 3},
+    {CropId::Cabbage, ItemId::Cabbage, 5, 1, 3}}};
+constexpr std::uint32_t DefinitionCount = static_cast<std::uint32_t>(Definitions.size());
 
 } // namespace
 
 DailyRequest BuildDailyRequest(std::uint16_t day) noexcept {
     const std::uint32_t normalizedDay = day == 0 ? 1U : day;
     const std::uint32_t dayIndex = normalizedDay - 1U;
-    const std::uint32_t block = dayIndex / DefinitionCount;
-    const auto& permutation = Permutations[(block * 0x9E3779B9U) % PermutationCount];
-    const RequestDefinition& definition = Definitions[permutation[dayIndex % DefinitionCount]];
+    const RequestDefinition& definition = Definitions[dayIndex % DefinitionCount];
     std::uint32_t random = normalizedDay * 0x9E3779B9U;
     random ^= random >> 16U;
     const std::uint8_t count = static_cast<std::uint8_t>(

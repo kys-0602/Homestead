@@ -18,11 +18,14 @@ struct MarketEntry {
 
 inline constexpr std::uint16_t StartingGold = 20;
 inline constexpr std::uint16_t GoalGold = 100;
-inline constexpr std::size_t MarketCropCount = 3;
+inline constexpr std::size_t MarketCropCount = 6;
 inline constexpr std::array<MarketEntry, MarketCropCount> MarketTable{{
     {"WHEAT", ItemId::WheatSeed, ItemId::Wheat, 4, 7},
     {"CARROT", ItemId::CarrotSeed, ItemId::Carrot, 6, 12},
-    {"TOMATO", ItemId::TomatoSeed, ItemId::Tomato, 9, 20}}};
+    {"TOMATO", ItemId::TomatoSeed, ItemId::Tomato, 9, 20},
+    {"POTATO", ItemId::PotatoSeed, ItemId::Potato, 5, 10},
+    {"CORN", ItemId::CornSeed, ItemId::Corn, 8, 17},
+    {"CABBAGE", ItemId::CabbageSeed, ItemId::Cabbage, 12, 30}}};
 
 [[nodiscard]] inline constexpr const std::array<MarketEntry, MarketCropCount>& MarketEntries() noexcept {
     return MarketTable;

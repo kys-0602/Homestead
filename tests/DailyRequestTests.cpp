@@ -11,14 +11,17 @@ int main() {
         first.requiredCount > 5 || first.reward <= first.requiredCount * 7U ||
         Homestead::BuildDailyRequest(1).requiredCount != first.requiredCount) return 1;
 
-    std::array<bool, 4> crops{};
-    for (std::uint16_t day = 1; day <= 9; ++day) {
+    std::array<bool, 7> crops{};
+    for (std::uint16_t day = 1; day <= 6; ++day) {
         const Homestead::DailyRequest request = Homestead::BuildDailyRequest(day);
         crops[static_cast<std::size_t>(request.crop)] = true;
     }
     if (!crops[static_cast<std::size_t>(Homestead::CropId::Wheat)] ||
         !crops[static_cast<std::size_t>(Homestead::CropId::Carrot)] ||
-        !crops[static_cast<std::size_t>(Homestead::CropId::Tomato)]) return 2;
+        !crops[static_cast<std::size_t>(Homestead::CropId::Tomato)] ||
+        !crops[static_cast<std::size_t>(Homestead::CropId::Potato)] ||
+        !crops[static_cast<std::size_t>(Homestead::CropId::Corn)] ||
+        !crops[static_cast<std::size_t>(Homestead::CropId::Cabbage)]) return 2;
 
     Homestead::Inventory inventory;
     Homestead::DailyRequestState state;

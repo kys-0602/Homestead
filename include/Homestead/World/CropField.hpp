@@ -17,7 +17,10 @@ enum class CropId : std::uint8_t {
     None,
     Wheat,
     Carrot,
-    Tomato
+    Tomato,
+    Potato,
+    Corn,
+    Cabbage
 };
 
 struct CropDefinition {

@@ -34,6 +34,9 @@ const char* CropName(CropId crop) noexcept {
     case CropId::Wheat: return "WHEAT";
     case CropId::Carrot: return "CARROT";
     case CropId::Tomato: return "TOMATO";
+    case CropId::Potato: return "POTATO";
+    case CropId::Corn: return "CORN";
+    case CropId::Cabbage: return "CABBAGE";
     case CropId::None: return "NONE";
     }
     return "NONE";

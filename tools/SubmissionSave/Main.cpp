@@ -23,6 +23,9 @@ int main(int argumentCount, char** arguments) {
     snapshot.inventory[5] = {Homestead::ItemId::Wheat, 4};
     snapshot.inventory[6] = {Homestead::ItemId::Carrot, 2};
     snapshot.inventory[7] = {Homestead::ItemId::Tomato, 1};
+    snapshot.inventory[8] = {Homestead::ItemId::PotatoSeed, 5};
+    snapshot.inventory[9] = {Homestead::ItemId::Corn, 2};
+    snapshot.inventory[10] = {Homestead::ItemId::CabbageSeed, 2};
 
     constexpr std::uint8_t farmFlags = Homestead::TileFlagValue(Homestead::TileFlag::Tilled) |
         Homestead::TileFlagValue(Homestead::TileFlag::Watered);

@@ -12,6 +12,12 @@ constexpr ItemDefinition ItemDefinitions[] = {
     {ItemId::Carrot, ItemCategory::Harvest, 99, MakeAssetId("crop.carrot.harvest")},
     {ItemId::TomatoSeed, ItemCategory::Seed, 99, MakeAssetId("crop.tomato.seed_bag")},
     {ItemId::Tomato, ItemCategory::Harvest, 99, MakeAssetId("crop.tomato.harvest")},
+    {ItemId::PotatoSeed, ItemCategory::Seed, 99, MakeAssetId("crop.potato.seed_bag")},
+    {ItemId::Potato, ItemCategory::Harvest, 99, MakeAssetId("crop.potato.harvest")},
+    {ItemId::CornSeed, ItemCategory::Seed, 99, MakeAssetId("crop.corn.seed_bag")},
+    {ItemId::Corn, ItemCategory::Harvest, 99, MakeAssetId("crop.corn.harvest")},
+    {ItemId::CabbageSeed, ItemCategory::Seed, 99, MakeAssetId("crop.cabbage.seed_bag")},
+    {ItemId::Cabbage, ItemCategory::Harvest, 99, MakeAssetId("crop.cabbage.harvest")},
     {ItemId::Hoe, ItemCategory::Tool, 1, MakeAssetId("icon.tool.hoe")},
     {ItemId::WateringCan, ItemCategory::Tool, 1, MakeAssetId("icon.tool.watering_can")}
 };
