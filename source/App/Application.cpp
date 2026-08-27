@@ -218,6 +218,7 @@ int Application::Run() noexcept {
             static_cast<float>(ActiveMap().Height() * TileSize));
 
         if (!TileMapRenderer::Build(ActiveMap(), camera_, assets_, renderQueue_) ||
+            (collisionDebug_ && !AddCollisionDebug(ActiveMap(), camera_, assets_, renderQueue_)) ||
             (currentMap_ == MapId::Farm && !AddCrops(crops_, camera_, assets_, renderQueue_)) ||
             !PlayerRenderer::Add(
                 entityWorld_, player_, alpha, camera_, assets_, renderQueue_) ||
@@ -268,11 +269,13 @@ bool Application::FixedUpdate() noexcept {
         input_.DiscardPending();
         return true;
     }
+    if (input_.ConsumePressed(Action::CollisionDebug)) {
+        collisionDebug_ = !collisionDebug_;
+        input_.DiscardPending();
+        return true;
+    }
     if (paused_) return UpdatePauseMenu();
     if (dailyRequestOpen_) return UpdateDailyRequest();
-    if (input_.ConsumePressed(Action::Market)) {
-        marketOpen_ = !marketOpen_; inventoryOpen_ = false; input_.DiscardPending(); return true;
-    }
     if (marketOpen_) return UpdateMarket();
     if (input_.ConsumePressed(Action::Inventory)) {
         inventoryOpen_ = !inventoryOpen_;
@@ -390,6 +393,9 @@ bool Application::FixedUpdate() noexcept {
                 tile != nullptr && tile->object == static_cast<std::uint16_t>(TileGraphic::Door);
             const bool openRequests = currentMap_ == MapId::Farm && interactionTarget.inRange &&
                 tile != nullptr && tile->object == static_cast<std::uint16_t>(TileGraphic::Sign);
+            const bool openMarket = interactSource == PhysicalKey::E &&
+                currentMap_ == MapId::Farm && interactionTarget.inRange &&
+                tile != nullptr && tile->object == static_cast<std::uint16_t>(TileGraphic::MarketSign);
             if ((enterHouse && ChangeMap(MapId::House)) || (leaveHouse && ChangeMap(MapId::Farm))) {
                 audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
                 return true;
@@ -399,6 +405,14 @@ bool Application::FixedUpdate() noexcept {
                 dailyRequestOpen_ = true;
                 inventoryOpen_ = false;
                 marketOpen_ = false;
+                audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
+                input_.DiscardPending();
+                return true;
+            } else if (openMarket) {
+                FaceSelection(player_, playerFeet, interactionTarget);
+                marketOpen_ = true;
+                inventoryOpen_ = false;
+                dailyRequestOpen_ = false;
                 audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
                 input_.DiscardPending();
                 return true;
@@ -508,7 +522,6 @@ void Application::Shutdown() noexcept {
 
 bool Application::UpdatePauseMenu() noexcept {
     [[maybe_unused]] const bool ignoredInventory = input_.ConsumePressed(Action::Inventory);
-    [[maybe_unused]] const bool ignoredMarket = input_.ConsumePressed(Action::Market);
     const bool up = input_.ConsumePressed(Action::MoveUp);
     const bool down = input_.ConsumePressed(Action::MoveDown);
     const bool left = input_.ConsumePressed(Action::MoveLeft);
@@ -592,7 +605,6 @@ bool Application::UpdateMarket() noexcept {
 
 bool Application::UpdateDailyRequest() noexcept {
     [[maybe_unused]] const bool ignoredInventory = input_.ConsumePressed(Action::Inventory);
-    [[maybe_unused]] const bool ignoredMarket = input_.ConsumePressed(Action::Market);
     PhysicalKey interactSource = PhysicalKey::Count;
     PhysicalKey toolSource = PhysicalKey::Count;
     const bool interact = input_.ConsumePressed(Action::Interact, interactSource);
@@ -710,7 +722,7 @@ bool Application::ChangeMap(MapId destination) noexcept {
     currentMap_ = destination;
     dailyRequestOpen_ = false;
     const WorldPosition spawn = destination == MapId::House ?
-        WorldPosition{10.5F * TileSize, 9.5F * TileSize} :
+        WorldPosition{8.5F * TileSize, 7.5F * TileSize} :
         WorldPosition{8.5F * TileSize, 10.5F * TileSize};
     transform->current = spawn;
     transform->previous = spawn;

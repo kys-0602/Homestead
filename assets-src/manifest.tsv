@@ -14,6 +14,8 @@ trees.oak.big	Trees/Big_Oak_Tree.png	0	0	192	80
 decor.fences	Outdoor decoration/Fences.png	0	0	64	64
 decor.flowers	Outdoor decoration/Flowers.png	0	0	160	160
 decor.signs	Outdoor decoration/Signs.png	0	0	96	528
+decor.camp	Outdoor decoration/Camp_Decor.png	0	0	80	16
+decor.scarecrows	Outdoor decoration/Scarecrows.png	0	0	160	32
 icons.tools	Icons/Outline/Tool_Icons_Outline.png	0	0	160	16
 font.A	UI/Cute_Fantasy_Font_5x7.png	0	2	5	5
 font.B	UI/Cute_Fantasy_Font_5x7.png	5	2	5	5
@@ -58,6 +60,7 @@ interior.floor	Buildings/Houses_Interiors/Wood_Floor_Tiles.png	0	0	16	16
 interior.wall	Buildings/Houses_Interiors/Interior_Walls.png	0	0	32	32
 interior.bed	Buildings/House_Decor/Beds.png	0	0	32	32
 interior.door	Buildings/House_Decor/Doors.png	0	0	16	32
+interior.bookshelves	Buildings/House_Decor/BookShelves.png	0	0	192	112
 effect.cloud.0	Weather effects/Clouds.png	14	19	38	25
 effect.cloud.1	Weather effects/Clouds.png	82	20	28	24
 effect.cloud.2	Weather effects/Clouds.png	9	79	44	34

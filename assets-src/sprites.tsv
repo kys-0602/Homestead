@@ -52,10 +52,12 @@ crop.tomato.stage_2	crops.sheet	64	48	16	16
 crop.tomato.stage_3	crops.sheet	80	48	16	16
 crop.tomato.harvest	crops.sheet	96	48	16	16
 tree.oak.big	trees.oak.big	64	0	64	80
-decor.fence.vertical	decor.fences	0	0	16	16
-decor.fence.horizontal	decor.fences	16	0	16	16
+decor.fence.vertical	decor.fences	0	16	16	16
+decor.fence.horizontal	decor.fences	32	0	16	16
 decor.flower.white	decor.flowers	0	0	16	16
 decor.sign	decor.signs	0	0	16	16
+decor.camp	decor.camp	0	0	80	16
+decor.scarecrow	decor.scarecrows	0	0	32	32
 icon.tool.hoe	icons.tools	48	0	16	16
 icon.tool.watering_can	icons.tools	96	0	16	16
 font.A	font.A	0	0	5	5
@@ -110,6 +112,7 @@ interior.floor.wood	interior.floor	0	0	16	16
 interior.wall.wood	interior.wall	0	0	32	32
 interior.bed	interior.bed	0	0	32	32
 interior.door	interior.door	0	0	16	32
+interior.bookshelf	interior.bookshelves	0	0	48	32
 effect.cloud.0	effect.cloud.0	0	0	38	25
 effect.cloud.1	effect.cloud.1	0	0	28	24
 effect.cloud.2	effect.cloud.2	0	0	44	34

@@ -21,6 +21,7 @@ AssetId GraphicAssetId(std::uint16_t graphic) noexcept {
     case TileGraphic::FenceHorizontal: return MakeAssetId("decor.fence.horizontal");
     case TileGraphic::FenceVertical: return MakeAssetId("decor.fence.vertical");
     case TileGraphic::Sign: return MakeAssetId("decor.sign");
+    case TileGraphic::MarketSign: return MakeAssetId("decor.sign");
     case TileGraphic::FarmlandDry: return MakeAssetId("terrain.farmland.dry.15");
     case TileGraphic::FarmlandWet: return MakeAssetId("terrain.farmland.wet.15");
     case TileGraphic::Farmhouse: return MakeAssetId("building.farmhouse");
@@ -28,6 +29,9 @@ AssetId GraphicAssetId(std::uint16_t graphic) noexcept {
     case TileGraphic::InteriorWall: return MakeAssetId("interior.wall.wood");
     case TileGraphic::Bed: return MakeAssetId("interior.bed");
     case TileGraphic::Door: return MakeAssetId("interior.door");
+    case TileGraphic::CampDecor: return MakeAssetId("decor.camp");
+    case TileGraphic::Scarecrow: return MakeAssetId("decor.scarecrow");
+    case TileGraphic::Bookshelf: return MakeAssetId("interior.bookshelf");
     case TileGraphic::None:
     case TileGraphic::Count:
         return 0;
@@ -204,6 +208,35 @@ bool TileMapRenderer::Build(
     }
     if (stats != nullptr) {
         *stats = result;
+    }
+    return true;
+}
+
+bool AddCollisionDebug(const TileMap& map, const Camera2D& camera,
+                       const AssetStore& assets, RenderQueue& queue) noexcept {
+    const SpriteAsset* pixel = assets.FindSprite(MakeAssetId("terrain.grass"));
+    if (pixel == nullptr) return false;
+    for (std::int32_t y = 0; y < map.Height(); ++y) {
+        for (std::int32_t x = 0; x < map.Width(); ++x) {
+            const Tile* tile = map.Get(x, y);
+            if (tile == nullptr || (tile->flags & TileFlagValue(TileFlag::Blocked)) == 0) continue;
+            const Float2 position = camera.WorldToScreen({static_cast<float>(x * TileSize), static_cast<float>(y * TileSize)});
+            const float size = static_cast<float>(TileSize) * camera.Zoom();
+            constexpr float border = 1.0F;
+            const float widths[] = {size, size, border, border};
+            const float heights[] = {border, border, size, size};
+            const float offsetsX[] = {0.0F, 0.0F, 0.0F, size - border};
+            const float offsetsY[] = {0.0F, size - border, 0.0F, 0.0F};
+            for (unsigned edge = 0; edge < 4; ++edge) {
+                SpriteCommand command{};
+                command.x = position.x + offsetsX[edge]; command.y = position.y + offsetsY[edge];
+                command.width = widths[edge]; command.height = heights[edge];
+                command.uvX = pixel->x; command.uvY = pixel->y;
+                command.uvWidth = pixel->width; command.uvHeight = pixel->height;
+                command.color = 0xFFFF2020U; command.layer = SpriteLayer::Debug;
+                if (!queue.Add(command)) return false;
+            }
+        }
     }
     return true;
 }

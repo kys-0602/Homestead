@@ -138,8 +138,6 @@ Action Input::MapAction(PhysicalKey key) noexcept {
         return Action::Menu;
     case PhysicalKey::I:
         return Action::Inventory;
-    case PhysicalKey::M:
-        return Action::Market;
     case PhysicalKey::Digit1: return Action::Hotbar1;
     case PhysicalKey::Digit2: return Action::Hotbar2;
     case PhysicalKey::Digit3: return Action::Hotbar3;
@@ -148,6 +146,7 @@ Action Input::MapAction(PhysicalKey key) noexcept {
     case PhysicalKey::Digit6: return Action::Hotbar6;
     case PhysicalKey::Digit7: return Action::Hotbar7;
     case PhysicalKey::Digit8: return Action::Hotbar8;
+    case PhysicalKey::P: return Action::CollisionDebug;
     case PhysicalKey::Count:
         return Action::Count;
     }
