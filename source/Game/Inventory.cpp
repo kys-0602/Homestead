@@ -35,13 +35,19 @@ const ItemDefinition* FindItemDefinition(ItemId item) noexcept {
     return nullptr;
 }
 
-std::uint16_t Inventory::Add(ItemId item, std::uint16_t count) noexcept {
+bool IsValidItemQuality(ItemId item, ItemQuality quality) noexcept {
     const ItemDefinition* definition = FindItemDefinition(item);
-    if (definition == nullptr || count == 0) {
+    return definition != nullptr && quality < ItemQuality::Count &&
+        (definition->category == ItemCategory::Harvest || quality == ItemQuality::Normal);
+}
+
+std::uint16_t Inventory::Add(ItemId item, std::uint16_t count, ItemQuality quality) noexcept {
+    const ItemDefinition* definition = FindItemDefinition(item);
+    if (definition == nullptr || !IsValidItemQuality(item, quality) || count == 0) {
         return count;
     }
     for (ItemStack& slot : slots_) {
-        if (slot.item != item || slot.count >= definition->maximumStack) {
+        if (slot.item != item || slot.quality != quality || slot.count >= definition->maximumStack) {
             continue;
         }
         const std::uint16_t available = definition->maximumStack - slot.count;
@@ -53,7 +59,7 @@ std::uint16_t Inventory::Add(ItemId item, std::uint16_t count) noexcept {
     for (ItemStack& slot : slots_) {
         if (slot.item != ItemId::None) continue;
         const std::uint16_t added = std::min<std::uint16_t>(count, definition->maximumStack);
-        slot = {item, static_cast<std::uint8_t>(added)};
+        slot = {item, static_cast<std::uint8_t>(added), quality};
         count = static_cast<std::uint16_t>(count - added);
         if (count == 0) return 0;
     }
@@ -73,6 +79,19 @@ bool Inventory::Remove(ItemId item, std::uint16_t count) noexcept {
     return true;
 }
 
+bool Inventory::Remove(ItemId item, std::uint16_t count, ItemQuality quality) noexcept {
+    if (!IsValidItemQuality(item, quality) || count == 0 || Count(item, quality) < count) return false;
+    for (std::size_t index = slots_.size(); index > 0 && count > 0; --index) {
+        ItemStack& slot = slots_[index - 1];
+        if (slot.item != item || slot.quality != quality) continue;
+        const std::uint16_t removed = std::min<std::uint16_t>(count, slot.count);
+        slot.count = static_cast<std::uint8_t>(slot.count - removed);
+        count = static_cast<std::uint16_t>(count - removed);
+        if (slot.count == 0) slot = {};
+    }
+    return true;
+}
+
 bool Inventory::Move(std::size_t from, std::size_t to) noexcept {
     if (from >= SlotCount || to >= SlotCount || from == to || slots_[from].item == ItemId::None) {
         return false;
@@ -82,7 +101,7 @@ bool Inventory::Move(std::size_t from, std::size_t to) noexcept {
         slots_[from] = {};
         return true;
     }
-    if (slots_[to].item != slots_[from].item) return false;
+    if (slots_[to].item != slots_[from].item || slots_[to].quality != slots_[from].quality) return false;
     const ItemDefinition* definition = FindItemDefinition(slots_[from].item);
     if (definition == nullptr || slots_[to].count >= definition->maximumStack) return false;
     const std::uint8_t moved = static_cast<std::uint8_t>(std::min<unsigned>(
@@ -102,6 +121,13 @@ bool Inventory::Exchange(std::size_t first, std::size_t second) noexcept {
 std::uint16_t Inventory::Count(ItemId item) const noexcept {
     std::uint16_t count = 0;
     for (const ItemStack& slot : slots_) if (slot.item == item) count += slot.count;
+    return count;
+}
+
+std::uint16_t Inventory::Count(ItemId item, ItemQuality quality) const noexcept {
+    std::uint16_t count = 0;
+    for (const ItemStack& slot : slots_)
+        if (slot.item == item && slot.quality == quality) count += slot.count;
     return count;
 }
 

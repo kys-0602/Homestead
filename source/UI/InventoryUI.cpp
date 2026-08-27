@@ -27,7 +27,7 @@ bool AddSprite(const SpriteAsset& sprite, float x, float y, std::uint32_t color,
 }
 
 bool AddFrame(const SpriteAsset& sprite, float x, float y,
-              std::uint16_t depth, RenderQueue& queue) noexcept {
+              std::uint32_t color, std::uint16_t depth, RenderQueue& queue) noexcept {
     if (sprite.sourceWidth == 0 || sprite.sourceHeight == 0) return false;
     const float scaleX = static_cast<float>(InventoryFrameSize) /
         static_cast<float>(sprite.sourceWidth);
@@ -40,8 +40,20 @@ bool AddFrame(const SpriteAsset& sprite, float x, float y,
     command.height=static_cast<float>(sprite.height)*scaleY;
     command.uvX=sprite.x; command.uvY=sprite.y;
     command.uvWidth=sprite.width; command.uvHeight=sprite.height;
+    command.color=color;
     command.depth=depth; command.layer=SpriteLayer::UI;
     return queue.Add(command);
+}
+
+std::uint32_t QualityColor(ItemQuality quality) noexcept {
+    switch (quality) {
+    case ItemQuality::Silver: return 0xFFC7D8E8U;
+    case ItemQuality::Gold: return 0xFFFFD15AU;
+    case ItemQuality::Normal:
+    case ItemQuality::Count:
+        return 0xFFFFFFFFU;
+    }
+    return 0xFFFFFFFFU;
 }
 
 } // namespace
@@ -71,11 +83,17 @@ bool AddInventoryUI(const Inventory& inventory, std::size_t selectedSlot,
         const float slotX = static_cast<float>(HotbarX + static_cast<int>(index % 8) * InventorySlotSize);
         const float slotY = static_cast<float>(secondRow ? InventoryOverlayY : HotbarY);
         const bool highlighted = index == selectedSlot || (open && index == cursorSlot);
-        if (!AddFrame(highlighted ? *selected : *frame, slotX+1.0F, slotY+1.0F, 0, queue)) return false;
-        const float x = slotX + 6.0F;
-        const float y = slotY + 6.0F;
         const ItemStack& stack = inventory.Slot(index);
         const ItemDefinition* definition = FindItemDefinition(stack.item);
+        const std::uint32_t qualityColor = definition != nullptr &&
+            definition->category == ItemCategory::Harvest ? QualityColor(stack.quality) : 0xFFFFFFFFU;
+        if (!AddFrame(highlighted ? *selected : *frame, slotX+1.0F, slotY+1.0F,
+                      0xFFFFFFFFU, 0, queue)) return false;
+        if (qualityColor != 0xFFFFFFFFU &&
+            !AddUIFill(slotX + 3.0F, slotY + 3.0F, 4.0F, 4.0F,
+                       qualityColor, 2, assets, queue)) return false;
+        const float x = slotX + 6.0F;
+        const float y = slotY + 6.0F;
         if (definition != nullptr) {
             const SpriteAsset* item = assets.FindSprite(definition->sprite);
             if (item == nullptr || !AddSprite(*item, x, y, 0xFFFFFFFFU, 1, queue)) return false;
@@ -86,7 +104,7 @@ bool AddInventoryUI(const Inventory& inventory, std::size_t selectedSlot,
                 if (twoDigits) countText[1] = static_cast<char>('0' + stack.count % 10);
                 const float textX = x + (twoDigits ? 5.0F : 11.0F);
                 if (!AddBitmapText(countText, textX, y + 9.0F,
-                                   0xFFFFFFFFU, 3, assets, queue)) return false;
+                                   qualityColor, 3, assets, queue)) return false;
             }
         }
     }

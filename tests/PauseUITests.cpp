@@ -28,5 +28,7 @@ int main(int argumentCount, char** arguments) {
     Homestead::Settings settings;
     if (!assets.LoadFile(pakPath) || !Homestead::AddPauseUI(settings, 7, assets, queue) ||
         queue.Empty()) return 7;
+    queue.Clear();
+    if (!Homestead::AddMarketUI(123, 0, assets, queue) || queue.Empty()) return 8;
     return 0;
 }

@@ -26,6 +26,17 @@ constexpr CropDefinition CropDefinitions[]{
      {MakeAssetId("crop.cabbage.stage_0"), MakeAssetId("crop.cabbage.stage_1"),
       MakeAssetId("crop.cabbage.stage_2"), MakeAssetId("crop.cabbage.stage_3")}}};
 
+ItemQuality HarvestQuality(const CropInstance& crop) noexcept {
+    std::uint32_t value = static_cast<std::uint32_t>(crop.tileX) * 0x45D9F3BU;
+    value ^= static_cast<std::uint32_t>(crop.tileY) * 0x27D4EB2DU;
+    value ^= static_cast<std::uint32_t>(crop.crop) * 0x9E3779B9U;
+    value ^= static_cast<std::uint32_t>(crop.wateredDays) * 0x85EBCA6BU;
+    value ^= value >> 16U;
+    if (value % 20U == 0) return ItemQuality::Gold;
+    if (value % 5U == 0) return ItemQuality::Silver;
+    return ItemQuality::Normal;
+}
+
 } // namespace
 
 const CropDefinition* FindCropDefinition(CropId crop) noexcept {
@@ -69,7 +80,7 @@ bool CropField::Harvest(Inventory& inventory, const TileSelection& selection) no
     if (crop == nullptr) return false;
     const CropDefinition* definition = FindCropDefinition(crop->crop);
     if (definition == nullptr || crop->stage < definition->finalStage) return false;
-    if (inventory.Add(definition->harvestItem, 1) != 0) return false;
+    if (inventory.Add(definition->harvestItem, 1, HarvestQuality(*crop)) != 0) return false;
     *crop = {};
     --count_;
     return true;

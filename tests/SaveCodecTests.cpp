@@ -34,6 +34,16 @@ bool Rejects(const std::vector<std::uint8_t>& bytes) {
     return !Homestead::DecodeSave(bytes.data(), bytes.size(), snapshot);
 }
 
+std::vector<std::uint8_t> Version4Save(const std::vector<std::uint8_t>& version5) {
+    std::vector<std::uint8_t> bytes = version5;
+    for (std::size_t index = Homestead::Inventory::SlotCount; index > 0; --index)
+        bytes.erase(bytes.begin() + 37 + (index - 1) * 3 + 2);
+    SetU16(bytes, 4, 4);
+    SetU32(bytes, 8, static_cast<std::uint32_t>(bytes.size() - 16));
+    RepairChecksum(bytes);
+    return bytes;
+}
+
 std::vector<std::uint8_t> Version3Save(const std::vector<std::uint8_t>& version4) {
     std::vector<std::uint8_t> bytes = version4;
     bytes.erase(bytes.begin() + 32); // version 4 daily request completion
@@ -78,6 +88,7 @@ int main(int argumentCount, char** arguments) {
     source.inventory[0] = {Homestead::ItemId::Hoe, 1};
     source.inventory[1] = {Homestead::ItemId::WateringCan, 1};
     source.inventory[2] = {Homestead::ItemId::CarrotSeed, 9};
+    source.inventory[3] = {Homestead::ItemId::Carrot, 2, Homestead::ItemQuality::Silver};
     source.tileDeltas.push_back({3, 4, Homestead::TileFlagValue(Homestead::TileFlag::Tilled)});
     source.crops.push_back({3, 4, Homestead::CropId::Carrot, 2, 2, true});
     std::vector<std::uint8_t> bytes;
@@ -86,8 +97,12 @@ int main(int argumentCount, char** arguments) {
     if (!Homestead::DecodeSave(bytes.data(), bytes.size(), decoded) || decoded.day != 4 ||
         decoded.minute != 777 || decoded.mapId != Homestead::MapId::House ||
         decoded.gold != 87 || !decoded.dailyRequestCompleted || decoded.inventory[2].count != 9 ||
+        decoded.inventory[3].quality != Homestead::ItemQuality::Silver ||
         decoded.tileDeltas.size() != 1 || decoded.crops.size() != 1 || decoded.crops[0].stage != 2) return 2;
-    const auto version3 = Version3Save(bytes); Homestead::SaveSnapshot migratedV3;
+    const auto version4 = Version4Save(bytes); Homestead::SaveSnapshot migratedV4;
+    if (!Homestead::DecodeSave(version4.data(), version4.size(), migratedV4) ||
+        migratedV4.inventory[3].quality != Homestead::ItemQuality::Normal) return 3;
+    const auto version3 = Version3Save(version4); Homestead::SaveSnapshot migratedV3;
     if (!Homestead::DecodeSave(version3.data(), version3.size(), migratedV3) ||
         migratedV3.dailyRequestCompleted) return 3;
     const auto version2 = Version2Save(version3); Homestead::SaveSnapshot migratedV2;
@@ -96,15 +111,15 @@ int main(int argumentCount, char** arguments) {
         migratedV2.dailyRequestCompleted) return 3;
 
     auto damaged = bytes; damaged[0] = 'X'; if (!Rejects(damaged)) return 4;
-    damaged = bytes; SetU16(damaged, 4, 5); if (!Rejects(damaged)) return 4;
+    damaged = bytes; SetU16(damaged, 4, 6); if (!Rejects(damaged)) return 4;
     damaged = bytes; damaged.pop_back(); if (!Rejects(damaged)) return 5;
     damaged = bytes; damaged.back() ^= 1; if (!Rejects(damaged)) return 6;
     damaged = bytes; damaged[29] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 7;
     damaged = bytes; damaged[32] = 2; RepairChecksum(damaged); if (!Rejects(damaged)) return 8;
     damaged = bytes; damaged[37] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 8;
     damaged = bytes; SetU16(damaged, 33, 5000); RepairChecksum(damaged); if (!Rejects(damaged)) return 9;
-    damaged = bytes; damaged[71] = 0x80; RepairChecksum(damaged); if (!Rejects(damaged)) return 10;
-    damaged = bytes; damaged[74] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 11;
+    damaged = bytes; damaged[39] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 10;
+    damaged = bytes; damaged[92] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 11;
     damaged = bytes; damaged.resize(Homestead::MaximumSaveBytes + 1); if (!Rejects(damaged)) return 12;
 
     source.inventory[2].count = 100;
