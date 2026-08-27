@@ -18,6 +18,15 @@ struct MarketEntry {
 
 inline constexpr std::uint16_t StartingGold = 20;
 inline constexpr std::uint16_t GoalGold = 100;
+[[nodiscard]] inline constexpr std::uint8_t QualitySalePercent(ItemQuality quality) noexcept {
+    switch (quality) {
+    case ItemQuality::Normal: return 100;
+    case ItemQuality::Silver: return 125;
+    case ItemQuality::Gold: return 150;
+    case ItemQuality::Count: return 0;
+    }
+    return 0;
+}
 inline constexpr std::size_t MarketCropCount = 6;
 inline constexpr std::array<MarketEntry, MarketCropCount> MarketTable{{
     {"WHEAT", ItemId::WheatSeed, ItemId::Wheat, 4, 7},

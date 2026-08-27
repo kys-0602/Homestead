@@ -8,7 +8,7 @@
 namespace Homestead {
 namespace {
 
-constexpr std::uint16_t SaveVersion = 4;
+constexpr std::uint16_t SaveVersion = 5;
 constexpr std::uint16_t HeaderSize = 16;
 
 void U8(std::vector<std::uint8_t>& out, std::uint8_t value) { out.push_back(value); }
@@ -47,9 +47,10 @@ private:
 };
 
 bool ValidStack(const ItemStack& stack) noexcept {
-    if (stack.item == ItemId::None) return stack.count == 0;
+    if (stack.item == ItemId::None) return stack.count == 0 && stack.quality == ItemQuality::Normal;
     const ItemDefinition* definition = FindItemDefinition(stack.item);
-    return definition != nullptr && stack.count != 0 && stack.count <= definition->maximumStack;
+    return definition != nullptr && stack.count != 0 && stack.count <= definition->maximumStack &&
+        IsValidItemQuality(stack.item, stack.quality);
 }
 
 bool ValidCrop(const CropInstance& crop) noexcept {
@@ -82,6 +83,7 @@ bool EncodeSave(const SaveSnapshot& snapshot, std::vector<std::uint8_t>& bytes) 
     for (const ItemStack& stack : snapshot.inventory) {
         if (!ValidStack(stack)) return false;
         U8(payload, static_cast<std::uint8_t>(stack.item)); U8(payload, stack.count);
+        U8(payload, static_cast<std::uint8_t>(stack.quality));
     }
     for (const SavedTileDelta& delta : snapshot.tileDeltas) {
         U8(payload, delta.x); U8(payload, delta.y); U8(payload, delta.flags);
@@ -136,6 +138,11 @@ bool DecodeSave(const std::uint8_t* bytes, std::size_t size, SaveSnapshot& snaps
             if (item >= std::size(legacy)) return false;
             stack.item = legacy[item];
         } else stack.item = static_cast<ItemId>(item);
+        if (version >= 5) {
+            std::uint8_t quality = 0;
+            if (!reader.U8(quality) || quality >= static_cast<std::uint8_t>(ItemQuality::Count)) return false;
+            stack.quality = static_cast<ItemQuality>(quality);
+        }
         if (!ValidStack(stack)) return false;
     }
     result.tileDeltas.resize(tileCount);

@@ -43,6 +43,12 @@ bool AddMarketUI(std::uint16_t gold,std::uint8_t focus,const AssetStore& assets,
     for(int i=9;i>=5;--i){money[i]=static_cast<char>('0'+value%10U);value/=10U;}
     if(!AddBitmapText("MARKET",128,36,0xFF603020U,43,assets,queue)||
        !AddBitmapText(money,208,36,0xFF603020U,43,assets,queue))return false;
+    char qualityText[24]{}; std::size_t qualityLength=0;
+    Append(qualityText,qualityLength,"SILVER ");
+    AppendNumber(qualityText,qualityLength,QualitySalePercent(ItemQuality::Silver));
+    Append(qualityText,qualityLength," GOLD ");
+    AppendNumber(qualityText,qualityLength,QualitySalePercent(ItemQuality::Gold));
+    if(!AddBitmapText(qualityText,106,141,0xFF603020U,43,assets,queue))return false;
     const auto& entries=MarketEntries();
     for(std::uint8_t i=0;i<MarketCropCount;++i){
         const MarketEntry& entry=entries[i];

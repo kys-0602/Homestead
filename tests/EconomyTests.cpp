@@ -18,5 +18,9 @@ int main() {
     if(inventory.Add(Homestead::ItemId::Wheat,1)!=0||
        Homestead::SellHarvest(inventory,gold,0)||gold!=65530||
        inventory.Count(Homestead::ItemId::Wheat)!=1)return 7;
+    inventory.Clear(); gold=0;
+    if(inventory.Add(Homestead::ItemId::Wheat,2,Homestead::ItemQuality::Silver)!=0||
+       inventory.Add(Homestead::ItemId::Wheat,1,Homestead::ItemQuality::Gold)!=0||
+       !Homestead::SellHarvest(inventory,gold,0)||gold!=27)return 8;
     return 0;
 }

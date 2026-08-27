@@ -22,6 +22,14 @@ int main() {
     }
     if (full.Add(Homestead::ItemId::Carrot, 3) != 3) return 7;
 
+    Homestead::Inventory quality;
+    if (quality.Add(Homestead::ItemId::Carrot, 2, Homestead::ItemQuality::Silver) != 0 ||
+        quality.Add(Homestead::ItemId::Carrot, 1, Homestead::ItemQuality::Gold) != 0 ||
+        quality.Count(Homestead::ItemId::Carrot) != 3 ||
+        quality.Count(Homestead::ItemId::Carrot, Homestead::ItemQuality::Silver) != 2 ||
+        !quality.Remove(Homestead::ItemId::Carrot, 1, Homestead::ItemQuality::Gold) ||
+        quality.Count(Homestead::ItemId::Carrot) != 2) return 8;
+
     if (Homestead::InventorySlotAt(Homestead::HotbarX + 1,
             Homestead::HotbarY + 1, false) != 0 ||
         Homestead::InventorySlotAt(Homestead::HotbarX + 7 * Homestead::InventorySlotSize + 1,
@@ -29,6 +37,6 @@ int main() {
         Homestead::InventorySlotAt(Homestead::HotbarX + 1,
             Homestead::InventoryOverlayY + 1, false) != -1 ||
         Homestead::InventorySlotAt(Homestead::HotbarX + 1,
-            Homestead::InventoryOverlayY + 1, true) != 8) return 8;
+            Homestead::InventoryOverlayY + 1, true) != 8) return 9;
     return 0;
 }
