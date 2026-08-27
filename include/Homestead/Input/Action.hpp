@@ -13,7 +13,6 @@ enum class Action : std::uint8_t {
     UseTool,
     Menu,
     Inventory,
-    Market,
     Hotbar1,
     Hotbar2,
     Hotbar3,
@@ -22,6 +21,7 @@ enum class Action : std::uint8_t {
     Hotbar6,
     Hotbar7,
     Hotbar8,
+    CollisionDebug,
     Count
 };
 
@@ -38,7 +38,6 @@ enum class PhysicalKey : std::uint8_t {
     Space,
     F,
     I,
-    M,
     Escape,
     Digit1,
     Digit2,
@@ -48,6 +47,7 @@ enum class PhysicalKey : std::uint8_t {
     Digit6,
     Digit7,
     Digit8,
+    P,
     MouseLeft,
     MouseRight,
     Count

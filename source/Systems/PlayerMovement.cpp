@@ -48,6 +48,7 @@ bool GetCollisionRect(
         result = {tileLeft + 5.0F, tileTop + 3.0F, tileLeft + 11.0F, tileTop + 16.0F};
         break;
     case TileGraphic::Sign:
+    case TileGraphic::MarketSign:
         result = {tileLeft + 4.0F, tileTop + 8.0F, tileLeft + 12.0F, tileTop + 16.0F};
         break;
     default:

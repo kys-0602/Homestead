@@ -87,6 +87,7 @@ private:
     bool marketOpen_ = false;
     bool dailyRequestOpen_ = false;
     bool paused_ = false;
+    bool collisionDebug_ = false;
     bool saveOnDayChange_ = false;
     std::uint8_t pauseFocus_ = 0;
     std::uint16_t instructionTicks_ = 600;

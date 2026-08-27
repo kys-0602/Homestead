@@ -20,6 +20,7 @@ enum class TileGraphic : std::uint16_t {
     FenceHorizontal,
     FenceVertical,
     Sign,
+    MarketSign,
     FarmlandDry,
     FarmlandWet,
     Farmhouse,
@@ -27,6 +28,9 @@ enum class TileGraphic : std::uint16_t {
     InteriorWall,
     Bed,
     Door,
+    CampDecor,
+    Scarecrow,
+    Bookshelf,
     Count
 };
 

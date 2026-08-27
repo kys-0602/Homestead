@@ -47,4 +47,7 @@ public:
         TileMapRenderStats* stats = nullptr) noexcept;
 };
 
+[[nodiscard]] bool AddCollisionDebug(const TileMap& map, const Camera2D& camera,
+                                     const AssetStore& assets, RenderQueue& queue) noexcept;
+
 } // namespace Homestead
