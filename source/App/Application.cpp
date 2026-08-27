@@ -228,7 +228,7 @@ int Application::Run() noexcept {
                             inventoryOpen_, assets_, renderQueue_) ||
             !AddStatusUI(worldClock_, gold_, GoalGold, instructionTicks_ != 0,
                          saveNoticeTicks_ != 0, dailyRequestNoticeTicks_ != 0,
-                         goalComplete_, assets_, renderQueue_) ||
+                         assets_, renderQueue_) ||
             (marketOpen_ && !AddMarketUI(gold_, marketFocus_, assets_, renderQueue_)) ||
             (dailyRequestOpen_ && !AddDailyRequestUI(
                 BuildDailyRequest(worldClock_.Day()), dailyRequestState_, inventory_, gold_,
@@ -269,22 +269,6 @@ bool Application::FixedUpdate() noexcept {
         return true;
     }
     if (paused_) return UpdatePauseMenu();
-    if (goalComplete_) {
-        PhysicalKey interactSource = PhysicalKey::Count;
-        PhysicalKey toolSource = PhysicalKey::Count;
-        const bool interact = input_.ConsumePressed(Action::Interact, interactSource);
-        const bool tool = input_.ConsumePressed(Action::UseTool, toolSource);
-        bool resume = interact || tool;
-        const bool mouse = interactSource == PhysicalKey::MouseRight ||
-            toolSource == PhysicalKey::MouseLeft;
-        if (mouse) {
-            resume = input_.IsLogicalMouseValid() &&
-                CompletionContinueAt(input_.LogicalMouseX(), input_.LogicalMouseY());
-        }
-        if (resume) goalComplete_ = false;
-        input_.DiscardPending();
-        return true;
-    }
     if (dailyRequestOpen_) return UpdateDailyRequest();
     if (input_.ConsumePressed(Action::Market)) {
         marketOpen_ = !marketOpen_; inventoryOpen_ = false; input_.DiscardPending(); return true;
@@ -513,7 +497,6 @@ void Application::Shutdown() noexcept {
     marketOpen_ = false;
     dailyRequestOpen_ = false;
     currentMap_ = MapId::Farm;
-    goalComplete_ = false;
     inventoryOpen_ = false;
     paused_ = false;
     saveOnDayChange_ = false;
@@ -601,8 +584,6 @@ bool Application::UpdateMarket() noexcept {
             BuySeed(inventory_,gold_,marketFocus_):SellHarvest(inventory_,gold_,marketFocus_-MarketCropCount);
         if(changed) {
             audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
-            goalComplete_=gold_>=GoalGold;
-            if(goalComplete_) marketOpen_=false;
         }
     }
     input_.DiscardPending();
@@ -627,8 +608,6 @@ bool Application::UpdateDailyRequest() noexcept {
             BuildDailyRequest(worldClock_.Day()), dailyRequestState_, inventory_, gold_)) {
         dailyRequestNoticeTicks_ = 180;
         audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
-        goalComplete_ = gold_ >= GoalGold;
-        if (goalComplete_) dailyRequestOpen_ = false;
     }
     input_.DiscardPending();
     return true;
@@ -707,7 +686,6 @@ bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
     gold_ = snapshot.gold;
     dailyRequestState_.completed = snapshot.dailyRequestCompleted;
     dailyRequestOpen_ = false;
-    goalComplete_ = false;
     instructionTicks_ = 0;
     return true;
 }

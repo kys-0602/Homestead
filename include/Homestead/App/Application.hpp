@@ -97,7 +97,6 @@ private:
     std::uint8_t marketFocus_ = 0;
     DailyRequestState dailyRequestState_{};
     MapId currentMap_ = MapId::Farm;
-    bool goalComplete_ = false;
     bool initialized_ = false;
 };
 
