@@ -17,7 +17,13 @@ enum class ItemId : std::uint8_t {
     TomatoSeed,
     Tomato,
     Hoe,
-    WateringCan
+    WateringCan,
+    PotatoSeed,
+    Potato,
+    CornSeed,
+    Corn,
+    CabbageSeed,
+    Cabbage
 };
 
 enum class ItemCategory : std::uint8_t {

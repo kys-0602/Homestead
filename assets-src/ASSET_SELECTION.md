@@ -47,9 +47,10 @@ pavement, deck, waterfall, and animated-water sets are excluded.
 
 - `Crops/Crops.png`
 
-Select wheat, carrot, and tomato, each with a seed-bag icon, four growth stages,
-and harvest icon. `Crops_2.png` is an overlapping subset and is excluded, as are
-all other vegetables, berries, grapes, and fruit trees.
+Select wheat, carrot, tomato, potato, corn, and cabbage, each with a
+seed-bag icon, four growth stages, and harvest icon. `Crops_2.png` is an
+overlapping subset and remains excluded, along with unused vegetables, berries,
+strawberries, grapes, and fruit trees.
 
 ## Buildings and Environment
 

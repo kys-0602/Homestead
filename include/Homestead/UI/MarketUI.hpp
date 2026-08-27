@@ -4,7 +4,7 @@
 
 namespace Homestead {
 class AssetStore; class RenderQueue;
-inline constexpr std::uint8_t MarketItemCount = 6;
+inline constexpr std::uint8_t MarketItemCount = 12;
 [[nodiscard]] int MarketItemAt(std::uint32_t x, std::uint32_t y) noexcept;
 [[nodiscard]] std::uint8_t UpdateMarketFocus(std::uint8_t focus, bool up, bool down,
     bool mouseValid, std::uint32_t mouseX, std::uint32_t mouseY) noexcept;

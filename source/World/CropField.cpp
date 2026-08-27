@@ -15,7 +15,16 @@ constexpr CropDefinition CropDefinitions[]{
      MakeAssetId("crop.carrot.stage_2"), MakeAssetId("crop.carrot.stage_3")}},
     {CropId::Tomato, ItemId::TomatoSeed, ItemId::Tomato, 3, 4,
      {MakeAssetId("crop.tomato.stage_0"), MakeAssetId("crop.tomato.stage_1"),
-      MakeAssetId("crop.tomato.stage_2"), MakeAssetId("crop.tomato.stage_3")}}};
+      MakeAssetId("crop.tomato.stage_2"), MakeAssetId("crop.tomato.stage_3")}},
+    {CropId::Potato, ItemId::PotatoSeed, ItemId::Potato, 3, 2,
+     {MakeAssetId("crop.potato.stage_0"), MakeAssetId("crop.potato.stage_1"),
+      MakeAssetId("crop.potato.stage_2"), MakeAssetId("crop.potato.stage_3")}},
+    {CropId::Corn, ItemId::CornSeed, ItemId::Corn, 3, 3,
+     {MakeAssetId("crop.corn.stage_0"), MakeAssetId("crop.corn.stage_1"),
+      MakeAssetId("crop.corn.stage_2"), MakeAssetId("crop.corn.stage_3")}},
+    {CropId::Cabbage, ItemId::CabbageSeed, ItemId::Cabbage, 3, 5,
+     {MakeAssetId("crop.cabbage.stage_0"), MakeAssetId("crop.cabbage.stage_1"),
+      MakeAssetId("crop.cabbage.stage_2"), MakeAssetId("crop.cabbage.stage_3")}}};
 
 } // namespace
 
