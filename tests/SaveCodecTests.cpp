@@ -132,7 +132,7 @@ int main(int argumentCount, char** arguments) {
     damaged = bytes; damaged[32] = 2; RepairChecksum(damaged); if (!Rejects(damaged)) return 8;
     damaged = bytes; damaged[33] = 0x80; RepairChecksum(damaged); if (!Rejects(damaged)) return 8;
     damaged = bytes; damaged[37] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 8;
-    damaged = bytes; SetU16(damaged, 33, 5000); RepairChecksum(damaged); if (!Rejects(damaged)) return 9;
+    damaged = bytes; SetU16(damaged, 34, 5000); RepairChecksum(damaged); if (!Rejects(damaged)) return 9;
     damaged = bytes; damaged[39] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 10;
     damaged = bytes; damaged[92] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 11;
     damaged = bytes; damaged.resize(Homestead::MaximumSaveBytes + 1); if (!Rejects(damaged)) return 12;
