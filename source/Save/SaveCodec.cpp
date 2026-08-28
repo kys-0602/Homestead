@@ -4,11 +4,12 @@
 #include <iterator>
 
 #include "Homestead/World/TileMap.hpp"
+#include "Homestead/World/CropCatalogue.hpp"
 
 namespace Homestead {
 namespace {
 
-constexpr std::uint16_t SaveVersion = 5;
+constexpr std::uint16_t SaveVersion = 6;
 constexpr std::uint16_t HeaderSize = 16;
 
 void U8(std::vector<std::uint8_t>& out, std::uint8_t value) { out.push_back(value); }
@@ -78,6 +79,8 @@ bool EncodeSave(const SaveSnapshot& snapshot, std::vector<std::uint8_t>& bytes) 
     U8(payload, snapshot.selectedSlot); U8(payload, static_cast<std::uint8_t>(snapshot.mapId));
     U16(payload, snapshot.gold);
     U8(payload, snapshot.dailyRequestCompleted ? 1U : 0U);
+    if (!CropCatalogue::IsValidBits(snapshot.discoveredCrops)) return false;
+    U8(payload, snapshot.discoveredCrops);
     U16(payload, static_cast<std::uint16_t>(snapshot.tileDeltas.size()));
     U16(payload, static_cast<std::uint16_t>(snapshot.crops.size()));
     for (const ItemStack& stack : snapshot.inventory) {
@@ -115,12 +118,13 @@ bool DecodeSave(const std::uint8_t* bytes, std::size_t size, SaveSnapshot& snaps
     Reader reader(bytes + HeaderSize, payloadSize);
     SaveSnapshot result;
     std::uint32_t x = 0, y = 0; std::uint16_t tileCount = 0, cropCount = 0;
-    std::uint8_t requestCompleted = 0;
+    std::uint8_t requestCompleted = 0, discoveredCrops = 0;
     if (!reader.U32(x) || !reader.U32(y) || !reader.U16(result.day) || !reader.U16(result.minute) ||
         !reader.U8(result.selectedSlot) ||
         !(version < 3 || ([&reader,&result]() noexcept { std::uint8_t id=0; if(!reader.U8(id))return false; result.mapId=static_cast<MapId>(id); return IsValidMapId(result.mapId); })()) ||
         !(version == 1 ? ([&reader,&result]() noexcept { std::uint8_t legacy=0; result.gold=20; return reader.U8(legacy) && legacy<=3; })() : reader.U16(result.gold)) ||
         !(version < 4 || (reader.U8(requestCompleted) && requestCompleted <= 1U)) ||
+        !(version < 6 || (reader.U8(discoveredCrops) && CropCatalogue::IsValidBits(discoveredCrops))) ||
         !reader.U16(tileCount) || !reader.U16(cropCount) || result.day == 0 ||
         result.minute >= 24U * 60U || result.selectedSlot >= Inventory::HotbarSlotCount ||
         tileCount > MaximumTileDeltas || cropCount > CropField::Capacity) return false;
@@ -129,6 +133,7 @@ bool DecodeSave(const std::uint8_t* bytes, std::size_t size, SaveSnapshot& snaps
     result.playerX256 = static_cast<std::int32_t>(x);
     result.playerY256 = static_cast<std::int32_t>(y);
     result.dailyRequestCompleted = requestCompleted != 0;
+    result.discoveredCrops = discoveredCrops;
     for (ItemStack& stack : result.inventory) {
         std::uint8_t item = 0;
         if (!reader.U8(item) || !reader.U8(stack.count)) return false;

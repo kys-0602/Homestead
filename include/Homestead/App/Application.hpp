@@ -20,6 +20,7 @@
 #include "Homestead/Save/SaveSystem.hpp"
 #include "Homestead/World/TileMap.hpp"
 #include "Homestead/World/CropField.hpp"
+#include "Homestead/World/CropCatalogue.hpp"
 #include "Homestead/World/EntityWorld.hpp"
 #include "Homestead/World/WorldClock.hpp"
 #include "Homestead/Systems/InteractionSystem.hpp"
@@ -58,6 +59,7 @@ private:
     [[nodiscard]] bool UpdatePauseMenu() noexcept;
     [[nodiscard]] bool UpdateMarket() noexcept;
     [[nodiscard]] bool UpdateDailyRequest() noexcept;
+    [[nodiscard]] bool UpdateCropCatalogue() noexcept;
     [[nodiscard]] bool ApplyDisplaySettings() noexcept;
 
     SettingsSystem settingsSystem_;
@@ -70,6 +72,7 @@ private:
     TileMap farmMap_;
     TileMap houseMap_;
     CropField crops_;
+    CropCatalogue catalogue_;
     WorldClock worldClock_;
     EntityWorld entityWorld_;
     PlayerState player_;
@@ -88,6 +91,7 @@ private:
     bool inventoryOpen_ = false;
     bool marketOpen_ = false;
     bool dailyRequestOpen_ = false;
+    bool catalogueOpen_ = false;
     bool paused_ = false;
     bool collisionDebug_ = false;
     bool saveOnDayChange_ = false;

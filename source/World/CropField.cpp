@@ -9,22 +9,22 @@ namespace {
 constexpr CropDefinition CropDefinitions[]{
     {CropId::Wheat, ItemId::WheatSeed, ItemId::Wheat, 3, 2,
      {MakeAssetId("crop.wheat.stage_0"), MakeAssetId("crop.wheat.stage_1"),
-      MakeAssetId("crop.wheat.stage_2"), MakeAssetId("crop.wheat.stage_3")}},
+      MakeAssetId("crop.wheat.stage_2"), MakeAssetId("crop.wheat.stage_3")}, "WHEAT"},
     {CropId::Carrot, ItemId::CarrotSeed, ItemId::Carrot, 3, 3,
     {MakeAssetId("crop.carrot.stage_0"), MakeAssetId("crop.carrot.stage_1"),
-     MakeAssetId("crop.carrot.stage_2"), MakeAssetId("crop.carrot.stage_3")}},
+     MakeAssetId("crop.carrot.stage_2"), MakeAssetId("crop.carrot.stage_3")}, "CARROT"},
     {CropId::Tomato, ItemId::TomatoSeed, ItemId::Tomato, 3, 4,
      {MakeAssetId("crop.tomato.stage_0"), MakeAssetId("crop.tomato.stage_1"),
-      MakeAssetId("crop.tomato.stage_2"), MakeAssetId("crop.tomato.stage_3")}},
+     MakeAssetId("crop.tomato.stage_2"), MakeAssetId("crop.tomato.stage_3")}, "TOMATO"},
     {CropId::Potato, ItemId::PotatoSeed, ItemId::Potato, 3, 2,
      {MakeAssetId("crop.potato.stage_0"), MakeAssetId("crop.potato.stage_1"),
-      MakeAssetId("crop.potato.stage_2"), MakeAssetId("crop.potato.stage_3")}},
+     MakeAssetId("crop.potato.stage_2"), MakeAssetId("crop.potato.stage_3")}, "POTATO"},
     {CropId::Corn, ItemId::CornSeed, ItemId::Corn, 3, 3,
      {MakeAssetId("crop.corn.stage_0"), MakeAssetId("crop.corn.stage_1"),
-      MakeAssetId("crop.corn.stage_2"), MakeAssetId("crop.corn.stage_3")}},
+     MakeAssetId("crop.corn.stage_2"), MakeAssetId("crop.corn.stage_3")}, "CORN"},
     {CropId::Cabbage, ItemId::CabbageSeed, ItemId::Cabbage, 3, 5,
      {MakeAssetId("crop.cabbage.stage_0"), MakeAssetId("crop.cabbage.stage_1"),
-      MakeAssetId("crop.cabbage.stage_2"), MakeAssetId("crop.cabbage.stage_3")}}};
+     MakeAssetId("crop.cabbage.stage_2"), MakeAssetId("crop.cabbage.stage_3")}, "CABBAGE"}};
 
 ItemQuality HarvestQuality(const CropInstance& crop) noexcept {
     std::uint32_t value = static_cast<std::uint32_t>(crop.tileX) * 0x45D9F3BU;
@@ -74,13 +74,14 @@ bool CropField::Plant(TileMap& map, Inventory& inventory,
     return true;
 }
 
-bool CropField::Harvest(Inventory& inventory, const TileSelection& selection) noexcept {
+bool CropField::Harvest(Inventory& inventory, const TileSelection& selection, CropId* harvested) noexcept {
     if (!selection.valid || !selection.inRange) return false;
     CropInstance* crop = FindMutable(selection.x, selection.y);
     if (crop == nullptr) return false;
     const CropDefinition* definition = FindCropDefinition(crop->crop);
     if (definition == nullptr || crop->stage < definition->finalStage) return false;
     if (inventory.Add(definition->harvestItem, 1, HarvestQuality(*crop)) != 0) return false;
+    if (harvested != nullptr) *harvested = crop->crop;
     *crop = {};
     --count_;
     return true;

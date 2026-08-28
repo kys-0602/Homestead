@@ -57,6 +57,8 @@ int main(int argumentCount, char** arguments) {
         {8.5F * Homestead::TileSize, 9.5F * Homestead::TileSize}, farm);
     const Homestead::TileSelection bedSelection = Homestead::SelectNearbySpecialObject(
         {5.0F * Homestead::TileSize, 2.5F * Homestead::TileSize}, house);
+    const Homestead::TileSelection bookshelfSelection = Homestead::SelectNearbySpecialObject(
+        {12.5F * Homestead::TileSize, 3.5F * Homestead::TileSize}, house);
     const Homestead::TileSelection doorSelection = Homestead::SelectNearbySpecialObject(
         {8.5F * Homestead::TileSize, 7.5F * Homestead::TileSize}, house);
     const Homestead::TileSelection signSelection = Homestead::SelectNearbySpecialObject(
@@ -65,6 +67,7 @@ int main(int argumentCount, char** arguments) {
         {13.5F * Homestead::TileSize, 10.5F * Homestead::TileSize}, farm);
     if (!farmhouseSelection.valid || farmhouseSelection.x != 8 || farmhouseSelection.y != 7 ||
         !bedSelection.valid || bedSelection.x != 3 || bedSelection.y != 2 ||
+        !bookshelfSelection.valid || bookshelfSelection.x != 12 || bookshelfSelection.y != 1 ||
         !doorSelection.valid || doorSelection.x != 8 || doorSelection.y != 8 ||
         !signSelection.valid || signSelection.x != 10 || signSelection.y != 11 ||
         !marketSelection.valid || marketSelection.x != 15 || marketSelection.y != 11) return 6;
