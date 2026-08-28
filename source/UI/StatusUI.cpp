@@ -70,7 +70,7 @@ bool AddStatusUI(const WorldClock& clock, std::uint16_t gold, std::uint16_t goal
                              hudTextColor, 24, assets, queue) &&
             AddBitmapText(Text::StartControls, 88.0F, 77.0F,
                           hudTextColor, 24, assets, queue) &&
-            AddBitmapText("M MARKET E READ SIGN", 100.0F, 87.0F,
+            AddBitmapText(Text::StartSigns, 100.0F, 87.0F,
                           hudTextColor, 24, assets, queue);
     }
     return true;
