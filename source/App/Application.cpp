@@ -772,6 +772,7 @@ bool Application::ResetGameState() noexcept {
     }
     crops_.Clear();
     catalogue_.Clear();
+    catalogueOpen_ = false;
     worldClock_.Reset();
     inventory_.Clear();
     if (inventory_.Add(ItemId::Hoe, 1) != 0 || inventory_.Add(ItemId::WateringCan, 1) != 0)
