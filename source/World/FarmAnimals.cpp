@@ -75,7 +75,7 @@ void FarmAnimals::Reset() noexcept {
 
 void FarmAnimals::FixedUpdate() noexcept {
     UpdateAnimals(chickens_, ChickenRoutes, WalkSpeed, PauseDuration);
-    UpdateAnimals(frogs_, FrogRoutes, WalkSpeed * 0.5F, PauseDuration * 2U);
+    UpdateAnimals(frogs_, FrogRoutes, WalkSpeed * 0.5F, static_cast<std::uint16_t>(PauseDuration * 2U));
 }
 
 } // namespace Homestead
