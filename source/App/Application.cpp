@@ -655,7 +655,7 @@ bool Application::UpdateDailyRequest() noexcept {
 bool Application::UpdateCropCatalogue() noexcept {
     [[maybe_unused]] const bool ignoredInventory = input_.ConsumePressed(Action::Inventory);
     PhysicalKey source = PhysicalKey::Count;
-    if (input_.ConsumePressed(Action::Interact, source)) {
+    if (input_.ConsumePressed(Action::Interact, source) && source == PhysicalKey::E) {
         catalogueOpen_ = false;
         audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
     }
