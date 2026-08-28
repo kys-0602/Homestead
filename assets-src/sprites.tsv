@@ -137,3 +137,7 @@ effect.cloud.0	effect.cloud.0	0	0	38	25
 effect.cloud.1	effect.cloud.1	0	0	28	24
 effect.cloud.2	effect.cloud.2	0	0	44	34
 effect.cloud.3	effect.cloud.3	0	0	27	21
+animal.chicken.idle	animal.chicken	0	0	32	32
+animal.chicken.walk	animal.chicken	32	0	32	32
+animal.frog.idle	animal.frog	0	0	32	32
+animal.frog.walk	animal.frog	32	0	32	32

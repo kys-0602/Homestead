@@ -114,6 +114,10 @@ int main(int argumentCount, char** arguments) {
     for (const char* name : uiAssets) {
         if (assets.FindSprite(Homestead::MakeAssetId(name)) == nullptr) return 11;
     }
-    if (assets.FindSprite(Homestead::MakeAssetId("terrain.farmable.soil")) == nullptr) return 12;
+    if (assets.FindSprite(Homestead::MakeAssetId("terrain.farmable.soil")) == nullptr ||
+        assets.FindSprite(Homestead::MakeAssetId("animal.chicken.idle")) == nullptr ||
+        assets.FindSprite(Homestead::MakeAssetId("animal.chicken.walk")) == nullptr ||
+        assets.FindSprite(Homestead::MakeAssetId("animal.frog.idle")) == nullptr ||
+        assets.FindSprite(Homestead::MakeAssetId("animal.frog.walk")) == nullptr) return 12;
     return 0;
 }
