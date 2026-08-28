@@ -14,10 +14,11 @@ int main(int argumentCount, char** arguments) {
     if (Homestead::PauseItemAt(68, 48) != 0 ||
         Homestead::PauseItemAt(251, 145) != 6 ||
         Homestead::PauseItemAt(251, 159) != 7 ||
+        Homestead::PauseItemAt(251, 173) != 8 ||
         Homestead::PauseItemAt(67, 48) != -1 ||
         Homestead::PauseItemAt(252, 48) != -1 ||
         Homestead::PauseItemAt(68, 47) != -1 ||
-        Homestead::PauseItemAt(68, 160) != -1) return 3;
+        Homestead::PauseItemAt(68, 174) != -1) return 3;
     if(Homestead::MarketItemAt(50,55)!=0||Homestead::MarketItemAt(166,125)!=11||
        Homestead::MarketItemAt(49,55)!=-1||Homestead::MarketItemAt(50,139)!=-1)return 5;
     if(Homestead::UpdateMarketFocus(2,true,false,true,80,62)!=1||
@@ -26,7 +27,7 @@ int main(int argumentCount, char** arguments) {
     Homestead::AssetStore assets;
     Homestead::RenderQueue queue;
     Homestead::Settings settings;
-    if (!assets.LoadFile(pakPath) || !Homestead::AddPauseUI(settings, 7, assets, queue) ||
+    if (!assets.LoadFile(pakPath) || !Homestead::AddPauseUI(settings, 7, true, assets, queue) ||
         queue.Empty()) return 7;
     queue.Clear();
     if (!Homestead::AddMarketUI(123, 0, assets, queue) || queue.Empty()) return 8;

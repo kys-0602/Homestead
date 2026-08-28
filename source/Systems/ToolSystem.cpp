@@ -14,8 +14,8 @@ namespace {
 bool CanTill(const Tile& tile) noexcept {
     constexpr std::uint8_t forbidden = TileFlagValue(TileFlag::Blocked) |
         TileFlagValue(TileFlag::Water);
-    return tile.ground == static_cast<std::uint16_t>(TileGraphic::Grass) &&
-        tile.object == 0 && (tile.flags & forbidden) == 0 &&
+    return tile.object == 0 && (tile.flags & forbidden) == 0 &&
+        (tile.flags & TileFlagValue(TileFlag::Farmable)) != 0 &&
         (tile.flags & TileFlagValue(TileFlag::Tilled)) == 0;
 }
 

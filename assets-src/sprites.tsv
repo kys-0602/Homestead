@@ -1,6 +1,7 @@
 name	source	x	y	width	height
 terrain.grass	tiles.grass	0	0	16	16
 terrain.path	tiles.path.base	0	0	16	16
+terrain.farmable.soil	tiles.farmland.dry	32	16	16	16
 terrain.farmland.dry.0	tiles.farmland.dry	0	0	16	16
 terrain.farmland.dry.1	tiles.farmland.dry	0	48	16	16
 terrain.farmland.dry.2	tiles.farmland.dry	16	48	16	16

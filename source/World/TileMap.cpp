@@ -57,7 +57,7 @@ bool TileMap::LoadMemory(const std::uint8_t* data, std::size_t size) noexcept {
 
     constexpr std::uint8_t validFlags = TileFlagValue(TileFlag::Blocked) |
         TileFlagValue(TileFlag::Water) | TileFlagValue(TileFlag::Tilled) |
-        TileFlagValue(TileFlag::Watered);
+        TileFlagValue(TileFlag::Watered) | TileFlagValue(TileFlag::Farmable);
     for (std::uint32_t index = 0; index < tileCount; ++index) {
         const std::uint8_t* record = data + MapHeaderSize + index * TileRecordSize;
         Tile tile{};

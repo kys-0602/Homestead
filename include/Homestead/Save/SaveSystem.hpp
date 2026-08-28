@@ -15,6 +15,7 @@ class SaveSystem final {
 public:
     [[nodiscard]] SaveLoadResult Load(SaveSnapshot& snapshot) noexcept;
     [[nodiscard]] bool Save(const SaveSnapshot& snapshot) noexcept;
+    [[nodiscard]] bool Reset() noexcept;
 };
 
 } // namespace Homestead

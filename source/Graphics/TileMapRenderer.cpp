@@ -24,6 +24,7 @@ AssetId GraphicAssetId(std::uint16_t graphic) noexcept {
     case TileGraphic::MarketSign: return MakeAssetId("decor.sign");
     case TileGraphic::FarmlandDry: return MakeAssetId("terrain.farmland.dry.15");
     case TileGraphic::FarmlandWet: return MakeAssetId("terrain.farmland.wet.15");
+    case TileGraphic::FarmableSoil: return MakeAssetId("terrain.farmable.soil");
     case TileGraphic::Farmhouse: return MakeAssetId("building.farmhouse");
     case TileGraphic::WoodFloor: return MakeAssetId("interior.floor.wood");
     case TileGraphic::InteriorWall: return MakeAssetId("interior.wall.wood");

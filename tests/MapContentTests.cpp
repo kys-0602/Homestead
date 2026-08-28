@@ -73,7 +73,11 @@ int main(int argumentCount, char** arguments) {
     Homestead::Tile* right = farm.Get(21, 18);
     Homestead::Tile* down = farm.Get(20, 19);
     Homestead::Tile* left = farm.Get(19, 18);
-    if (center == nullptr || up == nullptr || right == nullptr || down == nullptr || left == nullptr) return 7;
+    const Homestead::Tile* grass = farm.Get(12, 18);
+    if (center == nullptr || up == nullptr || right == nullptr || down == nullptr || left == nullptr ||
+        grass == nullptr ||
+        (center->flags & Homestead::TileFlagValue(Homestead::TileFlag::Farmable)) == 0 ||
+        (grass->flags & Homestead::TileFlagValue(Homestead::TileFlag::Farmable)) != 0) return 7;
     center->flags |= Homestead::TileFlagValue(Homestead::TileFlag::Tilled);
     if (Homestead::FarmlandConnectionMask(farm, 20, 18) != 0) return 8;
     up->flags |= Homestead::TileFlagValue(Homestead::TileFlag::Tilled);
@@ -107,5 +111,6 @@ int main(int argumentCount, char** arguments) {
     for (const char* name : uiAssets) {
         if (assets.FindSprite(Homestead::MakeAssetId(name)) == nullptr) return 11;
     }
+    if (assets.FindSprite(Homestead::MakeAssetId("terrain.farmable.soil")) == nullptr) return 12;
     return 0;
 }

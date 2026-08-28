@@ -129,8 +129,7 @@ ApplicationInitializeResult Application::Initialize(HINSTANCE instance, int show
         cleanupInitialization();
         return ApplicationInitializeResult::Failed;
     }
-    if (inventory_.Add(ItemId::Hoe, 1) != 0 ||
-        inventory_.Add(ItemId::WateringCan, 1) != 0) {
+    if (!ResetGameState()) {
         cleanupInitialization();
         return ApplicationInitializeResult::Failed;
     }
@@ -138,12 +137,10 @@ ApplicationInitializeResult Application::Initialize(HINSTANCE instance, int show
     const SaveLoadResult loadResult = loader.LoadResult();
     if ((loadResult == SaveLoadResult::LoadedPrimary ||
          loadResult == SaveLoadResult::LoadedBackup) && !ApplySave(loader.Snapshot())) {
-        crops_.Clear();
-        inventory_.Clear();
-        [[maybe_unused]] const std::uint16_t hoe = inventory_.Add(ItemId::Hoe, 1);
-        [[maybe_unused]] const std::uint16_t watering = inventory_.Add(ItemId::WateringCan, 1);
-        worldClock_.Reset();
-        gold_ = StartingGold;
+        if (!ResetGameState()) {
+            cleanupInitialization();
+            return ApplicationInitializeResult::Failed;
+        }
     }
 
     if (!graphics_.Initialize(
@@ -234,7 +231,7 @@ int Application::Run() noexcept {
             (dailyRequestOpen_ && !AddDailyRequestUI(
                 BuildDailyRequest(worldClock_.Day()), dailyRequestState_, inventory_, gold_,
                 assets_, renderQueue_)) ||
-            (paused_ && !AddPauseUI(settings_, pauseFocus_, assets_, renderQueue_))) {
+            (paused_ && !AddPauseUI(settings_, pauseFocus_, resetConfirmation_, assets_, renderQueue_))) {
             return 1;
         }
         renderQueue_.Sort();
@@ -263,6 +260,7 @@ bool Application::FixedUpdate() noexcept {
         if (dailyRequestOpen_) { dailyRequestOpen_ = false; input_.DiscardPending(); return true; }
         if (marketOpen_) { marketOpen_ = false; input_.DiscardPending(); return true; }
         paused_ = !paused_;
+        resetConfirmation_ = false;
         inventoryOpen_ = false;
         moveSource_ = Inventory::SlotCount;
         if (!paused_) [[maybe_unused]] const bool savedSettings = settingsSystem_.Save(settings_);
@@ -514,6 +512,7 @@ void Application::Shutdown() noexcept {
     inventoryOpen_ = false;
     paused_ = false;
     saveOnDayChange_ = false;
+    resetConfirmation_ = false;
     pauseFocus_ = 0;
     dailyRequestState_ = {};
     weatherTicks_ = 0;
@@ -528,6 +527,7 @@ bool Application::UpdatePauseMenu() noexcept {
     const bool right = input_.ConsumePressed(Action::MoveRight);
     if (up) pauseFocus_ = pauseFocus_ == 0 ? PauseItemCount - 1 : pauseFocus_ - 1;
     if (down) pauseFocus_ = static_cast<std::uint8_t>((pauseFocus_ + 1) % PauseItemCount);
+    if (up || down) resetConfirmation_ = false;
     if (up || down) audio_.PlayEffect(MakeAssetId("audio.ui.move"));
 
     PhysicalKey interactSource = PhysicalKey::Count;
@@ -542,6 +542,7 @@ bool Application::UpdatePauseMenu() noexcept {
         else if (mouse) activate = false;
     } else if (mouse) activate = false;
 
+    if (pauseFocus_ != 7) resetConfirmation_ = false;
     bool displayChanged = false;
     bool settingsChanged = false;
     const int direction = right ? 1 : (left ? -1 : 0);
@@ -564,6 +565,12 @@ bool Application::UpdatePauseMenu() noexcept {
                                                     (*volume == 10 ? 0 : *volume + 1));
         settingsChanged = true;
     } else if (pauseFocus_ == 7 && activate) {
+        if (resetConfirmation_) {
+            if (ResetSave()) paused_ = false;
+        } else {
+            resetConfirmation_ = true;
+        }
+    } else if (pauseFocus_ == 8 && activate) {
         window_.RequestClose();
     }
     if (displayChanged && !ApplyDisplaySettings()) return false;
@@ -674,11 +681,13 @@ bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
     }
     for (std::size_t index = 0; index < snapshot.crops.size(); ++index) {
         const CropInstance& crop = snapshot.crops[index];
+        const Tile* cropTile = farmMap_.Get(crop.tileX, crop.tileY);
+        if (cropTile == nullptr) return false;
         bool tilled = false;
         for (const SavedTileDelta& delta : snapshot.tileDeltas)
             if (delta.x == crop.tileX && delta.y == crop.tileY &&
                 (delta.flags & TileFlagValue(TileFlag::Tilled)) != 0) tilled = true;
-        if (!tilled) return false;
+        if ((cropTile->flags & TileFlagValue(TileFlag::Farmable)) != 0 && !tilled) return false;
         for (std::size_t other = 0; other < index; ++other)
             if (snapshot.crops[other].tileX == crop.tileX && snapshot.crops[other].tileY == crop.tileY) return false;
     }
@@ -686,10 +695,17 @@ bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
     inventory_.Clear();
     for (std::size_t index = 0; index < Inventory::SlotCount; ++index) inventory_.Slot(index) = snapshot.inventory[index];
     for (const SavedTileDelta& delta : snapshot.tileDeltas) {
-        Tile* tile = farmMap_.Get(delta.x, delta.y); tile->flags |= delta.flags;
+        Tile* tile = farmMap_.Get(delta.x, delta.y);
+        if (tile != nullptr && (tile->flags & TileFlagValue(TileFlag::Farmable)) != 0)
+            tile->flags |= delta.flags;
     }
     crops_.Clear();
-    for (const CropInstance& crop : snapshot.crops) if (!crops_.Restore(crop, farmMap_)) return false;
+    for (const CropInstance& crop : snapshot.crops) {
+        const Tile* tile = farmMap_.Get(crop.tileX, crop.tileY);
+        if (tile == nullptr) return false;
+        if ((tile->flags & TileFlagValue(TileFlag::Farmable)) != 0 &&
+            !crops_.Restore(crop, farmMap_)) return false;
+    }
     TransformComponent* transform = entityWorld_.Transform(player_.entity);
     if (transform == nullptr) return false;
     transform->current = {playerX, playerY}; transform->previous = transform->current;
@@ -705,6 +721,46 @@ bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
 bool Application::SaveGame() noexcept {
     SaveSnapshot snapshot;
     return CaptureSave(snapshot) && saves_.Save(snapshot);
+}
+
+bool Application::ResetSave() noexcept {
+    return saves_.Reset() && ResetGameState();
+}
+
+bool Application::ResetGameState() noexcept {
+    for (std::int32_t y = 0; y < farmMap_.Height(); ++y) {
+        for (std::int32_t x = 0; x < farmMap_.Width(); ++x) {
+            Tile* tile = farmMap_.Get(x, y);
+            if (tile != nullptr) tile->flags &= static_cast<std::uint8_t>(~(
+                TileFlagValue(TileFlag::Tilled) | TileFlagValue(TileFlag::Watered)));
+        }
+    }
+    crops_.Clear();
+    worldClock_.Reset();
+    inventory_.Clear();
+    if (inventory_.Add(ItemId::Hoe, 1) != 0 || inventory_.Add(ItemId::WateringCan, 1) != 0)
+        return false;
+    TransformComponent* transform = entityWorld_.Transform(player_.entity);
+    if (transform == nullptr) return false;
+    constexpr WorldPosition start{16.5F * TileSize, 12.5F * TileSize};
+    transform->current = start;
+    transform->previous = start;
+    player_.toolUse = {};
+    player_.facing = FacingDirection::Down;
+    selectedSlot_ = 0;
+    inventoryCursor_ = 0;
+    moveSource_ = Inventory::SlotCount;
+    inventoryOpen_ = false;
+    marketOpen_ = false;
+    dailyRequestOpen_ = false;
+    saveOnDayChange_ = false;
+    resetConfirmation_ = false;
+    selection_ = {};
+    gold_ = StartingGold;
+    dailyRequestState_ = {};
+    currentMap_ = MapId::Farm;
+    instructionTicks_ = 600;
+    return true;
 }
 
 TileMap& Application::ActiveMap() noexcept {

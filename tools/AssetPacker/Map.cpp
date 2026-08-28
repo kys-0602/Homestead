@@ -42,6 +42,10 @@ bool DecodeTile(char symbol, Tile& tile) {
     case '=':
         tile.ground = static_cast<std::uint16_t>(TileGraphic::Path);
         return true;
+    case 'r':
+        tile.ground = static_cast<std::uint16_t>(TileGraphic::FarmableSoil);
+        tile.flags = TileFlagValue(TileFlag::Farmable);
+        return true;
     case 'f':
         tile.object = static_cast<std::uint16_t>(TileGraphic::FlowerWhite);
         return true;

@@ -40,8 +40,10 @@ std::vector<std::uint8_t> MakeMap() {
             U16(bytes, static_cast<std::uint16_t>(
                 sign ? Homestead::TileGraphic::Sign :
                 (fence ? Homestead::TileGraphic::FenceVertical : Homestead::TileGraphic::None)));
-            bytes.push_back(sign || fence ?
-                Homestead::TileFlagValue(Homestead::TileFlag::Blocked) : 0);
+            const std::uint8_t flags = sign || fence ?
+                Homestead::TileFlagValue(Homestead::TileFlag::Blocked) :
+                (x == 2 && y == 3 ? Homestead::TileFlagValue(Homestead::TileFlag::Farmable) : 0);
+            bytes.push_back(flags);
             bytes.push_back(0);
         }
     }
@@ -127,9 +129,13 @@ int main() {
         return 19;
 
     player.toolUse = {};
+    const Homestead::TileSelection bareGrass = Homestead::SelectMouseTile(
+        feet, {24.0F, 56.0F}, map);
     const Homestead::TileSelection path = Homestead::SelectFrontTile(
         feet, Homestead::FacingDirection::Right, map);
-    if (Homestead::TryStartToolUse(player, map, path, Homestead::ToolAction::Hoe) ||
+    if (!bareGrass.valid || !bareGrass.inRange ||
+        Homestead::TryStartToolUse(player, map, bareGrass, Homestead::ToolAction::Hoe) ||
+        Homestead::TryStartToolUse(player, map, path, Homestead::ToolAction::Hoe) ||
         Homestead::TryStartToolUse(player, map, mouse, Homestead::ToolAction::Hoe) ||
         Homestead::TryStartToolUse(player, map, distant, Homestead::ToolAction::Hoe)) return 20;
     return 0;

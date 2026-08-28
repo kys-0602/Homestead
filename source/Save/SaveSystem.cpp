@@ -86,4 +86,13 @@ bool SaveSystem::Save(const SaveSnapshot& snapshot) noexcept {
     return true;
 }
 
+bool SaveSystem::Reset() noexcept {
+    wchar_t primary[MAX_PATH]{}, temporary[MAX_PATH]{}, backup[MAX_PATH]{};
+    if (!Paths(primary, temporary, backup)) return false;
+    const auto remove = [](const wchar_t* path) noexcept {
+        return DeleteFileW(path) != FALSE || GetLastError() == ERROR_FILE_NOT_FOUND;
+    };
+    return remove(temporary) && remove(primary) && remove(backup);
+}
+
 } // namespace Homestead

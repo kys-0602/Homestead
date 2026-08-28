@@ -277,6 +277,23 @@ add_dependencies(HomesteadSaveCodecTests HomesteadRepresentativeSave)
 add_test(NAME HomesteadSaveCodecTests COMMAND HomesteadSaveCodecTests
     "${CMAKE_BINARY_DIR}/generated-assets/representative.sav")
 
+add_executable(HomesteadSaveSystemTests
+    SaveSystemTests.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Save/SaveCodec.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Save/SaveSystem.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Inventory.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/CropField.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/TileMap.cpp"
+)
+target_include_directories(HomesteadSaveSystemTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include"
+)
+target_compile_definitions(HomesteadSaveSystemTests PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_compile_options(HomesteadSaveSystemTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>
+)
+add_test(NAME HomesteadSaveSystemTests COMMAND HomesteadSaveSystemTests)
+
 add_executable(HomesteadSettingsTests
     SettingsTests.cpp
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Platform/Settings.cpp"

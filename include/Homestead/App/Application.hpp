@@ -50,6 +50,8 @@ private:
     [[nodiscard]] bool CaptureSave(SaveSnapshot& snapshot) const noexcept;
     [[nodiscard]] bool ApplySave(const SaveSnapshot& snapshot) noexcept;
     [[nodiscard]] bool SaveGame() noexcept;
+    [[nodiscard]] bool ResetSave() noexcept;
+    [[nodiscard]] bool ResetGameState() noexcept;
     [[nodiscard]] TileMap& ActiveMap() noexcept;
     [[nodiscard]] const TileMap& ActiveMap() const noexcept;
     [[nodiscard]] bool ChangeMap(MapId destination) noexcept;
@@ -89,6 +91,7 @@ private:
     bool paused_ = false;
     bool collisionDebug_ = false;
     bool saveOnDayChange_ = false;
+    bool resetConfirmation_ = false;
     std::uint8_t pauseFocus_ = 0;
     std::uint16_t instructionTicks_ = 600;
     std::uint16_t saveNoticeTicks_ = 0;

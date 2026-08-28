@@ -23,6 +23,7 @@ enum class TileGraphic : std::uint16_t {
     MarketSign,
     FarmlandDry,
     FarmlandWet,
+    FarmableSoil,
     Farmhouse,
     WoodFloor,
     InteriorWall,
@@ -38,7 +39,9 @@ enum class TileFlag : std::uint8_t {
     Blocked = 1U << 0U,
     Water = 1U << 1U,
     Tilled = 1U << 2U,
-    Watered = 1U << 3U
+    Watered = 1U << 3U,
+    // Static map property: newly created farmland is limited to these tiles.
+    Farmable = 1U << 4U
 };
 
 struct Tile {

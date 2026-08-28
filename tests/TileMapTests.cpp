@@ -90,5 +90,7 @@ int main() {
     damaged[28] = Homestead::TileFlagValue(Homestead::TileFlag::Tilled) |
         Homestead::TileFlagValue(Homestead::TileFlag::Watered);
     if (!Loads(damaged)) return 11;
+    damaged[28] = Homestead::TileFlagValue(Homestead::TileFlag::Farmable);
+    if (!Loads(damaged)) return 12;
     return 0;
 }
