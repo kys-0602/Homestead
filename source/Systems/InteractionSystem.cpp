@@ -65,7 +65,7 @@ TileSelection SelectNearbySpecialObject(
             const TileGraphic graphic = static_cast<TileGraphic>(tile->object);
             if (graphic != TileGraphic::Farmhouse && graphic != TileGraphic::Bed &&
                 graphic != TileGraphic::Door && graphic != TileGraphic::Sign &&
-                graphic != TileGraphic::MarketSign) continue;
+                graphic != TileGraphic::MarketSign && graphic != TileGraphic::Bookshelf) continue;
             const float deltaX = (static_cast<float>(x) + 0.5F) * TileSize - playerFeet.x;
             const float deltaY = (static_cast<float>(y) + 0.5F) * TileSize - playerFeet.y;
             const float distance = deltaX * deltaX + deltaY * deltaY;

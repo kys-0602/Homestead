@@ -200,6 +200,13 @@ target_compile_options(HomesteadFarmingTests PRIVATE
 )
 add_test(NAME HomesteadFarmingTests COMMAND HomesteadFarmingTests)
 
+add_executable(HomesteadCropCatalogueTests CropCatalogueTests.cpp)
+target_include_directories(HomesteadCropCatalogueTests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+target_compile_options(HomesteadCropCatalogueTests PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /utf-8>)
+add_test(NAME HomesteadCropCatalogueTests COMMAND HomesteadCropCatalogueTests)
+
 add_executable(HomesteadContentFlowTests
     ContentFlowTests.cpp
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Game/Economy.cpp"

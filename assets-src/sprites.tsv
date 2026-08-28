@@ -114,6 +114,7 @@ font.8	font.8	0	0	5	5
 font.9	font.9	0	0	5	5
 font.0	font.0	0	0	5	5
 font.colon	font.colon	0	0	5	5
+font.percent	font.percent	0	0	5	5
 ui.pointer.idle	ui.pointer	0	0	16	16
 ui.slot.frame	ui.slot.frame	0	0	32	32
 ui.slot.selected	ui.slot.selected	0	0	32	32

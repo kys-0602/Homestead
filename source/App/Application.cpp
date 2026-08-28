@@ -21,6 +21,7 @@
 #include "Homestead/UI/InventoryUI.hpp"
 #include "Homestead/UI/MarketUI.hpp"
 #include "Homestead/UI/DailyRequestUI.hpp"
+#include "Homestead/UI/CropCatalogueUI.hpp"
 #include "Homestead/UI/PauseUI.hpp"
 #include "Homestead/UI/StatusUI.hpp"
 
@@ -231,6 +232,7 @@ int Application::Run() noexcept {
             (dailyRequestOpen_ && !AddDailyRequestUI(
                 BuildDailyRequest(worldClock_.Day()), dailyRequestState_, inventory_, gold_,
                 assets_, renderQueue_)) ||
+            (catalogueOpen_ && !AddCropCatalogueUI(catalogue_, assets_, renderQueue_)) ||
             (paused_ && !AddPauseUI(settings_, pauseFocus_, resetConfirmation_, assets_, renderQueue_))) {
             return 1;
         }
@@ -259,6 +261,7 @@ bool Application::FixedUpdate() noexcept {
     if (input_.ConsumePressed(Action::Menu)) {
         if (dailyRequestOpen_) { dailyRequestOpen_ = false; input_.DiscardPending(); return true; }
         if (marketOpen_) { marketOpen_ = false; input_.DiscardPending(); return true; }
+        if (catalogueOpen_) { catalogueOpen_ = false; input_.DiscardPending(); return true; }
         paused_ = !paused_;
         resetConfirmation_ = false;
         inventoryOpen_ = false;
@@ -275,6 +278,7 @@ bool Application::FixedUpdate() noexcept {
     if (paused_) return UpdatePauseMenu();
     if (dailyRequestOpen_) return UpdateDailyRequest();
     if (marketOpen_) return UpdateMarket();
+    if (catalogueOpen_) return UpdateCropCatalogue();
     if (input_.ConsumePressed(Action::Inventory)) {
         inventoryOpen_ = !inventoryOpen_;
         inventoryCursor_ = selectedSlot_;
@@ -379,8 +383,10 @@ bool Application::FixedUpdate() noexcept {
             if (nearby.valid) interactionTarget = nearby;
         }
         selection_ = interactionTarget;
-        if (player_.toolUse.action == ToolAction::None &&
-            currentMap_ == MapId::Farm && crops_.Harvest(inventory_, interactionTarget)) {
+        CropId harvested = CropId::None;
+        if (player_.toolUse.action == ToolAction::None && currentMap_ == MapId::Farm &&
+            crops_.Harvest(inventory_, interactionTarget, &harvested)) {
+            [[maybe_unused]] const bool discovered = catalogue_.Discover(harvested);
             FaceSelection(player_, playerFeet, interactionTarget);
             audio_.PlayEffect(MakeAssetId("audio.harvest"));
         } else {
@@ -394,6 +400,9 @@ bool Application::FixedUpdate() noexcept {
             const bool openMarket = interactSource == PhysicalKey::E &&
                 currentMap_ == MapId::Farm && interactionTarget.inRange &&
                 tile != nullptr && tile->object == static_cast<std::uint16_t>(TileGraphic::MarketSign);
+            const bool openCatalogue = interactSource == PhysicalKey::E &&
+                currentMap_ == MapId::House && interactionTarget.inRange &&
+                tile != nullptr && tile->object == static_cast<std::uint16_t>(TileGraphic::Bookshelf);
             if ((enterHouse && ChangeMap(MapId::House)) || (leaveHouse && ChangeMap(MapId::Farm))) {
                 audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
                 return true;
@@ -411,6 +420,15 @@ bool Application::FixedUpdate() noexcept {
                 marketOpen_ = true;
                 inventoryOpen_ = false;
                 dailyRequestOpen_ = false;
+                audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
+                input_.DiscardPending();
+                return true;
+            } else if (openCatalogue) {
+                FaceSelection(player_, playerFeet, interactionTarget);
+                catalogueOpen_ = true;
+                inventoryOpen_ = false;
+                dailyRequestOpen_ = false;
+                marketOpen_ = false;
                 audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
                 input_.DiscardPending();
                 return true;
@@ -495,6 +513,7 @@ void Application::Shutdown() noexcept {
     graphics_.Shutdown();
     audio_.Shutdown();
     crops_.Clear();
+    catalogue_.Clear();
     worldClock_.Reset();
     inventory_.Clear();
     entityWorld_.Clear();
@@ -508,6 +527,7 @@ void Application::Shutdown() noexcept {
     gold_ = StartingGold;
     marketOpen_ = false;
     dailyRequestOpen_ = false;
+    catalogueOpen_ = false;
     currentMap_ = MapId::Farm;
     inventoryOpen_ = false;
     paused_ = false;
@@ -632,6 +652,18 @@ bool Application::UpdateDailyRequest() noexcept {
     return true;
 }
 
+bool Application::UpdateCropCatalogue() noexcept {
+    [[maybe_unused]] const bool ignoredInventory = input_.ConsumePressed(Action::Inventory);
+    PhysicalKey source = PhysicalKey::Count;
+    if (input_.ConsumePressed(Action::Interact, source) && source == PhysicalKey::E) {
+        catalogueOpen_ = false;
+        audio_.PlayEffect(MakeAssetId("audio.ui.confirm"));
+    }
+    [[maybe_unused]] const bool ignoredTool = input_.ConsumePressed(Action::UseTool);
+    input_.DiscardPending();
+    return true;
+}
+
 bool Application::CaptureSave(SaveSnapshot& snapshot) const noexcept {
     const TransformComponent* transform = entityWorld_.Transform(player_.entity);
     if (transform == nullptr) return false;
@@ -643,6 +675,7 @@ bool Application::CaptureSave(SaveSnapshot& snapshot) const noexcept {
     snapshot.mapId = currentMap_;
     snapshot.gold = gold_;
     snapshot.dailyRequestCompleted = dailyRequestState_.completed;
+    snapshot.discoveredCrops = catalogue_.Bits();
     for (std::size_t index = 0; index < Inventory::SlotCount; ++index)
         snapshot.inventory[index] = inventory_.Slot(index);
     for (std::int32_t y = 0; y < farmMap_.Height(); ++y) {
@@ -691,7 +724,8 @@ bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
         for (std::size_t other = 0; other < index; ++other)
             if (snapshot.crops[other].tileX == crop.tileX && snapshot.crops[other].tileY == crop.tileY) return false;
     }
-    if (!worldClock_.Restore(snapshot.day, snapshot.minute)) return false;
+    if (!worldClock_.Restore(snapshot.day, snapshot.minute) ||
+        !catalogue_.Restore(snapshot.discoveredCrops)) return false;
     inventory_.Clear();
     for (std::size_t index = 0; index < Inventory::SlotCount; ++index) inventory_.Slot(index) = snapshot.inventory[index];
     for (const SavedTileDelta& delta : snapshot.tileDeltas) {
@@ -714,6 +748,7 @@ bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
     gold_ = snapshot.gold;
     dailyRequestState_.completed = snapshot.dailyRequestCompleted;
     dailyRequestOpen_ = false;
+    catalogueOpen_ = false;
     instructionTicks_ = 0;
     return true;
 }
@@ -736,6 +771,8 @@ bool Application::ResetGameState() noexcept {
         }
     }
     crops_.Clear();
+    catalogue_.Clear();
+    catalogueOpen_ = false;
     worldClock_.Reset();
     inventory_.Clear();
     if (inventory_.Add(ItemId::Hoe, 1) != 0 || inventory_.Add(ItemId::WateringCan, 1) != 0)

@@ -30,6 +30,7 @@ struct CropDefinition {
     std::uint8_t finalStage = 0;
     std::uint8_t growthDays = 0;
     std::array<AssetId, 4> stageSprites{};
+    const char* name = "";
 };
 
 struct CropInstance {
@@ -54,7 +55,7 @@ public:
         ItemId seedItem) noexcept;
     [[nodiscard]] bool Harvest(
         Inventory& inventory,
-        const TileSelection& selection) noexcept;
+        const TileSelection& selection, CropId* harvested = nullptr) noexcept;
     void OnDayChanged(TileMap& map) noexcept;
     void Clear() noexcept;
     [[nodiscard]] bool Restore(const CropInstance& crop, const TileMap& map) noexcept;
