@@ -56,6 +56,28 @@ std::uint32_t QualityColor(ItemQuality quality) noexcept {
     return 0xFFFFFFFFU;
 }
 
+bool AddQualityBadge(ItemQuality quality, float slotX, float slotY,
+                     const AssetStore& assets, RenderQueue& queue) noexcept {
+    if (quality == ItemQuality::Normal || quality == ItemQuality::Count) return true;
+    constexpr std::uint32_t outline = 0xFF3A2418U;
+    const std::uint32_t fill = QualityColor(quality);
+    const float x = slotX + 17.0F;
+    const float y = slotY + 3.0F;
+    if (!AddUIFill(x, y, 8.0F, 8.0F, outline, 2, assets, queue)) return false;
+    if (quality == ItemQuality::Silver) {
+        return AddUIFill(x + 3.0F, y + 1.0F, 2.0F, 1.0F, fill, 3, assets, queue) &&
+            AddUIFill(x + 2.0F, y + 2.0F, 4.0F, 1.0F, fill, 3, assets, queue) &&
+            AddUIFill(x + 1.0F, y + 3.0F, 6.0F, 2.0F, fill, 3, assets, queue) &&
+            AddUIFill(x + 2.0F, y + 5.0F, 4.0F, 1.0F, fill, 3, assets, queue) &&
+            AddUIFill(x + 3.0F, y + 6.0F, 2.0F, 1.0F, fill, 3, assets, queue);
+    }
+    return AddUIFill(x + 3.0F, y + 1.0F, 2.0F, 1.0F, fill, 3, assets, queue) &&
+        AddUIFill(x + 1.0F, y + 2.0F, 6.0F, 1.0F, fill, 3, assets, queue) &&
+        AddUIFill(x + 2.0F, y + 3.0F, 4.0F, 1.0F, fill, 3, assets, queue) &&
+        AddUIFill(x + 1.0F, y + 4.0F, 6.0F, 1.0F, fill, 3, assets, queue) &&
+        AddUIFill(x + 3.0F, y + 5.0F, 2.0F, 2.0F, fill, 3, assets, queue);
+}
+
 } // namespace
 
 int InventorySlotAt(std::uint32_t x, std::uint32_t y, bool open) noexcept {
@@ -89,14 +111,13 @@ bool AddInventoryUI(const Inventory& inventory, std::size_t selectedSlot,
             definition->category == ItemCategory::Harvest ? QualityColor(stack.quality) : 0xFFFFFFFFU;
         if (!AddFrame(highlighted ? *selected : *frame, slotX+1.0F, slotY+1.0F,
                       0xFFFFFFFFU, 0, queue)) return false;
-        if (qualityColor != 0xFFFFFFFFU &&
-            !AddUIFill(slotX + 3.0F, slotY + 3.0F, 4.0F, 4.0F,
-                       qualityColor, 2, assets, queue)) return false;
         const float x = slotX + 6.0F;
         const float y = slotY + 6.0F;
         if (definition != nullptr) {
             const SpriteAsset* item = assets.FindSprite(definition->sprite);
             if (item == nullptr || !AddSprite(*item, x, y, 0xFFFFFFFFU, 1, queue)) return false;
+            if (definition->category == ItemCategory::Harvest &&
+                !AddQualityBadge(stack.quality, slotX, slotY, assets, queue)) return false;
             if (stack.count > 1) {
                 char countText[3]{};
                 const bool twoDigits = stack.count >= 10;
