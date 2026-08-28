@@ -3,6 +3,7 @@
 namespace Homestead {
 
 class EntityWorld;
+class FarmAnimals;
 class TileMap;
 struct PlayerState;
 
@@ -16,6 +17,7 @@ struct MovementInput {
     PlayerState& player,
     const TileMap& map,
     MovementInput input,
-    float stepSeconds) noexcept;
+    float stepSeconds,
+    const FarmAnimals* farmAnimals = nullptr) noexcept;
 
 } // namespace Homestead

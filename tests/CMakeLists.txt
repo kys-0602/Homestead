@@ -139,6 +139,7 @@ add_test(NAME HomesteadMapCompilerTests COMMAND HomesteadMapCompilerTests)
 add_executable(HomesteadPlayerMovementTests
     PlayerMovementTests.cpp
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Systems/PlayerMovement.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/FarmAnimals.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/EntityWorld.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/TileMap.cpp"
 )
@@ -155,6 +156,7 @@ add_executable(HomesteadInteractionToolTests
     InteractionToolTests.cpp
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Systems/InteractionSystem.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Systems/PlayerMovement.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/FarmAnimals.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/Systems/ToolSystem.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/EntityWorld.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../source/World/TileMap.cpp"
