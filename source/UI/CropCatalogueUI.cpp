@@ -22,7 +22,7 @@ bool AddCropCatalogueUI(const CropCatalogue& catalogue, const AssetStore& assets
     constexpr std::uint32_t text = 0xFF603020U, seen = 0xFF305840U;
     if (!AddUIPanel(45, 18, 230, 146, 0xFFFFFFFFU, 40, assets, queue) ||
         !AddBitmapText("CROP CATALOGUE", 116, 28, text, 43, assets, queue) ||
-        !AddBitmapText("SILVER 125 GOLD 150", 96, 40, text, 43, assets, queue)) return false;
+        !AddBitmapText("SILVER 125% GOLD 150%", 96, 40, text, 43, assets, queue)) return false;
     for (std::uint8_t index = 0; index < MarketCropCount; ++index) {
         const CropId crop = static_cast<CropId>(index + 1U);
         const float y = 56.0F + static_cast<float>(index * 14U);

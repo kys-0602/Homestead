@@ -108,7 +108,7 @@ int main(int argumentCount, char** arguments) {
             assets.FindSprite(Homestead::MakeAssetId(wet)) == nullptr) return 10;
     }
     constexpr const char* uiAssets[] = {
-        "font.colon", "ui.slot.frame", "ui.slot.selected", "ui.panel.tl",
+        "font.colon", "font.percent", "ui.slot.frame", "ui.slot.selected", "ui.panel.tl",
         "ui.panel.top", "ui.panel.tr", "ui.panel.left", "ui.panel.center",
         "ui.panel.right", "ui.panel.bl", "ui.panel.bottom", "ui.panel.br"};
     for (const char* name : uiAssets) {
