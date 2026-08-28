@@ -38,7 +38,8 @@ bool AddAnimals(const FarmAnimal* animals, std::size_t count,
         command.uvHeight = sprite->height;
         command.sortY = static_cast<std::uint16_t>(std::clamp(feet.y, 0.0F, 65535.0F));
         command.layer = SpriteLayer::Actor;
-        if (animal.current.x > animal.previous.x) command.flags = SpriteFlagValue(SpriteFlag::FlipHorizontal);
+        if (animal.facingRight == animal.flipWhenFacingRight)
+            command.flags = SpriteFlagValue(SpriteFlag::FlipHorizontal);
         if (!queue.Add(command)) return false;
     }
     return true;

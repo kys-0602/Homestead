@@ -1,6 +1,7 @@
 #include "Homestead/Game/PlayerState.hpp"
 #include "Homestead/Systems/PlayerMovement.hpp"
 #include "Homestead/World/EntityWorld.hpp"
+#include "Homestead/World/FarmAnimals.hpp"
 #include "Homestead/World/TileMap.hpp"
 
 #include <cmath>
@@ -137,5 +138,15 @@ int main() {
                 horizontalWorld, horizontalPlayer, map, {1.0F, 0.0F}, 1.0F / 60.0F)) return 17;
     const Homestead::TransformComponent* horizontal = horizontalWorld.Transform(horizontalPlayer.entity);
     if (horizontal == nullptr || !Near(horizontal->current.x, 240.0F)) return 18;
+    Homestead::FarmAnimals animals;
+    animals.Reset();
+    Homestead::EntityWorld animalWorld;
+    Homestead::PlayerState animalPlayer{};
+    animalPlayer.entity = animalWorld.Create({280.0F, 200.0F}, 1);
+    for (int step = 0; step < 20; ++step)
+        if (!Homestead::UpdatePlayerMovement(animalWorld, animalPlayer, map, {1.0F, 0.0F},
+                                              1.0F / 60.0F, &animals)) return 19;
+    const Homestead::TransformComponent* animalCollision = animalWorld.Transform(animalPlayer.entity);
+    if (animalCollision == nullptr || animalCollision->current.x > 285.01F) return 20;
     return 0;
 }

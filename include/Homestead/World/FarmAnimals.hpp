@@ -13,6 +13,11 @@ struct FarmAnimal {
     WorldPosition current{};
     std::uint8_t routeIndex = 0;
     std::uint16_t pauseTicks = 0;
+    float collisionHalfWidth = 0.0F;
+    float collisionTop = 0.0F;
+    float collisionBottom = 0.0F;
+    bool flipWhenFacingRight = true;
+    bool facingRight = false;
     bool moving = false;
 };
 
@@ -22,7 +27,7 @@ public:
     static constexpr std::size_t FrogCount = 1;
 
     void Reset() noexcept;
-    void FixedUpdate() noexcept;
+    void FixedUpdate(WorldPosition playerFeet = {}) noexcept;
 
     [[nodiscard]] const std::array<FarmAnimal, ChickenCount>& Chickens() const noexcept {
         return chickens_;

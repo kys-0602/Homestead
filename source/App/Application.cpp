@@ -261,7 +261,11 @@ bool Application::FixedUpdate() noexcept {
     }
     if (saveNoticeTicks_ != 0) --saveNoticeTicks_;
     if (dailyRequestNoticeTicks_ != 0) --dailyRequestNoticeTicks_;
-    if (currentMap_ == MapId::Farm) farmAnimals_.FixedUpdate();
+    if (currentMap_ == MapId::Farm) {
+        const TransformComponent* animalTarget = entityWorld_.Transform(player_.entity);
+        if (animalTarget == nullptr) return false;
+        farmAnimals_.FixedUpdate(animalTarget->current);
+    }
     if (input_.ConsumePressed(Action::Menu)) {
         if (dailyRequestOpen_) { dailyRequestOpen_ = false; input_.DiscardPending(); return true; }
         if (marketOpen_) { marketOpen_ = false; input_.DiscardPending(); return true; }
@@ -471,7 +475,8 @@ bool Application::FixedUpdate() noexcept {
 
     if (!UpdatePlayerMovement(
         entityWorld_, player_, ActiveMap(), movement,
-        static_cast<float>(FixedStepController::StepSeconds))) {
+        static_cast<float>(FixedStepController::StepSeconds),
+        currentMap_ == MapId::Farm ? &farmAnimals_ : nullptr)) {
         return false;
     }
     transform = entityWorld_.Transform(player_.entity);

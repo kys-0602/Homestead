@@ -7,6 +7,7 @@
 #include "Homestead/Assets/AssetStore.hpp"
 #include "Homestead/Game/PlayerState.hpp"
 #include "Homestead/World/EntityWorld.hpp"
+#include "Homestead/World/FarmAnimals.hpp"
 #include "Homestead/World/TileMap.hpp"
 
 namespace Homestead {
@@ -67,7 +68,7 @@ void MoveX(
     TransformComponent& transform,
     const ColliderComponent& collider,
     const TileMap& map,
-    float amount) noexcept {
+    float amount, const FarmAnimals* farmAnimals) noexcept {
     const float previousX = transform.current.x;
     transform.current.x += amount;
     const std::int32_t firstY = static_cast<std::int32_t>(
@@ -102,13 +103,29 @@ void MoveX(
             }
         }
     }
+    if (farmAnimals == nullptr) return;
+    const auto resolve = [&](const FarmAnimal& animal) noexcept {
+        const CollisionRect obstacle{animal.current.x - animal.collisionHalfWidth,
+            animal.current.y + animal.collisionTop, animal.current.x + animal.collisionHalfWidth,
+            animal.current.y + animal.collisionBottom};
+        if (!Overlaps(transform.current.y + collider.top, transform.current.y + collider.bottom,
+                      obstacle.top, obstacle.bottom)) return;
+        if (amount > 0.0F && previousX + collider.right <= obstacle.left + CollisionEpsilon &&
+            transform.current.x + collider.right > obstacle.left)
+            transform.current.x = std::min(transform.current.x, obstacle.left - collider.right);
+        else if (amount < 0.0F && previousX + collider.left >= obstacle.right - CollisionEpsilon &&
+                 transform.current.x + collider.left < obstacle.right)
+            transform.current.x = std::max(transform.current.x, obstacle.right - collider.left);
+    };
+    for (const FarmAnimal& animal : farmAnimals->Chickens()) resolve(animal);
+    for (const FarmAnimal& animal : farmAnimals->Frogs()) resolve(animal);
 }
 
 void MoveY(
     TransformComponent& transform,
     const ColliderComponent& collider,
     const TileMap& map,
-    float amount) noexcept {
+    float amount, const FarmAnimals* farmAnimals) noexcept {
     const float previousY = transform.current.y;
     transform.current.y += amount;
     const std::int32_t firstX = static_cast<std::int32_t>(
@@ -143,6 +160,22 @@ void MoveY(
             }
         }
     }
+    if (farmAnimals == nullptr) return;
+    const auto resolve = [&](const FarmAnimal& animal) noexcept {
+        const CollisionRect obstacle{animal.current.x - animal.collisionHalfWidth,
+            animal.current.y + animal.collisionTop, animal.current.x + animal.collisionHalfWidth,
+            animal.current.y + animal.collisionBottom};
+        if (!Overlaps(transform.current.x + collider.left, transform.current.x + collider.right,
+                      obstacle.left, obstacle.right)) return;
+        if (amount > 0.0F && previousY + collider.bottom <= obstacle.top + CollisionEpsilon &&
+            transform.current.y + collider.bottom > obstacle.top)
+            transform.current.y = std::min(transform.current.y, obstacle.top - collider.bottom);
+        else if (amount < 0.0F && previousY + collider.top >= obstacle.bottom - CollisionEpsilon &&
+                 transform.current.y + collider.top < obstacle.bottom)
+            transform.current.y = std::max(transform.current.y, obstacle.bottom - collider.top);
+    };
+    for (const FarmAnimal& animal : farmAnimals->Chickens()) resolve(animal);
+    for (const FarmAnimal& animal : farmAnimals->Frogs()) resolve(animal);
 }
 
 AssetId PlayerSprite(const PlayerState& player) noexcept {
@@ -185,7 +218,8 @@ bool UpdatePlayerMovement(
     PlayerState& player,
     const TileMap& map,
     MovementInput input,
-    float stepSeconds) noexcept {
+    float stepSeconds,
+    const FarmAnimals* farmAnimals) noexcept {
     TransformComponent* transform = world.Transform(player.entity);
     SpriteComponent* sprite = world.Sprite(player.entity);
     const ColliderComponent* collider = world.Collider(player.entity);
@@ -211,8 +245,8 @@ bool UpdatePlayerMovement(
         }
         ++player.animationTicks;
         const float distance = player.movementSpeed * stepSeconds;
-        MoveX(*transform, *collider, map, input.x * distance);
-        MoveY(*transform, *collider, map, input.y * distance);
+        MoveX(*transform, *collider, map, input.x * distance, farmAnimals);
+        MoveY(*transform, *collider, map, input.y * distance, farmAnimals);
     } else {
         player.animationTicks = 0;
     }

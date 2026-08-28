@@ -25,7 +25,8 @@ constexpr std::array<Route, FarmAnimals::FrogCount> FrogRoutes{{
 template <std::size_t Count>
 void ResetAnimals(std::array<FarmAnimal, Count>& animals,
                   const std::array<Route, Count>& routes,
-                  std::uint16_t pauseOffset) noexcept {
+                  std::uint16_t pauseOffset, float halfWidth, float top,
+                  float bottom, bool flipWhenFacingRight) noexcept {
     for (std::size_t index = 0; index < animals.size(); ++index) {
         FarmAnimal& animal = animals[index];
         animal = {};
@@ -33,13 +34,17 @@ void ResetAnimals(std::array<FarmAnimal, Count>& animals,
         animal.previous = animal.current;
         animal.routeIndex = 1;
         animal.pauseTicks = static_cast<std::uint16_t>(pauseOffset + index * 15U);
+        animal.collisionHalfWidth = halfWidth;
+        animal.collisionTop = top;
+        animal.collisionBottom = bottom;
+        animal.flipWhenFacingRight = flipWhenFacingRight;
     }
 }
 
 template <std::size_t Count>
 void UpdateAnimals(std::array<FarmAnimal, Count>& animals,
                    const std::array<Route, Count>& routes,
-                   float speed, std::uint16_t pauseDuration) noexcept {
+                   float speed, std::uint16_t pauseDuration, WorldPosition playerFeet) noexcept {
     for (std::size_t index = 0; index < animals.size(); ++index) {
         FarmAnimal& animal = animals[index];
         animal.previous = animal.current;
@@ -60,8 +65,18 @@ void UpdateAnimals(std::array<FarmAnimal, Count>& animals,
             animal.pauseTicks = pauseDuration;
             continue;
         }
-        animal.current.x += dx * speed / distance;
-        animal.current.y += dy * speed / distance;
+        const WorldPosition next{
+            animal.current.x + dx * speed / distance, animal.current.y + dy * speed / distance};
+        const bool overlapsPlayer = next.x + animal.collisionHalfWidth > playerFeet.x - 5.0F &&
+            next.x - animal.collisionHalfWidth < playerFeet.x + 5.0F &&
+            next.y + animal.collisionBottom > playerFeet.y - 6.0F &&
+            next.y + animal.collisionTop < playerFeet.y;
+        if (overlapsPlayer) {
+            animal.pauseTicks = 15;
+            continue;
+        }
+        animal.current = next;
+        if (std::fabs(dx) > 0.001F) animal.facingRight = dx > 0.0F;
         animal.moving = true;
     }
 }
@@ -69,13 +84,14 @@ void UpdateAnimals(std::array<FarmAnimal, Count>& animals,
 } // namespace
 
 void FarmAnimals::Reset() noexcept {
-    ResetAnimals(chickens_, ChickenRoutes, 0);
-    ResetAnimals(frogs_, FrogRoutes, 20);
+    ResetAnimals(chickens_, ChickenRoutes, 0, 6.0F, -8.0F, 0.0F, true);
+    ResetAnimals(frogs_, FrogRoutes, 20, 4.0F, -22.0F, -14.0F, false);
 }
 
-void FarmAnimals::FixedUpdate() noexcept {
-    UpdateAnimals(chickens_, ChickenRoutes, WalkSpeed, PauseDuration);
-    UpdateAnimals(frogs_, FrogRoutes, WalkSpeed * 0.5F, static_cast<std::uint16_t>(PauseDuration * 2U));
+void FarmAnimals::FixedUpdate(WorldPosition playerFeet) noexcept {
+    UpdateAnimals(chickens_, ChickenRoutes, WalkSpeed, PauseDuration, playerFeet);
+    UpdateAnimals(frogs_, FrogRoutes, WalkSpeed * 0.5F,
+                  static_cast<std::uint16_t>(PauseDuration * 2U), playerFeet);
 }
 
 } // namespace Homestead
