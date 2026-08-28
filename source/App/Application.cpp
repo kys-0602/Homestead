@@ -11,6 +11,7 @@
 #include "Homestead/Graphics/Presentation.hpp"
 #include "Homestead/Graphics/PlayerRenderer.hpp"
 #include "Homestead/Graphics/CropRenderer.hpp"
+#include "Homestead/Graphics/FarmAnimalRenderer.hpp"
 #include "Homestead/Graphics/SelectionRenderer.hpp"
 #include "Homestead/Graphics/TileMapRenderer.hpp"
 #include "Homestead/Graphics/WeatherRenderer.hpp"
@@ -218,6 +219,8 @@ int Application::Run() noexcept {
         if (!TileMapRenderer::Build(ActiveMap(), camera_, assets_, renderQueue_) ||
             (collisionDebug_ && !AddCollisionDebug(ActiveMap(), camera_, assets_, renderQueue_)) ||
             (currentMap_ == MapId::Farm && !AddCrops(crops_, camera_, assets_, renderQueue_)) ||
+            (currentMap_ == MapId::Farm && !AddFarmAnimals(
+                farmAnimals_, weatherTicks_, alpha, camera_, assets_, renderQueue_)) ||
             !PlayerRenderer::Add(
                 entityWorld_, player_, alpha, camera_, assets_, renderQueue_) ||
             (!inventoryOpen_ && !paused_ && !AddSelectionOverlay(selection_, camera_, assets_, renderQueue_)) ||
@@ -258,6 +261,7 @@ bool Application::FixedUpdate() noexcept {
     }
     if (saveNoticeTicks_ != 0) --saveNoticeTicks_;
     if (dailyRequestNoticeTicks_ != 0) --dailyRequestNoticeTicks_;
+    if (currentMap_ == MapId::Farm) farmAnimals_.FixedUpdate();
     if (input_.ConsumePressed(Action::Menu)) {
         if (dailyRequestOpen_) { dailyRequestOpen_ = false; input_.DiscardPending(); return true; }
         if (marketOpen_) { marketOpen_ = false; input_.DiscardPending(); return true; }
@@ -771,6 +775,7 @@ bool Application::ResetGameState() noexcept {
         }
     }
     crops_.Clear();
+    farmAnimals_.Reset();
     catalogue_.Clear();
     catalogueOpen_ = false;
     worldClock_.Reset();

@@ -22,6 +22,7 @@
 #include "Homestead/World/CropField.hpp"
 #include "Homestead/World/CropCatalogue.hpp"
 #include "Homestead/World/EntityWorld.hpp"
+#include "Homestead/World/FarmAnimals.hpp"
 #include "Homestead/World/WorldClock.hpp"
 #include "Homestead/Systems/InteractionSystem.hpp"
 
@@ -73,6 +74,7 @@ private:
     TileMap houseMap_;
     CropField crops_;
     CropCatalogue catalogue_;
+    FarmAnimals farmAnimals_;
     WorldClock worldClock_;
     EntityWorld entityWorld_;
     PlayerState player_;
