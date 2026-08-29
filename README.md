@@ -98,4 +98,4 @@ cmake --build --preset release --target HomesteadSubmission
 
 오디오의 상세 기록은 [assets-src/AUDIO_LICENSES.md](assets-src/AUDIO_LICENSES.md)에서 확인할 수 있습니다.
 
-MIT 라이선스는 이 저장소의 소스 코드와 프로젝트 문서에만 적용됩니다. Kenmi Art 그래픽 에셋, WhiteFoxGaming 배경음악 및 그 밖의 제3자 에셋은 각각의 원 라이선스를 따릅니다.
+> **중요:** MIT 라이선스는 이 저장소의 소스 코드와 프로젝트 문서에만 적용됩니다. 게임에 사용된 Kenmi Art 그래픽 에셋, WhiteFoxGaming 배경음악, 효과음 및 그 밖의 제3자 에셋은 MIT 라이선스에 포함되지 않으며, 이 저장소가 해당 에셋의 사용·복사·수정·재배포 권한을 제공하지 않습니다. 각 에셋은 원 제작자의 라이선스를 따라야 합니다.
