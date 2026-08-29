@@ -84,7 +84,7 @@ void UpdateAnimals(std::array<FarmAnimal, Count>& animals,
 } // namespace
 
 void FarmAnimals::Reset() noexcept {
-    ResetAnimals(chickens_, ChickenRoutes, 0, 6.0F, -8.0F, 0.0F, true);
+    ResetAnimals(chickens_, ChickenRoutes, 0, 6.0F, -18.0F, -10.0F, true);
     ResetAnimals(frogs_, FrogRoutes, 20, 4.0F, -22.0F, -14.0F, false);
 }
 

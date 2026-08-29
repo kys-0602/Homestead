@@ -142,7 +142,7 @@ int main() {
     animals.Reset();
     Homestead::EntityWorld animalWorld;
     Homestead::PlayerState animalPlayer{};
-    animalPlayer.entity = animalWorld.Create({280.0F, 200.0F}, 1);
+    animalPlayer.entity = animalWorld.Create({280.0F, 188.0F}, 1);
     for (int step = 0; step < 20; ++step)
         if (!Homestead::UpdatePlayerMovement(animalWorld, animalPlayer, map, {1.0F, 0.0F},
                                               1.0F / 60.0F, &animals)) return 19;
