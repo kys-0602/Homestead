@@ -186,6 +186,7 @@ if(HOMESTEAD_ASSET_SOURCE_FILES)
             "-Dbinary_path=$<TARGET_FILE:Homestead>"
             "-Dpak_path=${HOMESTEAD_DATA_PAK}"
             "-Dsave_path=${HOMESTEAD_REPRESENTATIVE_SAVE}"
+            "-Dreadme_path=${CMAKE_CURRENT_SOURCE_DIR}/README.txt"
             "-Dsubmission_directory=${CMAKE_CURRENT_BINARY_DIR}/submission"
             "-Dmanifest_path=${CMAKE_CURRENT_BINARY_DIR}/submission-manifest.txt"
             "-Dconfiguration=$<CONFIG>"

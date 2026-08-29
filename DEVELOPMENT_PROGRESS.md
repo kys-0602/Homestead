@@ -1122,3 +1122,19 @@
 - 실제 제출 합계 `637,667 bytes` (`+166,400 bytes`), 상한까지 `836,893 bytes` 여유.
 
 다음 작업: Windows 탐색기와 실제 실행 쓰레드에서 아이콘 표시 수동 확인.
+
+## 오프라인 제출 안내 문서
+
+구현:
+
+- 인터넷 연결없이도 실행 조건, 조작법, 기본 플레이, 저장 위치, 에셋 출처와 라이선스 범위를 확인할 수 있는 `README.txt`를 추가했다.
+- `HomesteadSubmission` 타겟이 `README.txt`를 제출 폴더에 복사하고, 파일 크기와 SHA-256을 제출 매니페스트에 포함하도록 수정했다.
+
+검증:
+
+- CMake Release 재구성과 `HomesteadSubmission` 빌드 성공.
+- 제출 폴더에 `Homestead.exe`, `data.pak`, `representative.sav`, `README.txt` 4개 파일 포함 확인.
+- 실제 제출 합계 `640,948 bytes` (`+3,281 bytes`), 상한까지 `833,612 bytes` 여유.
+- README.txt SHA-256: `c323d05de403019a374a063856dc3fa9c1262216fd269736f0722ef8605c8c04`
+
+다음 작업: 제출 폴더 전체 복사 및 수동 실행 확인.
