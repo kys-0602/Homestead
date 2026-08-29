@@ -91,7 +91,7 @@ cmake --build --preset release --target HomesteadSubmission
 ## 라이선스 및 출처
 
 - **게임 코드:** 이 저장소의 별도 라이선스는 아직 정해지지 않았습니다. 코드 재사용·배포 조건은 프로젝트 소유자에게 확인해야 합니다.
-- **그래픽 에셋:** 구매한 픽셀 아트 에셋의 허용 범위 안에서, 실제 게임에 쓰이는 일부 스프라이트 영역만 `data.pak`에 포함했습니다. 원본 PNG와 에셋 전체는 배포물에 포함하지 않습니다. 재배포·상업 이용 조건은 구매 당시의 원 라이선스를 따릅니다.
+- **그래픽 에셋:** [Kenmi Art](https://kenmi-art.itch.io/)의 구매 픽셀 아트 에셋을 사용했습니다. 허용 범위 안에서 실제 게임에 쓰이는 일부 스프라이트 영역만 `data.pak`에 포함했으며, 원본 PNG와 에셋 전체는 배포물에 포함하지 않습니다. 재배포·상업 이용 조건은 구매 당시의 원 라이선스를 따릅니다.
 - **배경음악:** `FunCrafting` — [WhiteFoxGaming, Crafting Daydreams Free Game Music](https://whitefoxgaming.itch.io/crafting-daydreams-free-game-music). 프로젝트 소유자가 확인한 조건은 로열티 프리, 상업적 이용 제한 없음, 출처 표기 불필요, 수정 허용입니다. 실행용 파일은 용량 절감을 위해 변환되어 `data.pak`에 들어갑니다.
 - **효과음:** `assets-src/Audio/sfx/`의 효과음은 Homestead를 위해 생성한 파일이며, 제3자 녹음물을 포함하지 않습니다.
 - **플랫폼 구성 요소:** Windows SDK, Direct3D 11, XAudio2는 Microsoft의 해당 사용 조건을 따르며, 별도 제3자 런타임 라이브러리를 배포물에 포함하지 않습니다.
