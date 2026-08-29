@@ -392,9 +392,10 @@ bool Application::FixedUpdate() noexcept {
         }
         selection_ = interactionTarget;
         CropId harvested = CropId::None;
+        ItemQuality harvestedQuality = ItemQuality::Normal;
         if (player_.toolUse.action == ToolAction::None && currentMap_ == MapId::Farm &&
-            crops_.Harvest(inventory_, interactionTarget, &harvested)) {
-            [[maybe_unused]] const bool discovered = catalogue_.Discover(harvested);
+            crops_.Harvest(inventory_, interactionTarget, &harvested, &harvestedQuality)) {
+            [[maybe_unused]] const bool discovered = catalogue_.Discover(harvested, harvestedQuality);
             FaceSelection(player_, playerFeet, interactionTarget);
             audio_.PlayEffect(MakeAssetId("audio.harvest"));
         } else {
@@ -685,6 +686,7 @@ bool Application::CaptureSave(SaveSnapshot& snapshot) const noexcept {
     snapshot.gold = gold_;
     snapshot.dailyRequestCompleted = dailyRequestState_.completed;
     snapshot.discoveredCrops = catalogue_.Bits();
+    snapshot.discoveredCropQualities = catalogue_.QualityBits();
     for (std::size_t index = 0; index < Inventory::SlotCount; ++index)
         snapshot.inventory[index] = inventory_.Slot(index);
     for (std::int32_t y = 0; y < farmMap_.Height(); ++y) {
@@ -734,7 +736,7 @@ bool Application::ApplySave(const SaveSnapshot& snapshot) noexcept {
             if (snapshot.crops[other].tileX == crop.tileX && snapshot.crops[other].tileY == crop.tileY) return false;
     }
     if (!worldClock_.Restore(snapshot.day, snapshot.minute) ||
-        !catalogue_.Restore(snapshot.discoveredCrops)) return false;
+        !catalogue_.Restore(snapshot.discoveredCrops, snapshot.discoveredCropQualities)) return false;
     inventory_.Clear();
     for (std::size_t index = 0; index < Inventory::SlotCount; ++index) inventory_.Slot(index) = snapshot.inventory[index];
     for (const SavedTileDelta& delta : snapshot.tileDeltas) {

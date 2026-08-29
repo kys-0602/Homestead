@@ -30,6 +30,7 @@ struct SaveSnapshot {
     std::uint16_t gold = 20;
     bool dailyRequestCompleted = false;
     std::uint8_t discoveredCrops = 0;
+    std::uint16_t discoveredCropQualities = 0;
     std::array<ItemStack, Inventory::SlotCount> inventory{};
     std::vector<SavedTileDelta> tileDeltas;
     std::vector<CropInstance> crops;

@@ -43,6 +43,15 @@ std::vector<std::uint8_t> Version5Save(const std::vector<std::uint8_t>& version6
     return bytes;
 }
 
+std::vector<std::uint8_t> Version6Save(const std::vector<std::uint8_t>& version7) {
+    std::vector<std::uint8_t> bytes = version7;
+    bytes.erase(bytes.begin() + 34, bytes.begin() + 36); // version 7 crop quality bits
+    SetU16(bytes, 4, 6);
+    SetU32(bytes, 8, static_cast<std::uint32_t>(bytes.size() - 16));
+    RepairChecksum(bytes);
+    return bytes;
+}
+
 std::vector<std::uint8_t> Version4Save(const std::vector<std::uint8_t>& version5) {
     std::vector<std::uint8_t> bytes = version5;
     for (std::size_t index = Homestead::Inventory::SlotCount; index > 0; --index)
@@ -95,6 +104,7 @@ int main(int argumentCount, char** arguments) {
     source.mapId = Homestead::MapId::House; source.gold = 87;
     source.dailyRequestCompleted = true;
     source.discoveredCrops = 0x03;
+    source.discoveredCropQualities = 0x0009;
     source.inventory[0] = {Homestead::ItemId::Hoe, 1};
     source.inventory[1] = {Homestead::ItemId::WateringCan, 1};
     source.inventory[2] = {Homestead::ItemId::CarrotSeed, 9};
@@ -108,9 +118,12 @@ int main(int argumentCount, char** arguments) {
         decoded.minute != 777 || decoded.mapId != Homestead::MapId::House ||
         decoded.gold != 87 || !decoded.dailyRequestCompleted || decoded.inventory[2].count != 9 ||
         decoded.inventory[3].quality != Homestead::ItemQuality::Silver ||
-        decoded.discoveredCrops != 0x03 ||
+        decoded.discoveredCrops != 0x03 || decoded.discoveredCropQualities != 0x0009 ||
         decoded.tileDeltas.size() != 1 || decoded.crops.size() != 1 || decoded.crops[0].stage != 2) return 2;
-    const auto version5 = Version5Save(bytes); Homestead::SaveSnapshot migratedV5;
+    const auto version6 = Version6Save(bytes); Homestead::SaveSnapshot migratedV6;
+    if (!Homestead::DecodeSave(version6.data(), version6.size(), migratedV6) ||
+        migratedV6.discoveredCrops != 0x03 || migratedV6.discoveredCropQualities != 0) return 3;
+    const auto version5 = Version5Save(version6); Homestead::SaveSnapshot migratedV5;
     if (!Homestead::DecodeSave(version5.data(), version5.size(), migratedV5) ||
         migratedV5.discoveredCrops != 0) return 3;
     const auto version4 = Version4Save(version5); Homestead::SaveSnapshot migratedV4;
@@ -125,16 +138,16 @@ int main(int argumentCount, char** arguments) {
         migratedV2.dailyRequestCompleted) return 3;
 
     auto damaged = bytes; damaged[0] = 'X'; if (!Rejects(damaged)) return 4;
-    damaged = bytes; SetU16(damaged, 4, 7); if (!Rejects(damaged)) return 4;
+    damaged = bytes; SetU16(damaged, 4, 8); if (!Rejects(damaged)) return 4;
     damaged = bytes; damaged.pop_back(); if (!Rejects(damaged)) return 5;
     damaged = bytes; damaged.back() ^= 1; if (!Rejects(damaged)) return 6;
     damaged = bytes; damaged[29] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 7;
     damaged = bytes; damaged[32] = 2; RepairChecksum(damaged); if (!Rejects(damaged)) return 8;
     damaged = bytes; damaged[33] = 0x80; RepairChecksum(damaged); if (!Rejects(damaged)) return 8;
-    damaged = bytes; damaged[37] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 8;
-    damaged = bytes; SetU16(damaged, 34, 5000); RepairChecksum(damaged); if (!Rejects(damaged)) return 9;
-    damaged = bytes; damaged[39] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 10;
-    damaged = bytes; damaged[92] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 11;
+    damaged = bytes; damaged[35] = 0x80; RepairChecksum(damaged); if (!Rejects(damaged)) return 8;
+    damaged = bytes; SetU16(damaged, 36, 5000); RepairChecksum(damaged); if (!Rejects(damaged)) return 9;
+    damaged = bytes; damaged[41] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 10;
+    damaged = bytes; damaged[94] = 0xFF; RepairChecksum(damaged); if (!Rejects(damaged)) return 11;
     damaged = bytes; damaged.resize(Homestead::MaximumSaveBytes + 1); if (!Rejects(damaged)) return 12;
 
     source.inventory[2].count = 100;

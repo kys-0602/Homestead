@@ -55,7 +55,8 @@ public:
         ItemId seedItem) noexcept;
     [[nodiscard]] bool Harvest(
         Inventory& inventory,
-        const TileSelection& selection, CropId* harvested = nullptr) noexcept;
+        const TileSelection& selection, CropId* harvested = nullptr,
+        ItemQuality* harvestedQuality = nullptr) noexcept;
     void OnDayChanged(TileMap& map) noexcept;
     void Clear() noexcept;
     [[nodiscard]] bool Restore(const CropInstance& crop, const TileMap& map) noexcept;

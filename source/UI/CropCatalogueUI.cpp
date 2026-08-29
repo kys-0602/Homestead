@@ -20,9 +20,12 @@ void AppendNumber(char* text, std::size_t& length, unsigned value) noexcept {
 } // namespace
 bool AddCropCatalogueUI(const CropCatalogue& catalogue, const AssetStore& assets, RenderQueue& queue) noexcept {
     constexpr std::uint32_t text = 0xFF603020U, seen = 0xFF305840U;
+    constexpr std::uint32_t silver = 0xFFC0C0C0U, gold = 0xFFFFC840U;
     if (!AddUIPanel(45, 18, 230, 146, 0xFFFFFFFFU, 40, assets, queue) ||
         !AddBitmapText("CROP CATALOGUE", 116, 28, text, 43, assets, queue) ||
-        !AddBitmapText("SILVER 125% GOLD 150%", 96, 40, text, 43, assets, queue)) return false;
+        !AddBitmapText("SILVER 125% GOLD 150%", 96, 40, text, 43, assets, queue) ||
+        !AddBitmapText("S", 190, 48, silver, 43, assets, queue) ||
+        !AddBitmapText("G", 238, 48, gold, 43, assets, queue)) return false;
     for (std::uint8_t index = 0; index < MarketCropCount; ++index) {
         const CropId crop = static_cast<CropId>(index + 1U);
         const float y = 56.0F + static_cast<float>(index * 14U);
@@ -36,7 +39,11 @@ bool AddCropCatalogueUI(const CropCatalogue& catalogue, const AssetStore& assets
         Append(line, length, definition->name); line[length++] = ' ';
         AppendNumber(line, length, definition->growthDays); line[length++] = 'D'; line[length++] = ' ';
         AppendNumber(line, length, MarketEntries()[index].sellPrice); line[length++] = 'G';
-        if (!AddBitmapText(line, 80, y, seen, 43, assets, queue)) return false;
+        if (!AddBitmapText(line, 80, y, seen, 43, assets, queue) ||
+            !AddBitmapText(catalogue.HasQuality(crop, ItemQuality::Silver) ? "YES" : "NO",
+                182, y, silver, 43, assets, queue) ||
+            !AddBitmapText(catalogue.HasQuality(crop, ItemQuality::Gold) ? "YES" : "NO",
+                228, y, gold, 43, assets, queue)) return false;
     }
     return AddBitmapText("E OR ESC CLOSE", 106, 148, text, 43, assets, queue);
 }

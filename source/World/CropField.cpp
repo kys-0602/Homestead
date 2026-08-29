@@ -74,14 +74,17 @@ bool CropField::Plant(TileMap& map, Inventory& inventory,
     return true;
 }
 
-bool CropField::Harvest(Inventory& inventory, const TileSelection& selection, CropId* harvested) noexcept {
+bool CropField::Harvest(Inventory& inventory, const TileSelection& selection, CropId* harvested,
+                        ItemQuality* harvestedQuality) noexcept {
     if (!selection.valid || !selection.inRange) return false;
     CropInstance* crop = FindMutable(selection.x, selection.y);
     if (crop == nullptr) return false;
     const CropDefinition* definition = FindCropDefinition(crop->crop);
     if (definition == nullptr || crop->stage < definition->finalStage) return false;
-    if (inventory.Add(definition->harvestItem, 1, HarvestQuality(*crop)) != 0) return false;
+    const ItemQuality quality = HarvestQuality(*crop);
+    if (inventory.Add(definition->harvestItem, 1, quality) != 0) return false;
     if (harvested != nullptr) *harvested = crop->crop;
+    if (harvestedQuality != nullptr) *harvestedQuality = quality;
     *crop = {};
     --count_;
     return true;
