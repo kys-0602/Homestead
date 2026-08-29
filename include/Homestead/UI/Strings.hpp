@@ -5,6 +5,8 @@ namespace Homestead::Text {
 inline constexpr char StartTools[] = "1 TILL 2 WATER";
 inline constexpr char StartControls[] = "F USE E BED SLEEPS";
 inline constexpr char StartSigns[] = "E SHOP OR READ SIGN";
+inline constexpr char OpenMarket[] = "E MARKET";
+inline constexpr char OpenDailyRequest[] = "E DAILY REQUEST";
 inline constexpr char Paused[] = "PAUSED";
 inline constexpr char Resume[] = "RESUME";
 inline constexpr char Inventory[] = "INVENTORY";

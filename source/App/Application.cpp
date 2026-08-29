@@ -46,6 +46,18 @@ bool GetPakPath(wchar_t (&path)[MAX_PATH]) noexcept {
     return true;
 }
 
+InteractionPrompt GetInteractionPrompt(
+    WorldPosition playerFeet, const TileMap& map) noexcept {
+    const TileSelection selection = SelectNearbySpecialObject(playerFeet, map);
+    const Tile* tile = selection.valid ? map.Get(selection.x, selection.y) : nullptr;
+    if (tile == nullptr) return InteractionPrompt::None;
+    switch (static_cast<TileGraphic>(tile->object)) {
+    case TileGraphic::MarketSign: return InteractionPrompt::Market;
+    case TileGraphic::Sign: return InteractionPrompt::DailyRequest;
+    default: return InteractionPrompt::None;
+    }
+}
+
 } // namespace
 
 Application::~Application() noexcept {
@@ -215,6 +227,10 @@ int Application::Run() noexcept {
             playerPosition,
             static_cast<float>(ActiveMap().Width() * TileSize),
             static_cast<float>(ActiveMap().Height() * TileSize));
+        const InteractionPrompt interactionPrompt =
+            currentMap_ == MapId::Farm && !inventoryOpen_ && !marketOpen_ &&
+            !dailyRequestOpen_ && !catalogueOpen_ && !paused_ ?
+            GetInteractionPrompt(playerTransform->current, ActiveMap()) : InteractionPrompt::None;
 
         if (!TileMapRenderer::Build(ActiveMap(), camera_, assets_, renderQueue_) ||
             (collisionDebug_ && !AddCollisionDebug(ActiveMap(), camera_, assets_, renderQueue_)) ||
@@ -230,6 +246,7 @@ int Application::Run() noexcept {
                             inventoryOpen_, assets_, renderQueue_) ||
             !AddStatusUI(worldClock_, gold_, GoalGold, instructionTicks_ != 0,
                          saveNoticeTicks_ != 0, dailyRequestNoticeTicks_ != 0,
+                         interactionPrompt,
                          assets_, renderQueue_) ||
             (marketOpen_ && !AddMarketUI(gold_, marketFocus_, assets_, renderQueue_)) ||
             (dailyRequestOpen_ && !AddDailyRequestUI(

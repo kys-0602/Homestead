@@ -28,6 +28,7 @@ bool AddFade(std::uint8_t alpha, std::uint16_t depth,
 
 bool AddStatusUI(const WorldClock& clock, std::uint16_t gold, std::uint16_t goal,
                  bool showInstructions, bool showSaved, bool showRequestComplete,
+                 InteractionPrompt interactionPrompt,
                  const AssetStore& assets,
                  RenderQueue& queue) noexcept {
     const SpriteAsset* pixel = assets.FindSprite(MakeAssetId("terrain.grass"));
@@ -64,13 +65,25 @@ bool AddStatusUI(const WorldClock& clock, std::uint16_t gold, std::uint16_t goal
         !AddBitmapText("REQUEST DONE", 124.0F, 29.0F,
                        hudTextColor, 24, assets, queue))) return false;
     if (showInstructions) {
-        return AddUIPanel(82.0F,60.0F,156.0F,38.0F,
-                          0xFFFFFFFFU,22,assets,queue) &&
-            AddBitmapText(Text::StartTools, 88.0F, 67.0F,
-                             hudTextColor, 24, assets, queue) &&
-            AddBitmapText(Text::StartControls, 88.0F, 77.0F,
-                          hudTextColor, 24, assets, queue) &&
-            AddBitmapText(Text::StartSigns, 100.0F, 87.0F,
+        if (!AddUIPanel(82.0F,60.0F,156.0F,38.0F,
+                          0xFFFFFFFFU,22,assets,queue) ||
+            !AddBitmapText(Text::StartTools, 88.0F, 67.0F,
+                           hudTextColor, 24, assets, queue) ||
+            !AddBitmapText(Text::StartControls, 88.0F, 77.0F,
+                           hudTextColor, 24, assets, queue) ||
+            !AddBitmapText(Text::StartSigns, 100.0F, 87.0F,
+                           hudTextColor, 24, assets, queue)) return false;
+    }
+    if (interactionPrompt == InteractionPrompt::Market) {
+        return AddUIPanel(124.0F, 124.0F, 72.0F, 16.0F,
+                          0xFFFFFFFFU, 22, assets, queue) &&
+            AddBitmapText(Text::OpenMarket, 136.0F, 129.0F,
+                          hudTextColor, 24, assets, queue);
+    }
+    if (interactionPrompt == InteractionPrompt::DailyRequest) {
+        return AddUIPanel(106.0F, 124.0F, 108.0F, 16.0F,
+                          0xFFFFFFFFU, 22, assets, queue) &&
+            AddBitmapText(Text::OpenDailyRequest, 115.0F, 129.0F,
                           hudTextColor, 24, assets, queue);
     }
     return true;

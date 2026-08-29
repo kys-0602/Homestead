@@ -8,6 +8,12 @@ class AssetStore;
 class RenderQueue;
 class WorldClock;
 
+enum class InteractionPrompt : std::uint8_t {
+    None,
+    Market,
+    DailyRequest
+};
+
 [[nodiscard]] bool AddStatusUI(
     const WorldClock& clock,
     std::uint16_t gold,
@@ -15,6 +21,7 @@ class WorldClock;
     bool showInstructions,
     bool showSaved,
     bool showRequestComplete,
+    InteractionPrompt interactionPrompt,
     const AssetStore& assets,
     RenderQueue& queue) noexcept;
 

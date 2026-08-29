@@ -1,8 +1,10 @@
 #include "Homestead/UI/PauseUI.hpp"
 #include "Homestead/UI/MarketUI.hpp"
+#include "Homestead/UI/StatusUI.hpp"
 #include "Homestead/Assets/AssetStore.hpp"
 #include "Homestead/Graphics/RenderQueue.hpp"
 #include "Homestead/Platform/Settings.hpp"
+#include "Homestead/World/WorldClock.hpp"
 
 #include <Windows.h>
 
@@ -31,5 +33,14 @@ int main(int argumentCount, char** arguments) {
         queue.Empty()) return 7;
     queue.Clear();
     if (!Homestead::AddMarketUI(123, 0, assets, queue) || queue.Empty()) return 8;
+    Homestead::WorldClock clock;
+    queue.Clear();
+    if (!Homestead::AddStatusUI(clock, 20, 250, false, false, false,
+                                Homestead::InteractionPrompt::Market, assets, queue) ||
+        queue.Empty()) return 9;
+    queue.Clear();
+    if (!Homestead::AddStatusUI(clock, 20, 250, false, false, false,
+                                Homestead::InteractionPrompt::DailyRequest, assets, queue) ||
+        queue.Empty()) return 10;
     return 0;
 }
