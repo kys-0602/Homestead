@@ -34,7 +34,7 @@
 - 작물, 동물, UI는 필요한 만큼만 단순하게 만들었습니다.
 - 저장 파일에는 플레이에 필요한 변화만 기록했습니다.
 
-최종 제출물은 `Homestead.exe`, `data.pak`, `representative.sav` 세 파일이며, 현재 합계는 **470,241바이트**입니다.
+최종 제출물은 `Homestead.exe`, `data.pak`, `representative.sav` 세 파일이며, 현재 합계는 **471,267바이트**입니다.
 
 파일 크기와 실행 속도를 관리한 방법은 [최적화 전략](OPTIMIZATION_STRATEGY.md)에서 자세히 볼 수 있습니다.
 
@@ -87,3 +87,13 @@ cmake --build --preset release --target HomesteadSubmission
 게임 규칙, 저장 파일, 입력, 화면 배치, 자산 데이터 등을 확인하는 자동 테스트 29개를 유지하고 있습니다. 최종 Release 빌드와 제출물 크기도 함께 확인합니다.
 
 그래픽과 조작감은 자동으로 완전히 판단할 수 없으므로, 최종 제출 전에는 농장 이동, 재배·수확·판매, 저장 후 재실행, 창 전환, 소리를 한 번씩 직접 확인하는 것을 권장합니다.
+
+## 라이선스 및 출처
+
+- **게임 코드:** 이 저장소의 별도 라이선스는 아직 정해지지 않았습니다. 코드 재사용·배포 조건은 프로젝트 소유자에게 확인해야 합니다.
+- **그래픽 에셋:** 구매한 픽셀 아트 에셋의 허용 범위 안에서, 실제 게임에 쓰이는 일부 스프라이트 영역만 `data.pak`에 포함했습니다. 원본 PNG와 에셋 전체는 배포물에 포함하지 않습니다. 재배포·상업 이용 조건은 구매 당시의 원 라이선스를 따릅니다.
+- **배경음악:** `FunCrafting` — [WhiteFoxGaming, Crafting Daydreams Free Game Music](https://whitefoxgaming.itch.io/crafting-daydreams-free-game-music). 프로젝트 소유자가 확인한 조건은 로열티 프리, 상업적 이용 제한 없음, 출처 표기 불필요, 수정 허용입니다. 실행용 파일은 용량 절감을 위해 변환되어 `data.pak`에 들어갑니다.
+- **효과음:** `assets-src/Audio/sfx/`의 효과음은 Homestead를 위해 생성한 파일이며, 제3자 녹음물을 포함하지 않습니다.
+- **플랫폼 구성 요소:** Windows SDK, Direct3D 11, XAudio2는 Microsoft의 해당 사용 조건을 따르며, 별도 제3자 런타임 라이브러리를 배포물에 포함하지 않습니다.
+
+오디오의 상세 기록은 [assets-src/AUDIO_LICENSES.md](assets-src/AUDIO_LICENSES.md)에서 확인할 수 있습니다.
