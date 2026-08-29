@@ -24,7 +24,10 @@ if(NOT HOMESTEAD_SOURCES)
     )
 endif()
 
-add_executable(Homestead WIN32 ${HOMESTEAD_SOURCES})
+add_executable(Homestead WIN32
+    ${HOMESTEAD_SOURCES}
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/Homestead.rc"
+)
 
 get_filename_component(HOMESTEAD_WINDOWS_KITS_ROOT
     "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots;KitsRoot10]"

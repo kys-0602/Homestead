@@ -9,6 +9,7 @@ namespace {
 
 constexpr wchar_t WindowClassName[] = L"HomesteadWindowClass";
 constexpr wchar_t WindowTitle[] = L"Homestead";
+constexpr int WindowIconResourceId = 101;
 constexpr LONG LogicalClientWidth = 320;
 constexpr LONG LogicalClientHeight = 180;
 
@@ -60,6 +61,8 @@ bool Window::Initialize(HINSTANCE instance, int showCommand, Input& input,
     windowClass.style = CS_HREDRAW | CS_VREDRAW;
     windowClass.lpfnWndProc = WindowProcedure;
     windowClass.hInstance = instance_;
+    windowClass.hIcon = LoadIconW(instance_, MAKEINTRESOURCEW(WindowIconResourceId));
+    windowClass.hIconSm = windowClass.hIcon;
     windowClass.hCursor = LoadCursorW(nullptr, IDC_ARROW);
     windowClass.lpszClassName = WindowClassName;
 
